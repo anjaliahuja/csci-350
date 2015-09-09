@@ -79,7 +79,9 @@ class Lock {
 
   private:
     char* name;				// for debugging
-    // plus some other stuff you'll need to define
+    char* state;
+    Thread* lockOwnerThread;
+    List *lockWaitQueue;
 };
 
 // The following class defines a "condition variable".  A condition

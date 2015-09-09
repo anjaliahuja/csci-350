@@ -35,9 +35,9 @@
 
 Semaphore::Semaphore(char* debugName, int initialValue)
 {
-    name = debugName;
-    value = initialValue;
-    queue = new List;
+  name = debugName;
+  value = initialValue;
+  queue = new List;
 }
 
 //----------------------------------------------------------------------
@@ -48,7 +48,7 @@ Semaphore::Semaphore(char* debugName, int initialValue)
 
 Semaphore::~Semaphore()
 {
-    delete queue;
+  delete queue;
 }
 
 //----------------------------------------------------------------------
@@ -64,16 +64,16 @@ Semaphore::~Semaphore()
 void
 Semaphore::P()
 {
-    IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
-    
-    while (value == 0) { 			// semaphore not available
-	queue->Append((void *)currentThread);	// so go to sleep
-	currentThread->Sleep();
-    } 
-    value--; 					// semaphore available, 
-						// consume its value
-    
-    (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+  IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+  
+  while (value == 0) { 			// semaphore not available
+    queue->Append((void *)currentThread);	// so go to sleep
+    currentThread->Sleep();
+  } 
+  value--; 					// semaphore available, 
+  // consume its value
+  
+  (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
 }
 
 //----------------------------------------------------------------------
@@ -87,26 +87,162 @@ Semaphore::P()
 void
 Semaphore::V()
 {
-    Thread *thread;
-    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+  Thread *thread;
+  IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
-    thread = (Thread *)queue->Remove();
-    if (thread != NULL)	   // make thread ready, consuming the V immediately
-	scheduler->ReadyToRun(thread);
-    value++;
-    (void) interrupt->SetLevel(oldLevel);
+  thread = (Thread *)queue->Remove();
+  if (thread != NULL)	   // make thread ready, consuming the V immediately
+    scheduler->ReadyToRun(thread);
+  value++;
+  (void) interrupt->SetLevel(oldLevel);
 }
 
 // Dummy functions -- so we can compile our later assignments 
 // Note -- without a correct implementation of Condition::Wait(), 
 // the test case in the network assignment won't work!
-Lock::Lock(char* debugName) {}
-Lock::~Lock() {}
-void Lock::Acquire() {}
-void Lock::Release() {}
+Lock::Lock(char* debugName) {
+  this.name = debugName;
+  this.state = "FREE";
+  this.lockOwnerThread = new Thread("test_thread");
+  this.lockWaitQueue = new List;
+}
 
-Condition::Condition(char* debugName) { }
-Condition::~Condition() { }
-void Condition::Wait(Lock* conditionLock) { ASSERT(FALSE); }
-void Condition::Signal(Lock* conditionLock) { }
-void Condition::Broadcast(Lock* conditionLock) { }
+Lock::~Lock() {
+  delete this.lockWaitQueue;
+  delete this.lockOwnerThread;
+}
+
+
+void Lock::Acquire() {
+  IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+  //Thread already owns it
+  if (currentThread == this.lockOwnerThread) {
+    (void) interrupt->SetLevel(oldLevel);
+    printf("Lock::Acquire -> Thread %s already owns lock!", this.name);
+    return;
+  }
+
+  //If the lock is available
+  if(this.state == "FREE") {
+    this.state = "BUSY";
+    this.lockOwnerThread = currentThread;
+  } else { //otherwise it's busy
+    this.lockWaitQueue->Append((void *)currentThread);	// so go to sleep
+    currentThread->Sleep();
+  }
+  //restore interrupts
+  (void) interrupt->SetLevel(oldLevel);
+  return;
+}
+
+void Lock::Release() {
+  IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+
+  if (currentThread != this.lockOwnerThread) {
+    printf("Lock::Release()-> current Thread %s doesn't own lock!", this.name);
+    (void) interrupt->SetLevel(oldLevel);
+    return;
+  }
+
+  //Thread waiting in the queue
+  if(!this.lockWaitQueue.empty()) {
+    Thread* removedThread = (Thread *)this.lockWaitQueue->Remove();
+    this.lockOwnerThread = removedThread;
+    scheduler->ReadyToRun(removedThread);
+  } else { //Nothing else
+    this.state = "FREE";
+    this.lockOwnerThread = NULL;
+  }
+
+  (void) interrupt->SetLevel(oldLevel);
+  return;
+}
+
+bool isHeldByCurrentThread() {
+  return currentThread == this.lockOwnerThread;
+}
+
+Condition::Condition(char* debugName) { 
+  this.name = debugName;
+  this.waitingLock = NULL;
+  this.waitConditionQueue = new List;
+}
+
+Condition::~Condition() {
+  delete this.waitingLock;
+  delete this.waitConditionQueue;
+}
+
+void Condition::Wait(Lock* conditionLock) { 
+  IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+
+  if(conditionLock == NULL) {
+    printf("Condition::Wait -> conditionLock %s , in condition %s is null", conditionLock.getName(), this.getName());
+    (void) interrupt->SetLevel(oldLevel);
+    return;
+  }
+  if(this.waitingLock == NULL) {
+    this.waitingLock = conditionLock;
+  }
+  if(this.waitingLock != conditionLock) {
+    printf("Condition::Wait -> waitingLock %s, in condition %s doens't equal to ConditionLock %s", this.waitingLock.getName(), this.getName(), conditionLock.getName());
+    (void) interrupt->SetLevel(oldLevel);
+    return;
+  }
+  //All three checks are done
+  conditionLock->Release();
+  this.waitConditionQueue->Append((void *)currentThread);
+  currentThread->Sleep();
+  conditionLock->Acquire();
+
+  //Not sure what this below does
+  //ASSERT(FALSE); 
+  
+  //Restore Interrupts
+  (void) interrupt->SetLevel(oldLevel);
+  return;
+}
+
+void Condition::Signal(Lock* conditionLock) { 
+  IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+
+  if(this.waitConditionQueue->empty()) {
+    printf("Condition::Signal -> No thread waiting");
+    (void) interrupt->SetLevel(oldLevel);
+    return;
+  }
+  if(conditionLock == NULL) {
+    printf("Condition::Signal -> conditionLock %s , in condition %s is null", conditionLock.getName(), this.getName());
+    (void) interrupt->SetLevel(oldLevel);
+    return;
+  }
+  if(this.waitingLock != conditionLock) {
+    printf("Condition::Signal -> conditionLock %s , in condition %s doesn't equal to waitingLock %s", conditionLock.getName(), this.getName(), this.waitingLock.getName();
+    (void) interrupt->SetLevel(oldLevel);
+    return;
+  }
+
+  //All checks done
+  Thread* removedThread = (Thread *)this.waitConditionQueue->Remove();
+  scheduler->ReadyToRun(removedThread);
+  if(this.waitConditionQueue->empty()) {
+    this.waitingLock = NULL;
+  }
+  
+  (void) interrupt->SetLevel(oldLevel);
+  return;
+}
+
+void Condition::Broadcast(Lock* conditionLock) { 
+  if(conditionLock == NULL) {
+    printf("Condition::Broadcast -> conditionLock %s , in condition %s is null", conditionLock.getName(), this.getName());
+    return;
+  }
+  if(conditionLock != this.waitingLock) {
+    printf("Condition::Broadcast -> conditionLock %s , in condition %s doesn't equal to waitingLock %s", conditionLock.getName(), this.getName(), this.waitingLock.getName();
+    return;
+  }
+  while(!waitConditionQueue->empty()) {
+    Signal(conditionLock);
+  }
+}
