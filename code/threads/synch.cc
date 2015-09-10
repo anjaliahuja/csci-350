@@ -145,8 +145,8 @@ void Lock::Release() {
   }
 
   //Thread waiting in the queue
-  if(!this->lockWaitQueue.empty()) {
-    Thread* removedThread = (Thread *)this->lockWaitQueue->Remove();
+  if(!this->lockWaitQueue->empty()) {
+    Thread* removedThread = (Thread *)(this->lockWaitQueue->Remove());
     this->lockOwnerThread = removedThread;
     scheduler->ReadyToRun(removedThread);
   } else { //Nothing else
