@@ -158,7 +158,7 @@ void Lock::Release() {
   return;
 }
 
-bool isHeldByCurrentThread() {
+bool Lock::isHeldByCurrentThread() {
   return currentThread == this->lockOwnerThread;
 }
 
