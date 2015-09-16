@@ -754,7 +754,6 @@ void Problem2() {
         std::cout << AppClerks[0]->getTotalServiced() << " " << AppClerks[1]->getTotalServiced() << std::endl;
       }
       std::cout << "-- Test 1 Completed" << std::endl;
-      printf("does this make a difference");
     }
     else if(testSelection == 2) {
       printf("-- Starting Test 2\n");
