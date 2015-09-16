@@ -560,6 +560,21 @@ void Customer::CustomerStart() {
         }
         AppClerks[my_line]->setState(1);
         AppClerkLineLock->Release();
+        
+        // Part 2: Reached clerk counter
+        AppClerks[my_line]->Acquire();
+        // Give my data to my clerk
+        AppClerkCV[my_line]->Signal(AppClerks[my_line]->getLock());
+        // Wait for clerk to do their job
+        AppClerkCV[my_line]->Wait(AppClerks[my_line]->getLock());
+        // Read my data
+        AppClerkCV[my_line]->Signal(AppClerks[my_line]->getLock());
+        AppClerks[my_line]->Release();
+
+        // what lock is this?
+        // lock->Release()
+        currentThread->Sleep();
+        // lock->Acquire()
 
       } else {
         // PicClerkLineLock->Acquire();
