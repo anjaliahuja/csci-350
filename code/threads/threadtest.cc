@@ -632,9 +632,20 @@ void Problem2() {
   int i;
 
 
-	printf("Please select which test you would like to run:\n");
+	printf("Please select which test you would like to run:\n
+          1. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time\n
+          2. Managers only read one from one Clerk's total money received, at a time.\n
+          3. Customers do not leave until they are given their passport by the Cashier. The Cashier does not start on another customer until they know that the last Customer has left their area\n
+          4. Clerks go on break when they have no one waiting in their line\n
+          5. Managers get Clerks off their break when lines get too long\n
+          6. Total sales never suffers from a race condition\n
+          7. The behavior of Customers is proper when Senators arrive. This is before, during, and after.\n
+          8. Full simulation\n
+          9. Quit\n
+        ");
+
   int testSelection = 0;
-  while(testSelection != 8) {
+  while(testSelection != 9) {
     std::cin << testSelection;
     if(testSelection == 1) {
       printf("-- Starting Test 1\n");
@@ -677,6 +688,12 @@ void Problem2() {
       t = new Thread("ts2_t7");
       t->Fork((VoidFunctionPtr)TEST_7, 0);
       printf("-- Test 7 Completed")
+    }
+    if(testSelection == 8) {
+      printf("-- Starting Full Simulation\n");
+      t = new Thread("ts2_t8");
+      t->Fork((VoidFunctionPtr)TEST_8, 0);
+      printf("-- Full Simulation Completed")
     }
     else {
       printf("-- not a valid choice, please try again --");
