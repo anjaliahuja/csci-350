@@ -672,43 +672,43 @@ void Problem2() {
     if(testSelection == 2) {
       printf("-- Starting Test 2\n");
       t = new Thread("ts2_t2");
-      t->Fork((VoidFunctionPtr)TEST_2, 0);
+      //t->Fork((VoidFunctionPtr)TEST_2, 0);
       printf("-- Test 2 Completed")
     }
     if(testSelection == 3) {
       printf("-- Starting Test 3\n");
       t = new Thread("ts2_t3");
-      t->Fork((VoidFunctionPtr)TEST_3, 0);
+      //t->Fork((VoidFunctionPtr)TEST_3, 0);
       printf("-- Test 3 Completed")
     }
     if(testSelection == 4) {
       printf("-- Starting Test 4\n");
       t = new Thread("ts2_t4");
-      t->Fork((VoidFunctionPtr)TEST_4, 0);
+      //t->Fork((VoidFunctionPtr)TEST_4, 0);
       printf("-- Test 4 Completed")
     }
     if(testSelection == 5) {
       printf("-- Starting Test 5\n");
       t = new Thread("ts2_t5");
-      t->Fork((VoidFunctionPtr)TEST_5, 0);
+      //t->Fork((VoidFunctionPtr)TEST_5, 0);
       printf("-- Test 5 Completed")
     }
     if(testSelection == 6) {
       printf("-- Starting Test 6\n");
       t = new Thread("ts2_t6");
-      t->Fork((VoidFunctionPtr)TEST_6, 0);
+      //t->Fork((VoidFunctionPtr)TEST_6, 0);
       printf("-- Test 6 Completed")
     }
     if(testSelection == 7) {
       printf("-- Starting Test 7\n");
       t = new Thread("ts2_t7");
-      t->Fork((VoidFunctionPtr)TEST_7, 0);
+      //t->Fork((VoidFunctionPtr)TEST_7, 0);
       printf("-- Test 7 Completed")
     }
     if(testSelection == 8) {
       printf("-- Starting Full Simulation\n");
       t = new Thread("ts2_t8");
-      t->Fork((VoidFunctionPtr)TEST_8, 0);
+      //t->Fork((VoidFunctionPtr)TEST_8, 0);
       printf("-- Full Simulation Completed")
     }
     else {
