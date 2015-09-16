@@ -5,6 +5,7 @@
 #include "system.h"
 #ifdef CHANGED
 #include "synch.h"
+#include <vector>
 #endif
 
 #ifdef CHANGED
@@ -371,18 +372,8 @@ void Problem2() {
 //By: Anjali Ahuja, Anne Kao, and Bernard Xie, Started 09/13/15
 //
 //Declaring Global Variables
-//
-//Different Clerks
-AppClerk** AppClerks;
-PicClerk** PicClerks;
-PassportClerk** PassportClerks;
-Cashier** Cashiers;
-
-//List of Customers
-Customer** Customers;
 
 //Application Clerk Line
-vector<Customer*>* AppClerkLine;
 Lock* AppClerkLineLock;
 Condition* AppClerkLineCV;
 
@@ -401,42 +392,37 @@ List* CashierLine;
 Lock* CashierLineLock;
 Condition* CashierLineCV;
 
-//Defining Classes
-//Application struct that generates SSN that each Customer will hold
-struct Application {
-  public:
-    Application() {
-      SSN = new char[9];
-      for(int i = 0; i < 9; i++) {
-        SSN[i] = static_cast<char>(rand()%10);
-      }
-    }
+int NUM_CLERKS;
+int NUM_CUSTOMERS;
 
-  private:
-    char* SSN;
-}
+
+//Defining Classes
 
 //Customer class
 class Customer : public Thread{
   public:
     //custom constructor
     Customer(char* debugName) : Thread(debugName) {
-      cutomer_application = new Application();
+      ssn = 0; // pass in from test
+      name = debugName;
       app_clerk = false;
       pic_clerk = false;
       passport_clerk = false;
       cashier = false;
       money = rand()%4*500 + 100;
     }
+
+    void CustomerStart();
+
     bool is_app_completed() {
-      return visited_app_clerk && visited_pic_clerk && visited_passport_clerk;
+      return app_clerk && pic_clerk && passport_clerk;
     }
     int get_money() {
       return money;
     }
 
-    Application* get_application() {
-      return customer_application;
+    int get_ssn() {
+      return ssn;
     }
 
     void set_app_clerk() {
@@ -463,12 +449,105 @@ class Customer : public Thread{
     bool get_cashier() {
       return cashier;
     }
+/*
+TODO: This needs to be implemented after the global variables of Clerks & customers are declared
+      Declaring Clerk/Customer before or after results in an undeclared error
+   
+*/
+  private:
+    char* name;
+    int ssn;
+    bool app_clerk;
+    bool pic_clerk;
+    bool passport_clerk;
+    bool cashier;
+    int money;
+};
 
-    void CustomerStart() {
+class AppClerk : public Thread {
+  public:
+    AppClerk(char* debugName) : Thread(debugName) {
+      name = debugName;
+      lock = new Lock(debugName);
+      state = 0; //0 is available, 1 is busy, 2 is on break
+      AppClerkCV = new Condition(debugName);
+    }
+
+    void AppClerkStart() {
+      while(true) {
+        AppClerkLineLock->Acquire();
+
+        //check for bribes
+        if(lineSize != 0) {
+          AppClerkLineCV->Signal(AppClerkLineLock);
+          this->state = 1;
+        } else {
+          //Add code for on break
+          this->state = 0;
+        }
+
+        this->lock->Acquire();
+        AppClerkLineLock->Release();
+
+        //Wait for customer data
+        AppClerkCV->Wait(this->lock);
+
+        //Do my job, customer now waiting
+        AppClerkCV->Signal(this->lock);
+        AppClerkCV->Wait(this->lock);
+
+        this->lock->Release();
+      }
+    }
+
+    void Acquire() {
+      this->lock->Acquire();
+    }
+
+    void Release() {
+      this->lock->Release();
+    }
+
+    int getState() {
+      return this->state;
+    }
+
+    void setState(int s) {
+      this->state = s;
+    } 
+
+    int getLineSize() {
+      return this->lineSize;
+    }
+
+    void incrementLineSize() {
+      this->lineSize++;
+    }
+
+    void decrementLineSize() {
+      this->lineSize--;
+    }
+
+  private:
+    char* name;
+    int state;
+    Lock* lock;
+    Condition* AppClerkCV;
+    int lineSize;
+};
+
+// Declaring class global variables.
+// List of Clerks
+AppClerk** AppClerks;
+
+//List of Customers
+Customer** Customers;
+
+void Customer::CustomerStart() {
       //int task = rand()%2;
       int task = 1;
       if (task == 0) {
-        AppClerkLineLock->Aquire();
+        AppClerkLineLock->Acquire();
         int my_line = -1;
         int line_size = 9999;
         for(int i = 0; i < NUM_CLERKS; i++) {
@@ -487,113 +566,30 @@ class Customer : public Thread{
         AppClerkLineLock->Release();
 
       } else {
-        PicClerkLineLock->Aquire();
+        // PicClerkLineLock->Acquire();
       }
-    }
-
-  private:
-    Application* customer_application;
-    bool app_clerk;
-    bool pic_clerk;
-    bool passport_clerk;
-    bool cashier;
-    int money;
 }
-
-class AppClerk : public Thread {
-  public:
-    AppClerk(char* debugStatement) {
-      this -> debugStatement = debugStatement;
-      lock = new Lock();
-      state = 0; //0 is available, 1 is busy, 2 is on break
-      customerLine = new std::queue<Cusomter*>();
-      AppClerkCV = new Condition(debugStatement + " 's CV'");
-    }
-
-    void AppClerkStart() {
-      while(true) {
-        AppClerkLineLock->Aquire();
-
-        //check for bribes
-        if(!customerLine->empty()) {
-          AppClerkLineCV->Signal(clerkLineLock);
-          this->state = 1;
-        } else {
-          //Add code for on break
-          this->state = 0;
-        }
-
-        this->lock->Aquire();
-        clerkLineLock->Release();
-
-        //Wait for customer data
-        AppClerkCV->Wait(this->lock);
-
-        //Do my job, customer now waiting
-        AppClerkCV->Signal(this->lock);
-        AppClerkCV->Wait(this->lock);
-
-        this->lock->release;
-      }
-    }
-
-    void Aquire() {
-      this->lock->Aquire();
-    }
-
-    void Release() {
-      this->lock->Release();
-    }
-
-    int getState() {
-      return this->state;
-    }
-
-    int setState(int state) {
-      this->state = state;
-    } 
-
-    int getLineSize() {
-      return this->lineSize;
-    }
-
-    void incrementLineSize() {
-      this->lineSize++;
-    }
-
-    void decrementLineSize() {
-      this->lineSize--;
-    }
-
-  private:
-    char* debugStatement;
-    int state;
-    Lock* lock;
-    Condition* AppClerkCV;
-    int lineSize;
-}
-
 void TEST_1() {
-  int NUM_CUSTOMERS = 5;
-  int NUM_CLERKS = 2;
+  NUM_CUSTOMERS = 5;
+  NUM_CLERKS = 2;
 
   Customers = new Customer*[NUM_CUSTOMERS];
-  AppClerks = new AppClerks*[NUM_CLERKS];
+  AppClerks = new AppClerk*[NUM_CLERKS];
 
   AppClerkLineLock = new Lock("App Clerk Line Lock");
   AppClerkLineCV = new Condition("App Clerk Line CV");
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     Customers[i] = new Customer("customer_" + i);
-    Customers[i] -> Fork((VoidFunctionPtr) CustomerStart, i);
+   // Customers[i] -> Fork((VoidFunctionPtr) Customers[i]->CustomerStart(), 0);
   }
 
   for(int i = 0; i < NUM_CLERKS; i++) {
     AppClerks[i] = new AppClerk("appClerk_" + i);
-    AppClerks[i] -> Fork((VoidFunctionPtr) AppClerkStart, i);
+    //AppClerks[i] -> Fork((VoidFunctionPtr) AppClerkStart, i);
   }
 
-  cout >> "TEST_1 has begun" >> endl;
+  printf("TEST_1 has begun");
 }
 
 /*
