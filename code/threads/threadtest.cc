@@ -363,11 +363,6 @@ void TestSuite() {
 }
 #endif
 
-void Problem2() {
-	// Tests we have to write for problem 2
-	printf("Tests have not been written yet.\n");
-}
-
 //Code for our Passport Office Simulation
 //By: Anjali Ahuja, Anne Kao, and Bernard Xie, Started 09/13/15
 //
@@ -629,4 +624,82 @@ void TEST_1() {
  *  }
  *}
  */
+
+void Problem2() {
+	// Tests we have to write for problem 2
+  Thread *t;
+  char *name;
+  int i;
+
+
+	printf("Please select which test you would like to run:\n
+          1. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time\n
+          2. Managers only read one from one Clerk's total money received, at a time.\n
+          3. Customers do not leave until they are given their passport by the Cashier. The Cashier does not start on another customer until they know that the last Customer has left their area\n
+          4. Clerks go on break when they have no one waiting in their line\n
+          5. Managers get Clerks off their break when lines get too long\n
+          6. Total sales never suffers from a race condition\n
+          7. The behavior of Customers is proper when Senators arrive. This is before, during, and after.\n
+          8. Full simulation\n
+          9. Quit\n
+        ");
+
+  int testSelection = 0;
+  while(testSelection != 9) {
+    std::cin << testSelection;
+    if(testSelection == 1) {
+      printf("-- Starting Test 1\n");
+      t = new Thread("ts2_t1");
+      t->Fork((VoidFunctionPtr)TEST_1, 0);
+      printf("-- Test 1 Completed")
+    }
+    if(testSelection == 2) {
+      printf("-- Starting Test 2\n");
+      t = new Thread("ts2_t2");
+      t->Fork((VoidFunctionPtr)TEST_2, 0);
+      printf("-- Test 2 Completed")
+    }
+    if(testSelection == 3) {
+      printf("-- Starting Test 3\n");
+      t = new Thread("ts2_t3");
+      t->Fork((VoidFunctionPtr)TEST_3, 0);
+      printf("-- Test 3 Completed")
+    }
+    if(testSelection == 4) {
+      printf("-- Starting Test 4\n");
+      t = new Thread("ts2_t4");
+      t->Fork((VoidFunctionPtr)TEST_4, 0);
+      printf("-- Test 4 Completed")
+    }
+    if(testSelection == 5) {
+      printf("-- Starting Test 5\n");
+      t = new Thread("ts2_t5");
+      t->Fork((VoidFunctionPtr)TEST_5, 0);
+      printf("-- Test 5 Completed")
+    }
+    if(testSelection == 6) {
+      printf("-- Starting Test 6\n");
+      t = new Thread("ts2_t6");
+      t->Fork((VoidFunctionPtr)TEST_6, 0);
+      printf("-- Test 6 Completed")
+    }
+    if(testSelection == 7) {
+      printf("-- Starting Test 7\n");
+      t = new Thread("ts2_t7");
+      t->Fork((VoidFunctionPtr)TEST_7, 0);
+      printf("-- Test 7 Completed")
+    }
+    if(testSelection == 8) {
+      printf("-- Starting Full Simulation\n");
+      t = new Thread("ts2_t8");
+      t->Fork((VoidFunctionPtr)TEST_8, 0);
+      printf("-- Full Simulation Completed")
+    }
+    else {
+      printf("-- not a valid choice, please try again --");
+    }
+  }
+  printf("Quitting!");
+  return;
+}
 
