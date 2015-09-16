@@ -561,6 +561,8 @@ void Customer::CustomerStart() {
           AppClerks[my_line]->decrementLineSize();
         }
         AppClerks[my_line]->setState(1);
+        //cout that customer got into line
+        std::cout << "Customer " << this->ssn << " just entered line: " << my_line << " with size " AppClerks[my_line]->getLineSize() << std::endl;
         AppClerkLineLock->Release();
 
         // Part 2: Reached clerk counter
