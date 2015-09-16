@@ -543,6 +543,8 @@ void Customer::CustomerStart() {
       //int task = rand()%2;
       int task = 1;
       if (task == 0) {
+        // Part 1: Deciding what line for customer to enter.
+        // TODO: Modularize?
         AppClerkLineLock->Acquire();
         int my_line = -1;
         int line_size = 9999;
@@ -560,7 +562,7 @@ void Customer::CustomerStart() {
         }
         AppClerks[my_line]->setState(1);
         AppClerkLineLock->Release();
-        
+
         // Part 2: Reached clerk counter
         AppClerks[my_line]->Acquire();
         // Give my data to my clerk
