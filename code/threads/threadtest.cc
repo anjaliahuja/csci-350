@@ -524,6 +524,14 @@ class AppClerk : public Thread {
       this->lineSize--;
     }
 
+    Lock* getLock() {
+        return lock;
+    }
+
+    Condition* getCV() {
+        return AppClerkCV;
+    }
+
   private:
     char* name;
     int state;
@@ -566,14 +574,14 @@ void Customer::CustomerStart() {
         // Part 2: Reached clerk counter
         AppClerks[my_line]->Acquire();
         // Give my data to my clerk
-        AppClerkCV[my_line]->Signal(AppClerks[my_line]->getLock());
+        AppClerks[my_line]->getCV()->Signal(AppClerks[my_line]->getLock());
         // Wait for clerk to do their job
-        AppClerkCV[my_line]->Wait(AppClerks[my_line]->getLock());
+        AppClerks[my_line]->getCV()->Wait(AppClerks[my_line]->getLock());
         // Read my data
-        AppClerkCV[my_line]->Signal(AppClerks[my_line]->getLock());
+        AppClerks[my_line]->getCV()->Signal(AppClerks[my_line]->getLock());
         AppClerks[my_line]->Release();
 
-        // what lock is this?
+        // TODO: what lock is this?
         // lock->Release()
         currentThread->Sleep();
         // lock->Acquire()
@@ -582,6 +590,15 @@ void Customer::CustomerStart() {
         // PicClerkLineLock->Acquire();
       }
 }
+
+void CustomerStart(int index) {
+  Customers[index]->CustomerStart();
+}
+
+void AppClerkStart(int index) {
+  AppClerks[index]->AppClerkStart();
+}
+
 void TEST_1() {
   NUM_CUSTOMERS = 5;
   NUM_CLERKS = 2;
@@ -594,12 +611,12 @@ void TEST_1() {
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     Customers[i] = new Customer("customer_" + i);
-   // Customers[i] -> Fork((VoidFunctionPtr) Customers[i]->CustomerStart(), 0);
+    Customers[i] -> Fork((VoidFunctionPtr) CustomerStart, i);
   }
 
   for(int i = 0; i < NUM_CLERKS; i++) {
     AppClerks[i] = new AppClerk("appClerk_" + i);
-    //AppClerks[i] -> Fork((VoidFunctionPtr) AppClerkStart, i);
+    AppClerks[i] -> Fork((VoidFunctionPtr) AppClerkStart, i);
   }
 
   printf("TEST_1 has begun");
@@ -662,54 +679,54 @@ void Problem2() {
 
   int testSelection = 0;
   while(testSelection != 9) {
-    std::cin << testSelection;
+    std::cin >> testSelection;
     if(testSelection == 1) {
       printf("-- Starting Test 1\n");
       t = new Thread("ts2_t1");
       t->Fork((VoidFunctionPtr)TEST_1, 0);
-      printf("-- Test 1 Completed")
+      printf("-- Test 1 Completed");
     }
     if(testSelection == 2) {
       printf("-- Starting Test 2\n");
       t = new Thread("ts2_t2");
       //t->Fork((VoidFunctionPtr)TEST_2, 0);
-      printf("-- Test 2 Completed")
+      printf("-- Test 2 Completed");
     }
     if(testSelection == 3) {
       printf("-- Starting Test 3\n");
       t = new Thread("ts2_t3");
       //t->Fork((VoidFunctionPtr)TEST_3, 0);
-      printf("-- Test 3 Completed")
+      printf("-- Test 3 Completed");
     }
     if(testSelection == 4) {
       printf("-- Starting Test 4\n");
       t = new Thread("ts2_t4");
       //t->Fork((VoidFunctionPtr)TEST_4, 0);
-      printf("-- Test 4 Completed")
+      printf("-- Test 4 Completed");
     }
     if(testSelection == 5) {
       printf("-- Starting Test 5\n");
       t = new Thread("ts2_t5");
       //t->Fork((VoidFunctionPtr)TEST_5, 0);
-      printf("-- Test 5 Completed")
+      printf("-- Test 5 Completed");
     }
     if(testSelection == 6) {
       printf("-- Starting Test 6\n");
       t = new Thread("ts2_t6");
       //t->Fork((VoidFunctionPtr)TEST_6, 0);
-      printf("-- Test 6 Completed")
+      printf("-- Test 6 Completed");
     }
     if(testSelection == 7) {
       printf("-- Starting Test 7\n");
       t = new Thread("ts2_t7");
       //t->Fork((VoidFunctionPtr)TEST_7, 0);
-      printf("-- Test 7 Completed")
+      printf("-- Test 7 Completed");
     }
     if(testSelection == 8) {
       printf("-- Starting Full Simulation\n");
       t = new Thread("ts2_t8");
       //t->Fork((VoidFunctionPtr)TEST_8, 0);
-      printf("-- Full Simulation Completed")
+      printf("-- Full Simulation Completed");
     }
     else {
       printf("-- not a valid choice, please try again --");
