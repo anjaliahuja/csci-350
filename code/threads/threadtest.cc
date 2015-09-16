@@ -6,6 +6,7 @@
 #ifdef CHANGED
 #include "synch.h"
 #include <vector>
+#include <iostream>
 #endif
 
 #ifdef CHANGED
@@ -631,18 +632,16 @@ void Problem2() {
   char *name;
   int i;
 
-
-	printf("Please select which test you would like to run:\n
-          1. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time\n
-          2. Managers only read one from one Clerk's total money received, at a time.\n
-          3. Customers do not leave until they are given their passport by the Cashier. The Cashier does not start on another customer until they know that the last Customer has left their area\n
-          4. Clerks go on break when they have no one waiting in their line\n
-          5. Managers get Clerks off their break when lines get too long\n
-          6. Total sales never suffers from a race condition\n
-          7. The behavior of Customers is proper when Senators arrive. This is before, during, and after.\n
-          8. Full simulation\n
-          9. Quit\n
-        ");
+  std::cout << "Please select which test you would like to run:" << std::endl;
+  std::cout << "1. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time" << std::endl;
+  std::cout << "2. Managers only read one from one Clerk's total money received, at a time." << std::endl;
+  std::cout << "3. Customers do not leave until they are given their passport by the Cashier. The Cashier does not start on another customer until they know that the last Customer has left their area" << std::endl;
+  std::cout << "Clerks go on break when they have no one waiting in their line" << std::endl;
+  std::cout << "5. Managers get Clerks off their break when lines get too long" << std::endl;
+  std::cout << "6. Total sales never suffers from a race condition" << std::endl;
+  std::cout << "The behavior of Customers is proper when Senators arrive. This is before, during, and after." << std::endl;
+  std::cout << "Full simulation" << std::endl;
+  std::cout << "9. Quit" << std::endl;
 
   int testSelection = 0;
   while(testSelection != 9) {
