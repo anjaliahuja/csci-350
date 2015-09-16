@@ -388,6 +388,8 @@ List* CashierLine;
 Lock* CashierLineLock;
 Condition* CashierLineCV;
 
+Semaphore sem("sem", 0);
+
 int NUM_CLERKS;
 int NUM_CUSTOMERS;
 
@@ -467,18 +469,19 @@ class AppClerk : public Thread {
       lock = new Lock(debugName);
       state = 0; //0 is available, 1 is busy, 2 is on break
       AppClerkCV = new Condition(debugName);
+      lineSize = 0;
     }
 
     void AppClerkStart() {
       while(true) {
         AppClerkLineLock->Acquire();
 
-        //check for bribes
+        //TODO: check for bribes
         if(lineSize != 0) {
           AppClerkLineCV->Signal(AppClerkLineLock);
           this->state = 1;
         } else {
-          //Add code for on break
+          //TODO: Add code for on break
           this->state = 0;
         }
 
@@ -486,14 +489,19 @@ class AppClerk : public Thread {
         AppClerkLineLock->Release();
 
         //Wait for customer data
+        std::cout << name << " waiting for application from " << std::endl;
         AppClerkCV->Wait(this->lock);
 
         //Do my job, customer now waiting
+        std::cout << name << " filed application. " << " now waiting." << std::endl;
         AppClerkCV->Signal(this->lock);
+
         AppClerkCV->Wait(this->lock);
 
         this->lock->Release();
       }
+
+      sem.V();
     }
 
     void Acquire() {
@@ -532,6 +540,10 @@ class AppClerk : public Thread {
         return AppClerkCV;
     }
 
+    char* getName() {
+        return name;
+    }
+
   private:
     char* name;
     int state;
@@ -549,7 +561,7 @@ Customer** Customers;
 
 void Customer::CustomerStart() {
       //int task = rand()%2;
-      int task = 1;
+      int task = 0;
       if (task == 0) {
         // Part 1: Deciding what line for customer to enter.
         // TODO: Modularize?
@@ -557,7 +569,10 @@ void Customer::CustomerStart() {
         int my_line = -1;
         int line_size = 9999;
         for(int i = 0; i < NUM_CLERKS; i++) {
+            //std::cout << i << " inside for " << std::endl;
+            //std:: cout << AppClerks[i]->getLineSize() << " " << AppClerks[i]->getState();
           if(AppClerks[i]->getLineSize() < line_size && AppClerks[i]->getState() != 2) {
+            //std::cout << i << " inside if " << std::endl;
             line_size = AppClerks[i]->getLineSize();
             my_line = i;
           }
@@ -570,27 +585,32 @@ void Customer::CustomerStart() {
         }
         AppClerks[my_line]->setState(1);
         //cout that customer got into line
-        std::cout << "Customer " << this->ssn << " just entered line: " << my_line << " with size " AppClerks[my_line]->getLineSize() << std::endl;
+        std::cout << this->name << " just entered line: " << my_line << " with size " << AppClerks[my_line]->getLineSize() << std::endl;
         AppClerkLineLock->Release();
 
         // Part 2: Reached clerk counter
         AppClerks[my_line]->Acquire();
         // Give my data to my clerk
+        std::cout << this->name << " giving application to " << AppClerks[my_line]->getName() << std::endl;
         AppClerks[my_line]->getCV()->Signal(AppClerks[my_line]->getLock());
         // Wait for clerk to do their job
+        std::cout << this->name << " waiting for " << AppClerks[my_line]->getName() << std::endl;
         AppClerks[my_line]->getCV()->Wait(AppClerks[my_line]->getLock());
         // Read my data
+        std::cout << this->name << "'s application is filed" << std::endl;
         AppClerks[my_line]->getCV()->Signal(AppClerks[my_line]->getLock());
         AppClerks[my_line]->Release();
 
         // TODO: what lock is this?
         // lock->Release()
-        currentThread->Sleep();
+        // currentThread->Sleep();
         // lock->Acquire()
 
       } else {
         // PicClerkLineLock->Acquire();
       }
+
+      sem.V();
 }
 
 void CustomerStart(int index) {
@@ -603,7 +623,7 @@ void AppClerkStart(int index) {
 
 void TEST_1() {
   NUM_CUSTOMERS = 5;
-  NUM_CLERKS = 2;
+  NUM_CLERKS = 1;
 
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_CLERKS];
@@ -611,17 +631,16 @@ void TEST_1() {
   AppClerkLineLock = new Lock("App Clerk Line Lock");
   AppClerkLineCV = new Condition("App Clerk Line CV");
 
-  for(int i = 0; i < NUM_CUSTOMERS; i++){
-    Customers[i] = new Customer("customer_" + i);
-    Customers[i] -> Fork((VoidFunctionPtr) CustomerStart, i);
-  }
+  //for(int i = 0; i < NUM_CUSTOMERS; i++){
+    Customers[0] = new Customer("customer_" + 0);
+  //}
 
   for(int i = 0; i < NUM_CLERKS; i++) {
     AppClerks[i] = new AppClerk("appClerk_" + i);
-    AppClerks[i] -> Fork((VoidFunctionPtr) AppClerkStart, i);
   }
 
-  printf("TEST_1 has begun");
+  AppClerks[0]->Fork((VoidFunctionPtr)AppClerkStart, 0);
+  Customers[0]->Fork((VoidFunctionPtr)CustomerStart, 0);
 }
 
 /*
@@ -666,7 +685,6 @@ void Problem2() {
 	// Tests we have to write for problem 2
   Thread *t;
   char *name;
-  int i;
 
   std::cout << "Please select which test you would like to run:" << std::endl;
   std::cout << "1. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time" << std::endl;
@@ -685,46 +703,49 @@ void Problem2() {
     if(testSelection == 1) {
       printf("-- Starting Test 1\n");
       t = new Thread("ts2_t1");
-      t->Fork((VoidFunctionPtr)TEST_1, 0);
+      t->Fork((VoidFunctionPtr)TEST_1,0);
+      for (int i = 0; i < 2; i++) {
+        sem.P();
+      }
       printf("-- Test 1 Completed");
     }
-    if(testSelection == 2) {
+    else if(testSelection == 2) {
       printf("-- Starting Test 2\n");
       t = new Thread("ts2_t2");
       //t->Fork((VoidFunctionPtr)TEST_2, 0);
       printf("-- Test 2 Completed");
     }
-    if(testSelection == 3) {
+    else if(testSelection == 3) {
       printf("-- Starting Test 3\n");
       t = new Thread("ts2_t3");
       //t->Fork((VoidFunctionPtr)TEST_3, 0);
       printf("-- Test 3 Completed");
     }
-    if(testSelection == 4) {
+    else if(testSelection == 4) {
       printf("-- Starting Test 4\n");
       t = new Thread("ts2_t4");
       //t->Fork((VoidFunctionPtr)TEST_4, 0);
       printf("-- Test 4 Completed");
     }
-    if(testSelection == 5) {
+    else if(testSelection == 5) {
       printf("-- Starting Test 5\n");
       t = new Thread("ts2_t5");
       //t->Fork((VoidFunctionPtr)TEST_5, 0);
       printf("-- Test 5 Completed");
     }
-    if(testSelection == 6) {
+    else if(testSelection == 6) {
       printf("-- Starting Test 6\n");
       t = new Thread("ts2_t6");
       //t->Fork((VoidFunctionPtr)TEST_6, 0);
       printf("-- Test 6 Completed");
     }
-    if(testSelection == 7) {
+    else if(testSelection == 7) {
       printf("-- Starting Test 7\n");
       t = new Thread("ts2_t7");
       //t->Fork((VoidFunctionPtr)TEST_7, 0);
       printf("-- Test 7 Completed");
     }
-    if(testSelection == 8) {
+    else if(testSelection == 8) {
       printf("-- Starting Full Simulation\n");
       t = new Thread("ts2_t8");
       //t->Fork((VoidFunctionPtr)TEST_8, 0);

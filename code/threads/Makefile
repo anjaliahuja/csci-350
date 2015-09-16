@@ -295,7 +295,48 @@ threadtest.o: ../threads/threadtest.cc ../threads/copyright.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_uninitialized.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_vector.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_bvector.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/vector.tcc
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/vector.tcc \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/iostream \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/ostream \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/ios \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/char_traits.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/localefwd.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/ios_base.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/atomicity.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/sparc-sun-solaris2.10/bits/atomic_word.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/locale_classes.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/string \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/memory \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_raw_storage_iter.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/limits \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_function.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/basic_string.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/algorithm \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_algo.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_heap.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_tempbuf.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/basic_string.tcc \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/streambuf \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/streambuf.tcc \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/basic_ios.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/streambuf_iterator.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/locale_facets.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/cwctype \
+  /usr/include/wctype.h /usr/include/iso/wctype_iso.h \
+  /usr/include/iso/wctype_c99.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/sparc-sun-solaris2.10/bits/ctype_base.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/sparc-sun-solaris2.10/bits/ctype_inline.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/codecvt.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/sparc-sun-solaris2.10/bits/codecvt_specializations.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/sparc-sun-solaris2.10/bits/time_members.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/sparc-sun-solaris2.10/bits/messages_members.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/basic_ios.tcc \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/ostream.tcc \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/locale \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/locale_facets.tcc \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/typeinfo \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/istream \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/istream.tcc
 interrupt.o: ../machine/interrupt.cc \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/include/stdio.h \
   /usr/include/stdarg.h /usr/include/iso/stdarg_iso.h \
