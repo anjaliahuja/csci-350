@@ -400,9 +400,9 @@ int NUM_CUSTOMERS;
 class Customer : public Thread{
   public:
     //custom constructor
-    Customer(char* debugName) : Thread(debugName) {
-      ssn = 0; // pass in from test
-      name = debugName;
+    Customer(char* debugName, int id) : Thread(debugName) {
+      ssn = id; // pass in from test
+      name = debugName + (id+'0');
       app_clerk = false;
       pic_clerk = false;
       passport_clerk = false;
@@ -447,11 +447,7 @@ class Customer : public Thread{
     bool get_cashier() {
       return cashier;
     }
-/*
-TODO: This needs to be implemented after the global variables of Clerks & customers are declared
-      Declaring Clerk/Customer before or after results in an undeclared error
-   
-*/
+
   private:
     char* name;
     int ssn;
@@ -464,12 +460,13 @@ TODO: This needs to be implemented after the global variables of Clerks & custom
 
 class AppClerk : public Thread {
   public:
-    AppClerk(char* debugName) : Thread(debugName) {
+    AppClerk(char* debugName, int id) : Thread(debugName) {
       name = debugName;
       lock = new Lock(debugName);
       state = 0; //0 is available, 1 is busy, 2 is on break
       AppClerkCV = new Condition(debugName);
       lineSize = 0;
+      this->id = id;
     }
 
     void AppClerkStart() {
@@ -489,7 +486,7 @@ class AppClerk : public Thread {
         AppClerkLineLock->Release();
 
         //Wait for customer data
-        std::cout << name << " waiting for application from " << std::endl;
+        std::cout << name << " waiting for application" << std::endl;
         AppClerkCV->Wait(this->lock);
 
         //Do my job, customer now waiting
@@ -550,6 +547,7 @@ class AppClerk : public Thread {
     Lock* lock;
     Condition* AppClerkCV;
     int lineSize;
+    int id;
 };
 
 // Declaring class global variables.
@@ -623,7 +621,7 @@ void AppClerkStart(int index) {
 
 void TEST_1() {
   NUM_CUSTOMERS = 5;
-  NUM_CLERKS = 1;
+  NUM_CLERKS = 2;
 
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_CLERKS];
@@ -631,16 +629,17 @@ void TEST_1() {
   AppClerkLineLock = new Lock("App Clerk Line Lock");
   AppClerkLineCV = new Condition("App Clerk Line CV");
 
-  //for(int i = 0; i < NUM_CUSTOMERS; i++){
-    Customers[0] = new Customer("customer_" + 0);
-  //}
 
   for(int i = 0; i < NUM_CLERKS; i++) {
-    AppClerks[i] = new AppClerk("appClerk_" + i);
+    AppClerks[i] = new AppClerk("appClerk_", i);
+  AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
   }
 
-  AppClerks[0]->Fork((VoidFunctionPtr)AppClerkStart, 0);
-  Customers[0]->Fork((VoidFunctionPtr)CustomerStart, 0);
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    Customers[i] = new Customer("customer_", i);
+  Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
+  }
+
 }
 
 /*
@@ -701,13 +700,13 @@ void Problem2() {
   while(testSelection != 9) {
     std::cin >> testSelection;
     if(testSelection == 1) {
-      printf("-- Starting Test 1\n");
+      std::cout << "-- Test 1 Completed"<<std::endl;
       t = new Thread("ts2_t1");
       t->Fork((VoidFunctionPtr)TEST_1,0);
       for (int i = 0; i < 2; i++) {
         sem.P();
       }
-      printf("-- Test 1 Completed");
+      std::cout << "-- Test 1 Completed" << std::endl;
     }
     else if(testSelection == 2) {
       printf("-- Starting Test 2\n");
