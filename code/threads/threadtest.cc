@@ -5,7 +5,6 @@
 #include "system.h"
 #ifdef CHANGED
 #include "synch.h"
-#include <vector>
 #include <iostream>
 #endif
 
@@ -401,8 +400,8 @@ class Customer : public Thread{
   public:
     //custom constructor
     Customer(char* debugName, int id) : Thread(debugName) {
+      name = debugName;
       ssn = id; // pass in from test
-      name = debugName + (id+'0');
       app_clerk = false;
       pic_clerk = false;
       passport_clerk = false;
@@ -462,11 +461,11 @@ class AppClerk : public Thread {
   public:
     AppClerk(char* debugName, int id) : Thread(debugName) {
       name = debugName;
-      lock = new Lock(debugName);
-      state = 0; //0 is available, 1 is busy, 2 is on break
-      AppClerkCV = new Condition(debugName);
-      lineSize = 0;
       this->id = id;
+      state = 0; //0 is available, 1 is busy, 2 is on break
+      lineSize = 0;
+      lock = new Lock(debugName);
+      AppClerkCV = new Condition(debugName);
     }
 
     void AppClerkStart() {
@@ -543,11 +542,11 @@ class AppClerk : public Thread {
 
   private:
     char* name;
+    int id;
     int state;
+    int lineSize;
     Lock* lock;
     Condition* AppClerkCV;
-    int lineSize;
-    int id;
 };
 
 // Declaring class global variables.
@@ -629,15 +628,18 @@ void TEST_1() {
   AppClerkLineLock = new Lock("App Clerk Line Lock");
   AppClerkLineCV = new Condition("App Clerk Line CV");
 
-
   for(int i = 0; i < NUM_CLERKS; i++) {
-    AppClerks[i] = new AppClerk("appClerk_", i);
-  AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
+    char* debugName = new char[15];
+    sprintf(debugName, "appClerk_%d", i);
+    AppClerks[i] = new AppClerk(debugName, i);
+    AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
   }
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
-    Customers[i] = new Customer("customer_", i);
-  Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
+    char* debugName = new char[15];
+    sprintf(debugName, "customers_%d", i);
+    Customers[i] = new Customer(debugName, i);
+    Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
   }
 
 }
@@ -686,15 +688,15 @@ void Problem2() {
   char *name;
 
   std::cout << "Please select which test you would like to run:" << std::endl;
-  std::cout << "1. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time" << std::endl;
-  std::cout << "2. Managers only read one from one Clerk's total money received, at a time." << std::endl;
-  std::cout << "3. Customers do not leave until they are given their passport by the Cashier. The Cashier does not start on another customer until they know that the last Customer has left their area" << std::endl;
-  std::cout << "Clerks go on break when they have no one waiting in their line" << std::endl;
-  std::cout << "5. Managers get Clerks off their break when lines get too long" << std::endl;
-  std::cout << "6. Total sales never suffers from a race condition" << std::endl;
-  std::cout << "The behavior of Customers is proper when Senators arrive. This is before, during, and after." << std::endl;
-  std::cout << "Full simulation" << std::endl;
-  std::cout << "9. Quit" << std::endl;
+  std::cout << " 1. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time" << std::endl;
+  std::cout << " 2. Managers only read one from one Clerk's total money received, at a time." << std::endl;
+  std::cout << " 3. Customers do not leave until they are given their passport by the Cashier. The Cashier does not start on another customer until they know that the last Customer has left their area" << std::endl;
+  std::cout << " 4. Clerks go on break when they have no one waiting in their line" << std::endl;
+  std::cout << " 5. Managers get Clerks off their break when lines get too long" << std::endl;
+  std::cout << " 6. Total sales never suffers from a race condition" << std::endl;
+  std::cout << " 7. The behavior of Customers is proper when Senators arrive. This is before, during, and after." << std::endl;
+  std::cout << " 8. Full simulation" << std::endl;
+  std::cout << " 9. Quit" << std::endl;
 
   int testSelection = 0;
   while(testSelection != 9) {
@@ -703,7 +705,7 @@ void Problem2() {
       std::cout << "-- Test 1 Completed"<<std::endl;
       t = new Thread("ts2_t1");
       t->Fork((VoidFunctionPtr)TEST_1,0);
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < 7; i++) {
         sem.P();
       }
       std::cout << "-- Test 1 Completed" << std::endl;
