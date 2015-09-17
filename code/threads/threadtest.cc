@@ -1139,6 +1139,8 @@ void PassportClerkStart(int index){
 }
 
 void TEST_1() {
+  /* Customers always take the shortest line, but no 2 customers 
+  ever choose the same shortest line at the same time */
   NUM_CUSTOMERS = 2;
   NUM_APPCLERKS = 2;
 
@@ -1175,8 +1177,39 @@ void TEST_1() {
   }
 }
 
+void TEST_2() {
+  // Managers only read one from one Clerk's total money received, at a time
+
+}
+
+void TEST_3() {
+  /* Customers do not leave until they are given their passport by the Cashier. 
+  The Cashier does not start on another customer until they know that the last 
+  Customer has left their area */
+}
+
+void TEST_4() {
+  // Clerks go on break when they have no one waiting in their line
+}
+
+void TEST_5() {
+  // Managers get Clerks off their break when lines get too long
+}
+
+void TEST_6() {
+  // Total sales never suffers from a race condition
+}
+
+void TEST_7() {
+  /* The behavior of Customers is proper when Senators arrive. This is
+  before, during, and after. */
+}
+
+void FULL_SIMULATION() {
+
+}
+
 /*
- *void TEST_7() {
  *  int NUM_CUSTOMERS = 50;
  *  int NUM_APPCLERKS = 5;
  * 
@@ -1210,7 +1243,6 @@ void TEST_1() {
  *    PassportClerks[i] = new PassportClerk("ppClerk_" + i);
  *    Cashiers[i] = new Cashier("cashier_" + i);
  *  }
- *}
  */
 
 void Problem2() {
