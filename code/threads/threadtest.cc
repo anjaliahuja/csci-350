@@ -374,25 +374,21 @@ int AppClerkBribeMoney;
 
 //Picture Clerk Line
 Lock* PicClerkLineLock;
-Condition* PicClerkLineCV;
-//bribe
-Condition* PicClerkBribeLineCV;
 int PicClerkBribeMoney;
 
 //Passport Clerk Line
 Lock* PassportClerkLineLock;
-Condition* PassportClerkLineCV;
-//bribe
-Condition* PassportClerkBribeLineCV;
 int PassportClerkBribeMoney;
 
 //Cashier Line
 Lock* CashierLineLock;
-Condition* CashierLineCV;
 
 Semaphore sem("sem", 0);
 
-int NUM_APPCLERKS;
+int NUM_APP_CLERKS;
+int NUM_PIC_CLERKS;
+int NUM_PASSPORT_CLERKS;
+int NUM_CASHIERS;
 int NUM_CUSTOMERS;
 
 // For tests.  Have to sem.V() for test to finish.
@@ -647,7 +643,7 @@ int Customer::FindAppLine() {
   AppClerkLineLock->Acquire();
   int my_line = -1;
   int line_size = 9999;
-  for(int i = 0; i < NUM_APPCLERKS; i++) {
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
     if(AppClerks[i]->getLineSize() < line_size && AppClerks[i]->getState() != 2) {
       line_size = AppClerks[i]->getLineSize();
       my_line = i;
@@ -711,14 +707,14 @@ void TEST_1() {
   /* Customers always take the shortest line, but no 2 customers 
   ever choose the same shortest line at the same time */
   NUM_CUSTOMERS = 2;
-  NUM_APPCLERKS = 2;
+  NUM_APP_CLERKS = 2;
 
   Customers = new Customer*[NUM_CUSTOMERS];
-  AppClerks = new AppClerk*[NUM_APPCLERKS];
+  AppClerks = new AppClerk*[NUM_APP_CLERKS];
 
   AppClerkLineLock = new Lock("appClerk_lineLock");
 
-  for(int i = 0; i < NUM_APPCLERKS; i++) {
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
     char* debugName = new char[15];
     sprintf(debugName, "appClerk_%d", i);
     AppClerks[i] = new AppClerk(debugName, i);
@@ -736,7 +732,7 @@ void TEST_1() {
   AppClerks[0]->incrementLineSize();
   std::cout << "Ignore Condition::Signal error" << std::endl;
 
-  for(int i = 0; i < NUM_APPCLERKS; i++) {
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
     AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
   }
 
@@ -774,11 +770,11 @@ void TEST_7() {
 
 void FULL_SIMULATION() {
   Customers = new Customer*[NUM_CUSTOMERS];
-  AppClerks = new AppClerk*[NUM_APPCLERKS];
+  AppClerks = new AppClerk*[NUM_APP_CLERKS];
 
   AppClerkLineLock = new Lock("appClerk_lineLock");
 
-  for(int i = 0; i < NUM_APPCLERKS; i++) {
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
     char* debugName = new char[15];
     sprintf(debugName, "appClerk_%d", i);
     AppClerks[i] = new AppClerk(debugName, i);
@@ -790,7 +786,7 @@ void FULL_SIMULATION() {
     Customers[i] = new Customer(debugName, i);
   }
 
-  for(int i = 0; i < NUM_APPCLERKS; i++) {
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
     AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
   }
 
@@ -800,14 +796,14 @@ void FULL_SIMULATION() {
 }
 /*
  *  int NUM_CUSTOMERS = 50;
- *  int NUM_APPCLERKS = 5;
+ *  int NUM_APP_CLERKS = 5;
  * 
  *  //Declaring customers and clerks
  *  Customers = new Customer*[NUM_CUSTOMERS];
- *  AppClerks = new AppClerks*[NUM_APPCLERKS];
- *  PicClerks = new PicClerks*[NUM_APPCLERKS];
- *  PassportClerks = new PassportClerks*[NUM_APPCLERKS];
- *  Cashiers = new Cashiers*[NUM_APPCLERKS];
+ *  AppClerks = new AppClerks*[NUM_APP_CLERKS];
+ *  PicClerks = new PicClerks*[NUM_APP_CLERKS];
+ *  PassportClerks = new PassportClerks*[NUM_APP_CLERKS];
+ *  Cashiers = new Cashiers*[NUM_APP_CLERKS];
  * 
  *  //Initializing different clerks' lines
  *  AppClerkLineLock = new Lock("App Clerk Line Lock");
@@ -826,7 +822,7 @@ void FULL_SIMULATION() {
  *    Customers[i] = new Customer("customer_" + i);
  *  }
  *
- *  for(int i = 0; i < NUM_APPCLERKS; i++) {
+ *  for(int i = 0; i < NUM_APP_CLERKS; i++) {
  *    AppClerks[i] = new AppClerk("appClerk_" + i);
  *    PicClerks[i] = new PicClerk("picClerk_" + i);
  *    PassportClerks[i] = new PassportClerk("ppClerk_" + i);
@@ -912,10 +908,10 @@ void Problem2() {
       std::cout << "How many customers? ";
       std::cin >> NUM_CUSTOMERS;
       std::cout << "How many application clerks? ";
-      std::cin >> NUM_APPCLERKS;
+      std::cin >> NUM_APP_CLERKS;
       t = new Thread("ts2_fullsimulation");
       t->Fork((VoidFunctionPtr)FULL_SIMULATION, 0);
-      //for (int i = 0; i < NUM_APPCLERKS + NUM_CUSTOMERS; i++) {
+      //for (int i = 0; i < NUM_APP_CLERKS + NUM_CUSTOMERS; i++) {
         sem.P();
       //}
       std::cout << "-- Full Simulation Completed" << std::endl;
