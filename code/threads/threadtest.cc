@@ -392,6 +392,9 @@ Semaphore sem("sem", 0);
 int NUM_APPCLERKS;
 int NUM_CUSTOMERS;
 int NUM_CASHIERS;
+int NUM_PICCLERKS;
+int NUM_PASSPORTCLERKS;
+
 
 // For tests.  Have to sem.V() for test to finish.
 bool test;
@@ -415,7 +418,14 @@ class Customer : public Thread{
 
     void CustomerStart();
     int FindAppLine();
+
     void GetApplicationFiled(int my_line);
+    int FindPicLine();
+    void GetPictureTaken(int my_line);
+    int FindCashierLine();
+    void PayCashier(int my_line);
+    int FindPassportLine();
+    void GetPassport(int my_line);
 
     bool is_app_completed() {
       return app_clerk && pic_clerk && passport_clerk;
@@ -580,7 +590,7 @@ class PicClerk : public Thread {
 
     void PicClerkStart() {
       while(true) {
-        PickClerkLineLock->Acquire();
+        PicClerkLineLock->Acquire();
 
         //TODO: check for bribes
         if(lineSize != 0) {
@@ -600,7 +610,7 @@ class PicClerk : public Thread {
 
         //Do my job, customer now waiting
         std::cout << name << " took picture. " << std::endl; //<< " now waiting." << std::endl;
-        AppClerkCV->Signal(this->lock);
+        PicClerkCV->Signal(this->lock);
 
 
         std::cout << name << " waiting for customer approval" << std::endl;
@@ -784,7 +794,7 @@ class PassportClerk : public Thread {
 };
 
 class Cashier : public Thread {
-
+  public:
      Cashier(char* debugName, int id) : Thread(debugName) {
       name = debugName;
       this->id = id;
@@ -813,13 +823,8 @@ class Cashier : public Thread {
         CashierLineLock->Release();
 
     }
-
-    void TakeMoneyFromCustomer(Customer* customer){
-        money += 100; 
-        currentCustomer = customer;
-
     }
-void Acquire() {
+    void Acquire() {
       this->lock->Acquire();
     }
 
@@ -863,6 +868,12 @@ void Acquire() {
         return name;
     }
 
+    void TakeMoneyFromCustomer(Customer* customer){
+        money += 100; 
+        currentCustomer = customer;
+
+    }
+
 
 
   private:
@@ -880,10 +891,12 @@ void Acquire() {
 
 
 
-
 // Declaring class global variables.
 // List of Clerks
 AppClerk** AppClerks;
+PicClerk** PicClerks;
+PassportClerk** PassportClerks;
+Cashier** Cashiers;
 
 //List of Customers
 Customer** Customers;
@@ -1009,7 +1022,7 @@ void Customer::GetPictureTaken(int my_line){
         currentThread->Yield();
     }
     PicClerks[my_line]->Acquire();
-    if(picClerks[my_line]->state == 0 ){
+    if(PicClerks[my_line]->getState() == 0 ){
         PicClerks[my_line]->getCV()->Signal(PicClerks[my_line]->getLock());
         std::cout << this->name << "Picture is filed by" << PicClerks[my_line]->getName() << std::endl;
     }
@@ -1042,7 +1055,7 @@ int Customer::FindPassportLine() {
   return my_line;
 }
 
-void Customer::GetPassport() {
+void Customer::GetPassport(int my_line) {
     /*PassportClerks will "certify" a Customer ONLY if the 
     Customer has a filed application and picture.f a Customer shows up
      to the PassportClerk BEFORE both documenets are filed, they they 
@@ -1067,7 +1080,7 @@ void Customer::GetPassport() {
         currentThread->Yield();
     }
     PassportClerks[my_line]->Acquire();
-    if(PassportClerks[my_line]->state == 0 ){
+    if(PassportClerks[my_line]->getState() == 0 ){
         PassportClerks[my_line]->getCV()->Signal(PassportClerks[my_line]->getLock());
         std::cout << this->name << "Passport is certified by" << PassportClerks[my_line]->getName() << std::endl;
     }
@@ -1102,7 +1115,7 @@ int Customer::FindCashierLine() {
   return my_line;
 }
 
-void Customer::PayCashier() {
+void Customer::PayCashier(int my_line) {
     Cashiers[my_line]->Acquire();
     std::cout << this->name << " Going to cashier to pay for passport " << Cashiers[my_line]->getName() << std::endl;
 
@@ -1131,11 +1144,11 @@ void AppClerkStart(int index) {
 }
 
 void PicClerkStart(int index){
-    PicClerks[inxex]->PicClerkStart();
+    PicClerks[index]->PicClerkStart();
 }
 
 void PassportClerkStart(int index){
-    PassportClerkStart[index]->PassportClerkStart();
+    PassportClerks[index]->PassportClerkStart();
 }
 
 void TEST_1() {
