@@ -371,19 +371,28 @@ void TestSuite() {
 //Application Clerk Line
 Lock* AppClerkLineLock;
 Condition* AppClerkLineCV;
+//bribe
+Lock* AppClerkBribeLineLock;
+Condition* AppClerkBribeLineCV;
+int AppClerkBribeMoney;
 
 //Picture Clerk Line
-List* PicClerkLine;
 Lock* PicClerkLineLock;
 Condition* PicClerkLineCV;
+//bribe
+Lock* PicClerkBribeLineLock;
+Condition* PicClerkBribeLineCV;
+int PicClerkBribeMoney;
 
 //Passport Clerk Line
-List* PassportClerkLine;
 Lock* PassportClerkLineLock;
 Condition* PassportClerkLineCV;
+//bribe
+Lock* PassportClerkBribeLineLock;
+Condition* PassportClerkBribeLineCV;
+int PassportClerkBribeMoney;
 
 //Cashier Line
-List* CashierLine;
 Lock* CashierLineLock;
 Condition* CashierLineCV;
 
@@ -460,6 +469,8 @@ class Customer : public Thread{
     bool passport_clerk;
     bool cashier;
     int money;
+
+    Lock* lock;
 };
 
 class AppClerk : public Thread {
@@ -469,16 +480,29 @@ class AppClerk : public Thread {
       this->id = id;
       state = 0; //0 is available, 1 is busy, 2 is on break
       lineSize = 0;
+      bribeLineSize = 0;
       totalServiced = 0;
       lock = new Lock(debugName);
       AppClerkCV = new Condition(debugName);
+
+      if (id == 0) {
+        AppClerkBribeMoney = 0;
+      }
     }
 
     void AppClerkStart() {
       while(true) {
         AppClerkLineLock->Acquire();
 
-        //TODO: check for bribes
+        while (bribeLineSize != 0) {
+          AppClerkBribeLineLock->Acquire();
+          AppClerkBribeMoney += 500;
+          std::cout << name << " accepted a bribe." << std::endl;
+          AppClerkBribeLineCV->Signal(AppClerkBribeLineLock);
+          this->state = 1;
+          AppClerkBribeLineLock->Release();
+        }
+
         if(lineSize != 0) {
           AppClerkLineCV->Signal(AppClerkLineLock);
           this->state = 1;
@@ -537,6 +561,18 @@ class AppClerk : public Thread {
       this->lineSize--;
     }
 
+    int getBribeLineSize() {
+      return this->bribeLineSize;
+    }
+
+    void incrementBribeLineSize() {
+      this->bribeLineSize++;
+    }
+
+    void decrementBribeLineSize() {
+      this->bribeLineSize--;
+    }
+
     int getTotalServiced() {
         return totalServiced;
     }
@@ -558,6 +594,7 @@ class AppClerk : public Thread {
     int id;
     int state;
     int lineSize;
+    int bribeLineSize;
     int totalServiced;
     Lock* lock;
     Condition* AppClerkCV;
@@ -594,7 +631,9 @@ void Customer::CustomerStart() {
     GetApplicationFiled(my_line);
   }
 
-  sem.V();
+  if (test) {
+    sem.V();
+  }
 }
 
 int Customer::FindAppLine() {
@@ -605,6 +644,26 @@ int Customer::FindAppLine() {
     if(AppClerks[i]->getLineSize() < line_size && AppClerks[i]->getState() != 2) {
       line_size = AppClerks[i]->getLineSize();
       my_line = i;
+    }
+  }
+
+  // Bribe
+  if (money >= 600) {
+    // 30% chance customer will bribe the clerk.
+    if (rand()%100 < 60) {
+      AppClerkBribeLineLock->Acquire();
+      if (AppClerks[my_line]->getState() == 1) {
+        AppClerks[my_line]->incrementBribeLineSize();
+        AppClerkBribeLineCV->Wait(AppClerkBribeLineLock);
+        AppClerks[my_line]->decrementBribeLineSize();
+      }
+      AppClerks[my_line]->setState(1);
+      std::cout << this->name << " is bribing " << AppClerks[my_line]->getName() << std::endl;
+      money -= 500;
+      AppClerkBribeLineLock->Release();
+      AppClerkLineLock->Release();
+
+      return my_line;
     }
   }
 
@@ -635,9 +694,9 @@ void Customer::GetApplicationFiled(int my_line) {
   AppClerks[my_line]->Release();
 
   // TODO: what lock is this?
-  // lock->Release()
-  // currentThread->Sleep();
-  // lock->Acquire()
+  //lock->Release();
+  //currentThread->Sleep();
+  //lock->Acquire();
 }
 
 void CustomerStart(int index) {
@@ -657,8 +716,8 @@ void TEST_1() {
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_APPCLERKS];
 
-  AppClerkLineLock = new Lock("App Clerk Line Lock");
-  AppClerkLineCV = new Condition("App Clerk Line CV");
+  AppClerkLineLock = new Lock("appClerk_lineLock");
+  AppClerkLineCV = new Condition("appClerk_lineCV");
 
   for(int i = 0; i < NUM_APPCLERKS; i++) {
     char* debugName = new char[15];
@@ -673,7 +732,7 @@ void TEST_1() {
   }
 
   // Because we're inappropriately incrementing lineSize,
-  // an error will be thrown on the App Clerk Line CV
+  // an error will be thrown on the appClerk_lineCV
   AppClerks[0]->incrementLineSize();
   AppClerks[0]->incrementLineSize();
   std::cout << "Ignore Condition::Signal error" << std::endl;
@@ -715,7 +774,31 @@ void TEST_7() {
 }
 
 void FULL_SIMULATION() {
+  Customers = new Customer*[NUM_CUSTOMERS];
+  AppClerks = new AppClerk*[NUM_APPCLERKS];
 
+  AppClerkLineLock = new Lock("appClerk_lineLock");
+  AppClerkLineCV = new Condition("appClerk_lineCV");
+
+  for(int i = 0; i < NUM_APPCLERKS; i++) {
+    char* debugName = new char[15];
+    sprintf(debugName, "appClerk_%d", i);
+    AppClerks[i] = new AppClerk(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    char* debugName = new char[15];
+    sprintf(debugName, "customer_%d", i);
+    Customers[i] = new Customer(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_APPCLERKS; i++) {
+    AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
+  }
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
+  }
 }
 /*
  *  int NUM_CUSTOMERS = 50;
@@ -826,10 +909,15 @@ void Problem2() {
       printf("-- Test 7 Completed");
     }
     else if(testSelection == 8) {
-      printf("-- Starting Full Simulation\n");
-      t = new Thread("ts2_t8");
-      //t->Fork((VoidFunctionPtr)TEST_8, 0);
-      printf("-- Full Simulation Completed");
+      std::cout << "-- Starting Full Simulation" << std::endl;
+      std::cout << "How many customers? ";
+      std::cin >> NUM_CUSTOMERS;
+      std::cout << "How many application clerks? ";
+      std::cin >> NUM_APPCLERKS;
+      t = new Thread("ts2_fullsimulation");
+      t->Fork((VoidFunctionPtr)FULL_SIMULATION, 0);
+      sem.P();
+      std::cout << "-- Full Simulation Completed" << std::endl;
     }
     else if(testSelection == 9) {    
       printf("Quitting!");
