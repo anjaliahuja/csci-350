@@ -391,6 +391,7 @@ Semaphore sem("sem", 0);
 
 int NUM_APPCLERKS;
 int NUM_CUSTOMERS;
+int NUM_CASHIERS;
 
 // For tests.  Have to sem.V() for test to finish.
 bool test;
@@ -794,6 +795,8 @@ class Cashier : public Thread {
       CashierCV = new Condition(debugName);
     }
     void CashierStart() {
+
+        ////FINISH THIS//////
       while(true) {
         CashierLineLock->Acquire();
 
@@ -811,6 +814,11 @@ class Cashier : public Thread {
 
     }
 
+    void TakeMoneyFromCustomer(Customer* customer){
+        money += 100; 
+        currentCustomer = customer;
+
+    }
 void Acquire() {
       this->lock->Acquire();
     }
@@ -870,8 +878,6 @@ void Acquire() {
     // need current customer??
 };
 
-
-}
 
 
 
@@ -1068,8 +1074,54 @@ void Customer::GetPassport() {
     this->passport_clerk = true;
     PassportClerks[my_line]->Release();  
 
+    }
 
 }
+
+int Customer::FindCashierLine() {
+  CashierLineLock->Acquire();
+  int my_line = -1;
+  int line_size = 9999;
+  for(int i = 0; i < NUM_CASHIERS; i++) {
+    if(Cashiers[i]->getLineSize() < line_size && Cashiers[i]->getState() != 2) {
+      line_size = Cashiers[i]->getLineSize();
+      my_line = i;
+    }
+  }
+
+  if (Cashiers[my_line]->getState() == 1) {
+    Cashiers[my_line]->incrementLineSize();
+    CashierLineCV->Wait(CashierLineLock);
+    Cashiers[my_line]->decrementLineSize();
+  }
+
+  Cashiers[my_line]->setState(1);
+  std::cout << this->name << " just entered line " << my_line << " with size " << Cashiers[my_line]->getLineSize() << std::endl;
+  CashierLineLock->Release();
+
+  return my_line;
+}
+
+void Customer::PayCashier() {
+    Cashiers[my_line]->Acquire();
+    std::cout << this->name << " Going to cashier to pay for passport " << Cashiers[my_line]->getName() << std::endl;
+
+    if(this->passport_clerk == false){
+        //yield and send customer to back of line
+    }
+    else{
+        Cashiers[my_line]->TakeMoneyFromCustomer(this);
+        this->money -= 100; 
+
+        Cashiers[my_line]->getCV()->Signal(Cashiers[my_line]->getLock());    
+        Cashiers[my_line]->getCV()->Wait(Cashiers[my_line]->getLock());    
+
+
+    }
+
+}
+
+
 void CustomerStart(int index) {
   Customers[index]->CustomerStart();
 }
@@ -1080,6 +1132,10 @@ void AppClerkStart(int index) {
 
 void PicClerkStart(int index){
     PicClerks[inxex]->PicClerkStart();
+}
+
+void PassportClerkStart(int index){
+    PassportClerkStart[index]->PassportClerkStart();
 }
 
 void TEST_1() {
