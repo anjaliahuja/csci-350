@@ -621,10 +621,7 @@ class PicClerk : public Thread {
       }
     }
 
-    void TakeCustomerPicture(Customer* cust){
-
-    }
-
+   
     void Acquire() {
       this->lock->Acquire();
     }
@@ -662,7 +659,7 @@ class PicClerk : public Thread {
     }
 
     Condition* getCV() {
-        return AppClerkCV;
+        return PicClerkCV;
     }
 
     char* getName() {
@@ -678,10 +675,206 @@ class PicClerk : public Thread {
     int lineSize;
     int totalServiced;
     Lock* lock;
-    Condition* AppClerkCV;
+    Condition* PicClerkCV;
     Customer* currentCustomer;
     // need current customer??
 };
+
+class PassportClerk : public Thread {
+  public:
+    PassportClerk(char* debugName, int id) : Thread(debugName) {
+      name = debugName;
+      this->id = id;
+      state = 0; //0 is available, 1 is busy, 2 is on break
+      lineSize = 0;
+      totalServiced = 0;
+      lock = new Lock(debugName);
+      PassportClerkCV = new Condition(debugName);
+    }
+
+    void PassportClerkStart() {
+      while(true) {
+        PassportClerkLineLock->Acquire();
+
+        //TODO: check for bribes
+        if(lineSize != 0) {
+          PassportClerkLineCV->Signal(PassportClerkLineLock);
+          this->state = 1;
+        } else {
+          //TODO: Add code for on break
+          this->state = 0;
+        }
+
+        this->lock->Acquire();
+        PassportClerkLineLock->Release();
+
+        std::cout << name << " waiting for application" << std::endl;
+        PassportClerkCV->Wait(this->lock);
+
+        std::cout << name << " recording application" << std::endl;
+        PassportClerkCV->Signal(this->lock);
+
+        
+        this->lock->Release();
+        
+        if (test) {
+          sem.V();
+        }
+      }
+    }
+
+   
+    void Acquire() {
+      this->lock->Acquire();
+    }
+
+    void Release() {
+      this->lock->Release();
+    }
+
+    int getState() {
+      return this->state;
+    }
+
+    void setState(int s) {
+      this->state = s;
+    } 
+
+    int getLineSize() {
+      return this->lineSize;
+    }
+
+    void incrementLineSize() {
+      this->lineSize++;
+    }
+
+    void decrementLineSize() {
+      this->lineSize--;
+    }
+
+    int getTotalServiced() {
+        return totalServiced;
+    }
+
+    Lock* getLock() {
+        return lock;
+    }
+
+    Condition* getCV() {
+        return PassportClerkCV;
+    }
+
+    char* getName() {
+        return name;
+    }
+
+
+
+  private:
+    char* name;
+    int id;
+    int state;
+    int lineSize;
+    int totalServiced;
+    Lock* lock;
+    Condition* PassportClerkCV;
+    Customer* currentCustomer;
+    // need current customer??
+};
+
+class Cashier : public Thread {
+
+     Cashier(char* debugName, int id) : Thread(debugName) {
+      name = debugName;
+      this->id = id;
+      state = 0; //0 is available, 1 is busy, 2 is on break
+      lineSize = 0;
+      totalServiced = 0;
+      lock = new Lock(debugName);
+      CashierCV = new Condition(debugName);
+    }
+    void CashierStart() {
+      while(true) {
+        CashierLineLock->Acquire();
+
+        //TODO: check for bribes
+        if(lineSize != 0) {
+          CashierLineCV->Signal(CashierLineLock);
+          this->state = 1;
+        } else {
+          //TODO: Add code for on break
+          this->state = 0;
+        }
+
+        this->lock->Acquire();
+        CashierLineLock->Release();
+
+    }
+
+void Acquire() {
+      this->lock->Acquire();
+    }
+
+    void Release() {
+      this->lock->Release();
+    }
+
+    int getState() {
+      return this->state;
+    }
+
+    void setState(int s) {
+      this->state = s;
+    } 
+
+    int getLineSize() {
+      return this->lineSize;
+    }
+
+    void incrementLineSize() {
+      this->lineSize++;
+    }
+
+    void decrementLineSize() {
+      this->lineSize--;
+    }
+
+    int getTotalServiced() {
+        return totalServiced;
+    }
+
+    Lock* getLock() {
+        return lock;
+    }
+
+    Condition* getCV() {
+        return CashierCV;
+    }
+
+    char* getName() {
+        return name;
+    }
+
+
+
+  private:
+    char* name;
+    int id;
+    int state;
+    int lineSize;
+    int totalServiced;
+    int money;
+    Lock* lock;
+    Condition* CashierCV;
+    Customer* currentCustomer;
+    // need current customer??
+};
+
+
+}
+
+
+
 // Declaring class global variables.
 // List of Clerks
 AppClerk** AppClerks;
@@ -704,6 +897,12 @@ void Customer::CustomerStart() {
     my_line = FindPicLine();
 
     GetPictureTaken(my_line);
+
+  }
+  else { // go to passport clerk
+    my_line = FindPassportLine();
+
+    GetPassport(my_line);
 
   }
 
@@ -746,7 +945,7 @@ void Customer::GetApplicationFiled(int my_line) {
   std::cout << this->name << "'s application is filed" << std::endl;
   AppClerks[my_line]->getCV()->Signal(AppClerks[my_line]->getLock());
   AppClerks[my_line]->Release();
-
+  this->app_clerk = true;
   // TODO: what lock is this?
   // lock->Release()
   // currentThread->Sleep();
@@ -803,14 +1002,73 @@ void Customer::GetPictureTaken(int my_line){
     for(int i =100; i<1000; ++i){
         currentThread->Yield();
     }
-    picClerks[my_line]->Acquire();
+    PicClerks[my_line]->Acquire();
     if(picClerks[my_line]->state == 0 ){
         PicClerks[my_line]->getCV()->Signal(PicClerks[my_line]->getLock());
         std::cout << this->name << "Picture is filed by" << PicClerks[my_line]->getName() << std::endl;
     }
-    picClerks[my_line]->Release();  
+    this->pic_clerk = true;
+    PicClerks[my_line]->Release();  
 
+}
+
+int Customer::FindPassportLine() {
+  PassportClerkLineLock->Acquire();
+  int my_line = -1;
+  int line_size = 9999;
+  for(int i = 0; i < NUM_PASSPORTCLERKS; i++) {
+    if(PassportClerks[i]->getLineSize() < line_size && PassportClerks[i]->getState() != 2) {
+      line_size = PassportClerks[i]->getLineSize();
+      my_line = i;
     }
+  }
+
+  if (PassportClerks[my_line]->getState() == 1) {
+    PassportClerks[my_line]->incrementLineSize();
+    PassportClerkLineCV->Wait(PassportClerkLineLock);
+    PassportClerks[my_line]->decrementLineSize();
+  }
+
+  PassportClerks[my_line]->setState(1);
+  std::cout << this->name << " just entered line " << my_line << " with size " << PassportClerks[my_line]->getLineSize() << std::endl;
+  PassportClerkLineLock->Release();
+
+  return my_line;
+}
+
+void Customer::GetPassport() {
+    /*PassportClerks will "certify" a Customer ONLY if the 
+    Customer has a filed application and picture.f a Customer shows up
+     to the PassportClerk BEFORE both documenets are filed, they they 
+     (the Customer) are punished by being forec to wait for some arbitrary amount of time. 
+     This is to be from 100 to 1000 currentThread->Yield() calls. 
+     After these calls are completed, ,the Customer goes to the back of the PassportClerk line. 
+     NOTE It takes time for a PassportClerk to "record" a Customer's completed documents. */
+
+    PassportClerks[my_line]->Acquire();
+    std::cout << this->name << " Going to passport clerk to get passport taken " << PicClerks[my_line]->getName() << std::endl;
+
+    if(this->pic_clerk == false || this->app_clerk == false){
+        //send customer to back of line after yield
+    } else{
+
+
+        PassportClerks[my_line]->getCV()->Signal(PassportClerks[my_line]->getLock());
+        //waits for passport clerk to certify passport
+
+        PicClerks[my_line]->Release(); // no busy waiting
+    for(int i =100; i<1000; ++i){
+        currentThread->Yield();
+    }
+    PassportClerks[my_line]->Acquire();
+    if(PassportClerks[my_line]->state == 0 ){
+        PassportClerks[my_line]->getCV()->Signal(PassportClerks[my_line]->getLock());
+        std::cout << this->name << "Passport is certified by" << PassportClerks[my_line]->getName() << std::endl;
+    }
+    this->passport_clerk = true;
+    PassportClerks[my_line]->Release();  
+
+
 }
 void CustomerStart(int index) {
   Customers[index]->CustomerStart();
