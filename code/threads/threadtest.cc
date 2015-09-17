@@ -392,6 +392,9 @@ Semaphore sem("sem", 0);
 int NUM_APPCLERKS;
 int NUM_CUSTOMERS;
 
+// For tests.  Have to sem.V() for test to finish.
+bool test;
+
 
 //Defining Classes
 
@@ -492,15 +495,18 @@ class AppClerk : public Thread {
         AppClerkCV->Wait(this->lock);
 
         //Do my job, customer now waiting
-        std::cout << name << " filed application. " << " now waiting." << std::endl;
+        std::cout << name << " filed application. " << std::endl; //<< " now waiting." << std::endl;
         AppClerkCV->Signal(this->lock);
+        this->totalServiced++;
 
         AppClerkCV->Wait(this->lock);
 
         this->lock->Release();
-      }
 
-      sem.V();
+        if (test) {
+          sem.V();
+        }
+      }
     }
 
     void Acquire() {
@@ -525,7 +531,6 @@ class AppClerk : public Thread {
 
     void incrementLineSize() {
       this->lineSize++;
-      this->totalServiced++;
     }
 
     void decrementLineSize() {
@@ -597,10 +602,7 @@ int Customer::FindAppLine() {
   int my_line = -1;
   int line_size = 9999;
   for(int i = 0; i < NUM_APPCLERKS; i++) {
-      //std::cout << i << " inside for " << std::endl;
-      //std:: cout << AppClerks[i]->getLineSize() << " " << AppClerks[i]->getState();
     if(AppClerks[i]->getLineSize() < line_size && AppClerks[i]->getState() != 2) {
-      //std::cout << i << " inside if " << std::endl;
       line_size = AppClerks[i]->getLineSize();
       my_line = i;
     }
@@ -611,9 +613,8 @@ int Customer::FindAppLine() {
     AppClerkLineCV->Wait(AppClerkLineLock);
     AppClerks[my_line]->decrementLineSize();
   }
+
   AppClerks[my_line]->setState(1);
-  //cout that customer got into line
-  // TODO: Should we put these into debug statments?
   std::cout << this->name << " just entered line " << my_line << " with size " << AppClerks[my_line]->getLineSize() << std::endl;
   AppClerkLineLock->Release();
 
@@ -665,7 +666,7 @@ void TEST_1() {
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     char* debugName = new char[15];
-    sprintf(debugName, "customers_%d", i);
+    sprintf(debugName, "customer_%d", i);
     Customers[i] = new Customer(debugName, i);
   }
 
@@ -673,6 +674,7 @@ void TEST_1() {
   // an error will be thrown on the App Clerk Line CV
   AppClerks[0]->incrementLineSize();
   AppClerks[0]->incrementLineSize();
+  std::cout << "Ignore Condition::Signal error" << std::endl;
 
   for(int i = 0; i < NUM_APPCLERKS; i++) {
     AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
@@ -724,7 +726,7 @@ void TEST_1() {
 void Problem2() {
 	// Tests we have to write for problem 2
   Thread *t;
-  char *name;
+  test = false;
 
   std::cout << "Please select which test you would like to run:" << std::endl;
   std::cout << " 1. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time" << std::endl;
@@ -739,19 +741,21 @@ void Problem2() {
 
   int testSelection = 0;
   while(testSelection != 9) {
+    std::cout << "Enter option: ";
     std::cin >> testSelection;
     if(testSelection == 1) {
-      std::cout << "-- Test 1 Completed"<<std::endl;
+      std::cout << "-- Starting Test 1"<<std::endl;
+      test = true;
       t = new Thread("ts2_t1");
       t->Fork((VoidFunctionPtr)TEST_1,0);
       for (int i = 0; i < 4; i++) {
         sem.P();
       }
-      if (AppClerks[0]->getTotalServiced() == 2 &&
+      if (AppClerks[0]->getLineSize() == 2 &&
             AppClerks[1]->getTotalServiced() == 2) {
-        std::cout << "TEST_1 PASSED" << std::endl;
+        std::cout << "Test 1 PASSED" << std::endl;
       } else {
-        std::cout << AppClerks[0]->getTotalServiced() << " " << AppClerks[1]->getTotalServiced() << std::endl;
+        std::cout << "Test 1 FAILED" << std::endl;
       }
       std::cout << "-- Test 1 Completed" << std::endl;
     }
@@ -797,11 +801,13 @@ void Problem2() {
       //t->Fork((VoidFunctionPtr)TEST_8, 0);
       printf("-- Full Simulation Completed");
     }
+    else if(testSelection == 9) {    
+      printf("Quitting!");
+      return;
+    }
     else {
       printf("-- not a valid choice, please try again --");
     }
   }
-  printf("Quitting!");
-  return;
 }
 
