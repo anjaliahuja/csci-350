@@ -642,6 +642,10 @@ void TEST_1() {
 
 }
 
+void TEST_2() {
+
+}
+
 /*
  *void TEST_7() {
  *  int NUM_CUSTOMERS = 50;
