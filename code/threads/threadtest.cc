@@ -383,6 +383,12 @@ int PassportClerkBribeMoney;
 //Cashier Line
 Lock* CashierLineLock;
 
+//Senator
+Lock* SenatorLock;
+Condition* SenatorCV;
+int NUM_SENATORS = 0;
+bool SenatorArrived = false;
+
 Semaphore sem("sem", 0);
 
 int NUM_APP_CLERKS;
@@ -410,12 +416,12 @@ class Customer : public Thread{
       cashier = false;
       money = rand()%4*500 + 100;
 
-      senator = false;
-
       // 5% chance a customer is a senator
-      if (rand()%100 < 5) {
-        senator = true;
-        sprintf(debugName, "senator_%d", id);
+      if (rand()%100 < 100 && NUM_SENATORS < 10) {
+        SenatorArrived = true;
+        sprintf(debugName, "Senator %d", NUM_SENATORS);
+        SenatorCV = new Condition(debugName);
+        NUM_SENATORS++;
       }
     }
 
@@ -471,7 +477,6 @@ class Customer : public Thread{
     bool passport_clerk;
     bool cashier;
     int money;
-    bool senator;
 };
 
 class AppClerk : public Thread {
@@ -504,6 +509,13 @@ class AppClerk : public Thread {
 
     void AppClerkStart() {
       while(true) {
+        if (SenatorArrived) {
+          SenatorLock->Acquire();
+          std::cout << " caught a signal " << std::endl;
+          SenatorCV->Wait(SenatorLock);
+          SenatorLock->Release();
+        }
+
         AppClerkLineLock->Acquire();
 
         if (bribeLineSize != 0) {
@@ -528,7 +540,7 @@ class AppClerk : public Thread {
         //Wait for customer data
         cv->Wait(this->lock);
         std::cout << name << " has received SSN " << currentCustomer->getSSN();
-        std::cout << "from Customer " << currentCustomer->getName() << std::endl;
+        std::cout << " from " << currentCustomer->getName() << std::endl;
 
         //Do my job, customer now waiting
         cv->Signal(this->lock);
@@ -639,36 +651,48 @@ void Customer::CustomerStart() {
   // Senators get special treatment.
   // All customers not being serviced must "leave".
   // If new customers show up, they must wait outside.
-  if (senator) {
-    // make senator cut the lines? customers 
-    // don't actually have to leave..do they?
+  if (SenatorArrived) {
     // separate CV outside for customers to line up in.
+    SenatorLock->Acquire();
+
+    // signal all clerks that senator has arrived
+    //for (int i = 0; i < NUM_APP_CLERKS; i++) {
+      SenatorCV->Signal(SenatorLock);
+    //}
+
+    std::cout << "signalling" << std::endl;
+  } 
+  //int task = rand()%2;
+  int task = 0;
+  if (task == 0) {
+    // Part 1: Deciding what line for customer to enter.
+    int my_line = FindAppLine();
+
+    // Part 2: Reached clerk counter
+    GetApplicationFiled(my_line);
   } else {
-    //int task = rand()%2;
-    int task = 0;
-    if (task == 0) {
-      // Part 1: Deciding what line for customer to enter.
-      int my_line = FindAppLine();
+    // Pic clerk line stuff
+    /*
+    int my_line = FindPicLine();
+    GetPictureTaken(my_line);
+    */
 
-      // Part 2: Reached clerk counter
-      GetApplicationFiled(my_line);
-    } else {
-      // Pic clerk line stuff
-      /*
-      int my_line = FindPicLine();
-      GetPictureTaken(my_line);
-      */
+    // Part 1: Deciding what line for customer to enter.
+    int my_line = FindAppLine();
 
-      // Part 1: Deciding what line for customer to enter.
-      int my_line = FindAppLine();
+    // Part 2: Reached clerk counter
+    GetApplicationFiled(my_line);
+  }
 
-      // Part 2: Reached clerk counter
-      GetApplicationFiled(my_line);
-    }
+  if (test) {
+    sem.V();
+  }
 
-    if (test) {
-      sem.V();
-    }
+  // reset SenatorArrived after they leave
+  if (SenatorArrived) {
+    SenatorArrived = false;
+
+    SenatorLock->Release();
   }
 }
 
@@ -722,6 +746,8 @@ void Customer::GetApplicationFiled(int my_line) {
   // Read my data
   AppClerks[my_line]->getCV()->Signal(AppClerks[my_line]->getLock());
   AppClerks[my_line]->Release();
+
+  app_clerk = true;
 
   // TODO: what lock is this?
   //lock->Release();
@@ -810,6 +836,7 @@ void FULL_SIMULATION() {
   int SSN = 10000000;
 
   AppClerkLineLock = new Lock("appClerk_lineLock");
+  SenatorLock = new Lock("senator_lock");
 
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
     char* debugName = new char[20];
