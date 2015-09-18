@@ -409,6 +409,14 @@ class Customer : public Thread{
       passport_clerk = false;
       cashier = false;
       money = rand()%4*500 + 100;
+
+      senator = false;
+
+      // 5% chance a customer is a senator
+      if (rand()%100 < 5) {
+        senator = true;
+        sprintf(debugName, "senator_%d", id);
+      }
     }
 
     void CustomerStart();
@@ -451,6 +459,10 @@ class Customer : public Thread{
       return cashier;
     }
 
+    int getSSN() {
+      return ssn;
+    }
+
   private:
     char* name;
     int ssn;
@@ -459,6 +471,7 @@ class Customer : public Thread{
     bool passport_clerk;
     bool cashier;
     int money;
+    bool senator;
 };
 
 class AppClerk : public Thread {
@@ -475,6 +488,10 @@ class AppClerk : public Thread {
       lineCV = new Condition(debugName);
       bribeLineCV = new Condition(debugName);
 
+      customers = new List;
+      customersBribe = new List;
+      currentCustomer = NULL;
+
       if (id == 0) {
         AppClerkBribeMoney = 0;
       }
@@ -485,6 +502,8 @@ class AppClerk : public Thread {
       delete cv;
       delete lineCV;
       delete bribeLineCV;
+      delete customers;
+      delete customersBribe;
     }
 
     void AppClerkStart() {
@@ -493,27 +512,36 @@ class AppClerk : public Thread {
 
         if (bribeLineSize != 0) {
           AppClerkBribeMoney += 500;
+          std::cout << "ApplicationClerk " << name << " has received $500 from Customer [get id]" << std::endl;
           bribeLineCV->Signal(AppClerkLineLock);
           this->state = 1;
+          currentCustomer = (Customer*) customersBribe->Remove();
         } else if(lineSize != 0) {
+          std::cout << "ApplicationClerk " << name << " has signalled a Customer to come to their counter" << std::endl;
           lineCV->Signal(AppClerkLineLock);
           this->state = 1;
-
+          currentCustomer = (Customer*) customers->Remove();
         } else {
+          std::cout << "ApplicationClerk " << name << " is going on break" << std::endl;
           //TODO: Add code for on break
-          this->state = 0;
+          std::cout << "ApplicationClerk " << name << " is coming off break" << std::endl;
+          //this->state = 0;
+          
+          currentCustomer = (Customer*) customers->Remove();
         }
 
         AppClerkLineLock->Release();
         this->lock->Acquire();
 
         //Wait for customer data
-        std::cout << name << " waiting for application" << std::endl;
         cv->Wait(this->lock);
+        std::cout << "ApplicationClerk " << name << "has received SSN " << currentCustomer->getSSN();
+        std::cout << "from Customer " << currentCustomer->getName() << std::endl;
 
         //Do my job, customer now waiting
-        std::cout << name << " filed application. " << std::endl; //<< " now waiting." << std::endl;
         cv->Signal(this->lock);
+        std::cout << "ApplicationClerk " << name << "has recorded a completed application for ";
+        std::cout << "Customer " << currentCustomer->getName() << std::endl;
         this->totalServiced++;
 
         cv->Wait(this->lock);
@@ -591,6 +619,14 @@ class AppClerk : public Thread {
         return name;
     }
 
+    void addCustomer(Customer* customer) {
+      customers->Append((Customer*) customer);
+    }
+
+    void addCustomerBribe(Customer* customer) {
+      customersBribe->Append((Customer*) customer);
+    }
+
   private:
     char* name;
     int id;
@@ -602,6 +638,10 @@ class AppClerk : public Thread {
     Condition* cv;
     Condition* lineCV;
     Condition* bribeLineCV;
+
+    List* customers;
+    List* customersBribe;
+    Customer* currentCustomer;
 };
 
 // Declaring class global variables.
@@ -612,30 +652,39 @@ AppClerk** AppClerks;
 Customer** Customers;
 
 void Customer::CustomerStart() {
-  //int task = rand()%2;
-  int task = 0;
-  if (task == 0) {
-    // Part 1: Deciding what line for customer to enter.
-    int my_line = FindAppLine();
-
-    // Part 2: Reached clerk counter
-    GetApplicationFiled(my_line);
+  // Senators get special treatment.
+  // All customers not being serviced must "leave".
+  // If new customers show up, they must wait outside.
+  if (senator) {
+    // make senator cut the lines? customers 
+    // don't actually have to leave..do they?
+    // separate CV outside for customers to line up in.
   } else {
-    // Pic clerk line stuff
-    /*
-    int my_line = FindPicLine();
-    GetPictureTaken(my_line);
-    */
+    //int task = rand()%2;
+    int task = 0;
+    if (task == 0) {
+      // Part 1: Deciding what line for customer to enter.
+      int my_line = FindAppLine();
 
-    // Part 1: Deciding what line for customer to enter.
-    int my_line = FindAppLine();
+      // Part 2: Reached clerk counter
+      GetApplicationFiled(my_line);
+    } else {
+      // Pic clerk line stuff
+      /*
+      int my_line = FindPicLine();
+      GetPictureTaken(my_line);
+      */
 
-    // Part 2: Reached clerk counter
-    GetApplicationFiled(my_line);
-  }
+      // Part 1: Deciding what line for customer to enter.
+      int my_line = FindAppLine();
 
-  if (test) {
-    sem.V();
+      // Part 2: Reached clerk counter
+      GetApplicationFiled(my_line);
+    }
+
+    if (test) {
+      sem.V();
+    }
   }
 }
 
@@ -656,14 +705,16 @@ int Customer::FindAppLine() {
   int random = rand()%100;
   if (money >= 600 && AppClerks[my_line]->getState() == 1
       && random < 30) {
-    std::cout << this->name << " is bribing " << AppClerks[my_line]->getName() << std::endl;
+    AppClerks[my_line]->addCustomerBribe(this);
+    std::cout << "Customer " << this->name << " has gotten in bribe line for ApplicationClerk " << AppClerks[my_line]->getName() << std::endl;
     AppClerks[my_line]->incrementBribeLineSize();
     AppClerks[my_line]->getBribeLineCV()->Wait(AppClerkLineLock);
     AppClerks[my_line]->decrementBribeLineSize();
     money -= 500;
   } else {
-    std::cout << this->name << " just entered " << AppClerks[my_line]->getName() << "'s line with size " << AppClerks[my_line]->getLineSize() << std::endl;
+    AppClerks[my_line]->addCustomer(this);
     if (AppClerks[my_line]->getState() == 1) {
+      std::cout << "Customer " << this->name << " has gotten in regular line for ApplicationClerk " << AppClerks[my_line]->getName() << std::endl;
       AppClerks[my_line]->incrementLineSize();
       AppClerks[my_line]->getLineCV()->Wait(AppClerkLineLock);
       AppClerks[my_line]->decrementLineSize();
@@ -679,13 +730,13 @@ int Customer::FindAppLine() {
 void Customer::GetApplicationFiled(int my_line) {
   AppClerks[my_line]->Acquire();
   // Give my data to my clerk
-  std::cout << this->name << " giving application to " << AppClerks[my_line]->getName() << std::endl;
   AppClerks[my_line]->getCV()->Signal(AppClerks[my_line]->getLock());
+  std::cout << "Customer " << this->name << " has given SSN " << ssn << " to ApplicationClerk " << AppClerks[my_line]->getName() << std::endl;
+
   // Wait for clerk to do their job
-  std::cout << this->name << " waiting for " << AppClerks[my_line]->getName() << std::endl;
   AppClerks[my_line]->getCV()->Wait(AppClerks[my_line]->getLock());
+
   // Read my data
-  std::cout << this->name << "'s application is filed" << std::endl;
   AppClerks[my_line]->getCV()->Signal(AppClerks[my_line]->getLock());
   AppClerks[my_line]->Release();
 
@@ -708,6 +759,7 @@ void TEST_1() {
   ever choose the same shortest line at the same time */
   NUM_CUSTOMERS = 2;
   NUM_APP_CLERKS = 2;
+  int SSN = 100000000;
 
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
@@ -722,8 +774,9 @@ void TEST_1() {
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     char* debugName = new char[15];
+    SSN += rand()%(90000000/NUM_CUSTOMERS);
     sprintf(debugName, "customer_%d", i);
-    Customers[i] = new Customer(debugName, i);
+    Customers[i] = new Customer(debugName, SSN);
   }
 
   // Because we're inappropriately incrementing lineSize,
@@ -743,7 +796,6 @@ void TEST_1() {
 
 void TEST_2() {
   // Managers only read one from one Clerk's total money received, at a time
-
 }
 
 void TEST_3() {
@@ -772,6 +824,7 @@ void TEST_7() {
 void FULL_SIMULATION() {
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
+  int SSN = 10000000;
 
   AppClerkLineLock = new Lock("appClerk_lineLock");
 
@@ -783,8 +836,9 @@ void FULL_SIMULATION() {
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     char* debugName = new char[15];
+    SSN += rand()%(90000000/NUM_CUSTOMERS);
     sprintf(debugName, "customer_%d", i);
-    Customers[i] = new Customer(debugName, i);
+    Customers[i] = new Customer(debugName, SSN);
   }
 
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
@@ -795,7 +849,6 @@ void FULL_SIMULATION() {
     Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
   }
 }
-
 /*
  *  int NUM_CUSTOMERS = 50;
  *  int NUM_APP_CLERKS = 5;
