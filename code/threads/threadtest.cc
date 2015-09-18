@@ -488,8 +488,6 @@ class AppClerk : public Thread {
       lineCV = new Condition(debugName);
       bribeLineCV = new Condition(debugName);
 
-      customers = new List;
-      customersBribe = new List;
       currentCustomer = NULL;
 
       if (id == 0) {
@@ -502,8 +500,6 @@ class AppClerk : public Thread {
       delete cv;
       delete lineCV;
       delete bribeLineCV;
-      delete customers;
-      delete customersBribe;
     }
 
     void AppClerkStart() {
@@ -512,22 +508,18 @@ class AppClerk : public Thread {
 
         if (bribeLineSize != 0) {
           AppClerkBribeMoney += 500;
-          std::cout << "ApplicationClerk " << name << " has received $500 from Customer [get id]" << std::endl;
+          std::cout << name << " has received $500 from " << currentCustomer->getName() << std::endl;
           bribeLineCV->Signal(AppClerkLineLock);
           this->state = 1;
-          currentCustomer = (Customer*) customersBribe->Remove();
         } else if(lineSize != 0) {
-          std::cout << "ApplicationClerk " << name << " has signalled a Customer to come to their counter" << std::endl;
+          std::cout << name << " has signalled a Customer to come to their counter" << std::endl;
           lineCV->Signal(AppClerkLineLock);
           this->state = 1;
-          currentCustomer = (Customer*) customers->Remove();
         } else {
-          std::cout << "ApplicationClerk " << name << " is going on break" << std::endl;
+          std::cout << name << " is going on break" << std::endl;
           //TODO: Add code for on break
-          std::cout << "ApplicationClerk " << name << " is coming off break" << std::endl;
+          std::cout << name << " is coming off break" << std::endl;
           //this->state = 0;
-          
-          currentCustomer = (Customer*) customers->Remove();
         }
 
         AppClerkLineLock->Release();
@@ -535,13 +527,13 @@ class AppClerk : public Thread {
 
         //Wait for customer data
         cv->Wait(this->lock);
-        std::cout << "ApplicationClerk " << name << "has received SSN " << currentCustomer->getSSN();
+        std::cout << name << " has received SSN " << currentCustomer->getSSN();
         std::cout << "from Customer " << currentCustomer->getName() << std::endl;
 
         //Do my job, customer now waiting
         cv->Signal(this->lock);
-        std::cout << "ApplicationClerk " << name << "has recorded a completed application for ";
-        std::cout << "Customer " << currentCustomer->getName() << std::endl;
+        std::cout << name << " has recorded a completed application for ";
+        std::cout << currentCustomer->getName() << std::endl;
         this->totalServiced++;
 
         cv->Wait(this->lock);
@@ -550,8 +542,6 @@ class AppClerk : public Thread {
         if (test) {
           sem.V();
         }
-
-        // not waiting till it's filed a customer before moving onto the next...
       }
     }
 
@@ -619,12 +609,8 @@ class AppClerk : public Thread {
         return name;
     }
 
-    void addCustomer(Customer* customer) {
-      customers->Append((Customer*) customer);
-    }
-
-    void addCustomerBribe(Customer* customer) {
-      customersBribe->Append((Customer*) customer);
+    void setCustomer(Customer* customer) {
+      currentCustomer = customer;
     }
 
   private:
@@ -639,8 +625,6 @@ class AppClerk : public Thread {
     Condition* lineCV;
     Condition* bribeLineCV;
 
-    List* customers;
-    List* customersBribe;
     Customer* currentCustomer;
 };
 
@@ -705,16 +689,14 @@ int Customer::FindAppLine() {
   int random = rand()%100;
   if (money >= 600 && AppClerks[my_line]->getState() == 1
       && random < 30) {
-    AppClerks[my_line]->addCustomerBribe(this);
-    std::cout << "Customer " << this->name << " has gotten in bribe line for ApplicationClerk " << AppClerks[my_line]->getName() << std::endl;
+    std::cout << this->name << " has gotten in bribe line for " << AppClerks[my_line]->getName() << std::endl;
     AppClerks[my_line]->incrementBribeLineSize();
     AppClerks[my_line]->getBribeLineCV()->Wait(AppClerkLineLock);
     AppClerks[my_line]->decrementBribeLineSize();
     money -= 500;
   } else {
-    AppClerks[my_line]->addCustomer(this);
     if (AppClerks[my_line]->getState() == 1) {
-      std::cout << "Customer " << this->name << " has gotten in regular line for ApplicationClerk " << AppClerks[my_line]->getName() << std::endl;
+      std::cout << this->name << " has gotten in regular line for " << AppClerks[my_line]->getName() << std::endl;
       AppClerks[my_line]->incrementLineSize();
       AppClerks[my_line]->getLineCV()->Wait(AppClerkLineLock);
       AppClerks[my_line]->decrementLineSize();
@@ -729,9 +711,10 @@ int Customer::FindAppLine() {
 
 void Customer::GetApplicationFiled(int my_line) {
   AppClerks[my_line]->Acquire();
+  AppClerks[my_line]->setCustomer(this);
   // Give my data to my clerk
   AppClerks[my_line]->getCV()->Signal(AppClerks[my_line]->getLock());
-  std::cout << "Customer " << this->name << " has given SSN " << ssn << " to ApplicationClerk " << AppClerks[my_line]->getName() << std::endl;
+  std::cout << this->name << " has given SSN " << ssn << " to " << AppClerks[my_line]->getName() << std::endl;
 
   // Wait for clerk to do their job
   AppClerks[my_line]->getCV()->Wait(AppClerks[my_line]->getLock());
@@ -767,15 +750,15 @@ void TEST_1() {
   AppClerkLineLock = new Lock("appClerk_lineLock");
 
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
-    char* debugName = new char[15];
-    sprintf(debugName, "appClerk_%d", i);
+    char* debugName = new char[20];
+    sprintf(debugName, "ApplicationClerk %d", i);
     AppClerks[i] = new AppClerk(debugName, i);
   }
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
-    char* debugName = new char[15];
+    char* debugName = new char[20];
     SSN += rand()%(90000000/NUM_CUSTOMERS);
-    sprintf(debugName, "customer_%d", i);
+    sprintf(debugName, "Customer %d", i);
     Customers[i] = new Customer(debugName, SSN);
   }
 
@@ -829,15 +812,15 @@ void FULL_SIMULATION() {
   AppClerkLineLock = new Lock("appClerk_lineLock");
 
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
-    char* debugName = new char[15];
-    sprintf(debugName, "appClerk_%d", i);
+    char* debugName = new char[20];
+    sprintf(debugName, "ApplicationClerk %d", i);
     AppClerks[i] = new AppClerk(debugName, i);
   }
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     char* debugName = new char[15];
     SSN += rand()%(90000000/NUM_CUSTOMERS);
-    sprintf(debugName, "customer_%d", i);
+    sprintf(debugName, "Customer %d", i);
     Customers[i] = new Customer(debugName, SSN);
   }
 
