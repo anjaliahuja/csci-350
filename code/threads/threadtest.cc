@@ -479,9 +479,7 @@ class AppClerk : public Thread {
     AppClerk(char* debugName, int id) : Thread(debugName) {
       name = debugName;
       this->id = id;
-      state = 0; //0 is available, 1 is busy, 2 is on break
-      lineSize = 0;
-      bribeLineSize = 0;
+      state = 0; //0 is available, 1 is busy, 2 is on break 
       totalServiced = 0;
       lock = new Lock(debugName);
       cv = new Condition(debugName);
@@ -506,25 +504,24 @@ class AppClerk : public Thread {
       while(true) {
          AppClerkLineLock->Acquire();
 
-        if (bribeLine->size() != 0) {
+        if (getBribeLineSize() != 0) {
           bribeLineCV->Signal(AppClerkLineLock);
           currentCustomer = bribeLine->front();
           std::cout << name << " has received $500 from " << currentCustomer->getName() << std::endl;
           AppClerkBribeMoney += 500;
           this->state = 1;
           bribeLine->pop();
-        } else if(line->size() != 0) {
+        } else if(getLineSize() != 0) {
           lineCV->Signal(AppClerkLineLock);
           currentCustomer = line->front();
           std::cout << name << " has signalled a Customer to come to their counter" << std::endl;
           this->state = 1;
           line->pop();
         } else {
-          currentCustomer = NULL;
           std::cout << name << " is going on break" << std::endl;
           //TODO: Add code for on break
           std::cout << name << " is coming off break" << std::endl;
-          //this->state = 0;
+          this->state = 0;
         }
 
         AppClerkLineLock->Release();
@@ -541,7 +538,9 @@ class AppClerk : public Thread {
         std::cout << currentCustomer->getName() << std::endl;
         this->totalServiced++;
 
+        // do you need this wait? why does the customer need to signal back
         cv->Wait(this->lock);
+        currentCustomer = NULL;
         this->lock->Release();
 
         if (test) {
@@ -567,7 +566,9 @@ class AppClerk : public Thread {
     } 
 
     int getLineSize() {
-      return line->size();
+      // queue includes current customer.
+      if (line->empty()) return 0;
+      return line->size() - 1;
     }
 
     int getBribeLineSize() {
@@ -599,11 +600,10 @@ class AppClerk : public Thread {
     }
 
     void addToLine(Customer* customer) {
-      if (currentCustomer != NULL){
-        line->push(customer);
-      } else if (line->empty()) {
+      if (line->empty()) {
         currentCustomer = customer;
       }
+      line->push(customer);
     }
 
     void addToBribeLine(Customer* customer) {
@@ -614,8 +614,6 @@ class AppClerk : public Thread {
     char* name;
     int id;
     int state;
-    int lineSize;
-    int bribeLineSize;
     int totalServiced;
     Lock* lock;
     Condition* cv;
@@ -634,8 +632,6 @@ class PicClerk : public Thread {
       name = debugName;
       this->id = id;
       state = 0; //0 is available, 1 is busy, 2 is on break
-      lineSize = 0;
-      bribeLineSize = 0;
       totalServiced = 0;
       lock = new Lock(debugName);
       cv = new Condition(debugName);
@@ -661,24 +657,28 @@ class PicClerk : public Thread {
         PicClerkLineLock->Acquire();
 
         //TODO: check for bribes
-        if (bribeLine->size() != 0) {
+        if (getBribeLineSize() != 0) {
           bribeLineCV->Signal(PicClerkLineLock);
           currentCustomer = bribeLine->front();
           PicClerkBribeMoney += 500;
           this->state = 1;
           bribeLine->pop();
-        } else if(line->size() != 0) {
+        } else if(getLineSize() != 0) {
           lineCV->Signal(PicClerkLineLock);
           currentCustomer = line->front();
           std::cout << name << " has signalled a Customer to come to their counter" << std::endl;
           this->state = 1;
           line->pop();
         } else {
-          currentCustomer = NULL;
           std::cout << name << " is going on break" << std::endl;
           //TODO: Add code for on break
           std::cout << name << " is coming off break" << std::endl;
           this->state = 0;
+        }
+
+        if (currentCustomer == NULL && getLineSize() == 0) {
+          currentCustomer = line->front();
+          line->pop();
         }
 
         this->lock->Acquire();
@@ -696,20 +696,30 @@ class PicClerk : public Thread {
         //waiting for approval
         cv->Wait(this->lock);
 
-        // TODO: Implement.  call a function from customer when they reject it?
-        std::cout << name << " has been told that " << currentCustomer->getName();
-        std::cout << " does not like their picture" << std::endl;
+        if (!likePicture) {
+          std::cout << name << " has been told that " << currentCustomer->getName();
+          std::cout << " does not like their picture" << std::endl;
+          // Signals customer to go to the back of the line
+          cv->Signal(this->lock);
+        }
+        else {
+          std::cout << name << " has been told that " << currentCustomer->getName();
+          std::cout << " does like their picture" << std::endl;
 
-        std::cout << name << " has been told that " << currentCustomer->getName();
-        std::cout << " does like their picture" << std::endl;
+          // file application
+          lock->Release(); // no busy waiting
+          for(int i =100; i<1000; ++i){
+              currentThread->Yield();
+          }
+          lock->Acquire();
 
-        //appliation filed
-        cv->Signal(this->lock);
+          //appliation filed
+          cv->Signal(this->lock);
+          totalServiced++;
+        }
 
-        totalServiced++;
-
-        cv->Wait(this->lock);
-
+        //cv->Wait(this->lock);
+        currentCustomer = NULL;
         this->lock->Release();
         
         if (test) {
@@ -735,7 +745,9 @@ class PicClerk : public Thread {
     } 
 
     int getLineSize() {
-      return line->size();
+      // line includes currentCustomer
+      if (line->empty()) return 0;
+      return line->size() - 1;
     }
 
     int getBribeLineSize() {
@@ -767,24 +779,26 @@ class PicClerk : public Thread {
     }
 
     void addToLine(Customer* customer) {
-      if (currentCustomer != NULL){
-        line->push(customer);
-      } else if (line->empty()) {
+      if (line->empty()) {
         currentCustomer = customer;
-      }
+      }  
+      line->push(customer);
     }
 
     void addToBribeLine(Customer* customer) {
       bribeLine->push(customer);
     }
 
+    void setLikePicture(bool like) {
+      likePicture = like;
+    }
+
   private:
     char* name;
     int id;
     int state;
-    int lineSize;
-    int bribeLineSize;
     int totalServiced;
+    bool likePicture;
     Lock* lock;
     Condition* cv;
     Condition* lineCV;
@@ -1098,7 +1112,7 @@ void Customer::GetApplicationFiled(int my_line) {
   // Wait for clerk to do their job
   AppClerks[my_line]->getCV()->Wait(AppClerks[my_line]->getLock());
 
-  // Read my data
+  // why do we need to signal the clerk again.
   AppClerks[my_line]->getCV()->Signal(AppClerks[my_line]->getLock());
   AppClerks[my_line]->Release();
   this->app_clerk = true;
@@ -1153,28 +1167,28 @@ void Customer::GetPictureTaken(int my_line){
     //Waits for pic clerk to take picture
     PicClerks[my_line]->getCV()->Wait(PicClerks[my_line]->getLock());
     //Checking picture
-    int dislikePicture = 51; //chooses percentage between 1-99
-    while(dislikePicture > 50)  {      
-        dislikePicture = rand () % 100 + 1;
-
+    int dislikePicture = rand () % 100 + 1; //chooses percentage between 1-99
+    if (dislikePicture > 50)  {
         std::cout << this->name << " does not like their picture from " << PicClerks[my_line]->getName() << std::endl;
+        PicClerks[my_line]->setLikePicture(false);
         PicClerks[my_line]->getCV()->Signal(PicClerks[my_line]->getLock());
-        
-        //Waits for pic clerk to take picture
+        // // Has to get back in a line.
+        // Wait to make sure that clerk acknowledges & then go back in line
         PicClerks[my_line]->getCV()->Wait(PicClerks[my_line]->getLock());
-        //Checking picture
+
+        PicClerks[my_line]->Release();
+        GetPictureTaken(FindPicLine());
     }
+
     //Customer likes picture enough
+    PicClerks[my_line]->setLikePicture(true);
     std::cout << this->name << " does like their picture from " << PicClerks[my_line]->getName() << std::endl;
-    //PicClerkDoesJob after waiting
-    PicClerks[my_line]->Release(); // no busy waiting
-    for(int i =100; i<1000; ++i){
-        currentThread->Yield();
-    }
-    PicClerks[my_line]->Acquire();
-    if(PicClerks[my_line]->getState() == 0 ){
-        PicClerks[my_line]->getCV()->Signal(PicClerks[my_line]->getLock());
-    }
+    // Signal clerk and Wait to make sure that clerk acknowledges.
+    PicClerks[my_line]->getCV()->Signal(PicClerks[my_line]->getLock());
+
+    // Wait for application to be complete
+    PicClerks[my_line]->getCV()->Wait(PicClerks[my_line]->getLock());
+
     this->pic_clerk = true;
     PicClerks[my_line]->Release();  
 }
