@@ -1,4 +1,4 @@
-//	Simple test cases for the threads assignment.
+//  Simple test cases for the threads assignment.
 //
 
 #include "copyright.h"
@@ -25,7 +25,7 @@ Semaphore t1_s3("t1_s3",0);       // To make sure t1_t1 does not release the
                                   // lock before t1_t3 tries to acquire it
 Semaphore t1_done("t1_done",0);   // So that TestSuite knows when Test 1 is
                                   // done
-Lock t1_l1("t1_l1");		  // the lock tested in Test 1
+Lock t1_l1("t1_l1");          // the lock tested in Test 1
 
 // --------------------------------------------------
 // t1_t1() -- test1 thread 1
@@ -36,12 +36,12 @@ void t1_t1() {
     t1_s1.V();  // Allow t1_t2 to try to Acquire Lock
  
     printf ("%s: Acquired Lock %s, waiting for t3\n",currentThread->getName(),
-	    t1_l1.getName());
+        t1_l1.getName());
     t1_s3.P();
     printf ("%s: working in CS\n",currentThread->getName());
     for (int i = 0; i < 1000000; i++) ;
     printf ("%s: Releasing Lock %s\n",currentThread->getName(),
-	    t1_l1.getName());
+        t1_l1.getName());
     t1_l1.Release();
     t1_done.V();
 }
@@ -52,19 +52,19 @@ void t1_t1() {
 // --------------------------------------------------
 void t1_t2() {
 
-    t1_s1.P();	// Wait until t1 has the lock
+    t1_s1.P();  // Wait until t1 has the lock
     t1_s2.V();  // Let t3 try to acquire the lock
 
     printf("%s: trying to acquire lock %s\n",currentThread->getName(),
-	    t1_l1.getName());
+        t1_l1.getName());
     t1_l1.Acquire();
 
     printf ("%s: Acquired Lock %s, working in CS\n",currentThread->getName(),
-	    t1_l1.getName());
+        t1_l1.getName());
     for (int i = 0; i < 10; i++)
-	;
+    ;
     printf ("%s: Releasing Lock %s\n",currentThread->getName(),
-	    t1_l1.getName());
+        t1_l1.getName());
     t1_l1.Release();
     t1_done.V();
 }
@@ -75,22 +75,22 @@ void t1_t2() {
 // --------------------------------------------------
 void t1_t3() {
 
-    t1_s2.P();	// Wait until t2 is ready to try to acquire the lock
+    t1_s2.P();  // Wait until t2 is ready to try to acquire the lock
 
-    t1_s3.V();	// Let t1 do it's stuff
+    t1_s3.V();  // Let t1 do it's stuff
     for ( int i = 0; i < 3; i++ ) {
-	printf("%s: Trying to release Lock %s\n",currentThread->getName(),
-	       t1_l1.getName());
-	t1_l1.Release();
+    printf("%s: Trying to release Lock %s\n",currentThread->getName(),
+           t1_l1.getName());
+    t1_l1.Release();
     }
 }
 
 // --------------------------------------------------
 // Test 2 - see TestSuite() for details
 // --------------------------------------------------
-Lock t2_l1("t2_l1");		// For mutual exclusion
-Condition t2_c1("t2_c1");	// The condition variable to test
-Semaphore t2_s1("t2_s1",0);	// To ensure the Signal comes before the wait
+Lock t2_l1("t2_l1");        // For mutual exclusion
+Condition t2_c1("t2_c1");   // The condition variable to test
+Semaphore t2_s1("t2_s1",0); // To ensure the Signal comes before the wait
 Semaphore t2_done("t2_done",0);     // So that TestSuite knows when Test 2 is
                                   // done
 
@@ -101,12 +101,12 @@ Semaphore t2_done("t2_done",0);     // So that TestSuite knows when Test 2 is
 void t2_t1() {
     t2_l1.Acquire();
     printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName(),
-	   t2_l1.getName(), t2_c1.getName());
+       t2_l1.getName(), t2_c1.getName());
     t2_c1.Signal(&t2_l1);
     printf("%s: Releasing Lock %s\n",currentThread->getName(),
-	   t2_l1.getName());
+       t2_l1.getName());
     t2_l1.Release();
-    t2_s1.V();	// release t2_t2
+    t2_s1.V();  // release t2_t2
     t2_done.V();
 }
 
@@ -115,21 +115,21 @@ void t2_t1() {
 //     This thread will wait on a pre-signalled variable
 // --------------------------------------------------
 void t2_t2() {
-    t2_s1.P();	// Wait for t2_t1 to be done with the lock
+    t2_s1.P();  // Wait for t2_t1 to be done with the lock
     t2_l1.Acquire();
     printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
-	   t2_l1.getName(), t2_c1.getName());
+       t2_l1.getName(), t2_c1.getName());
     t2_c1.Wait(&t2_l1);
     printf("%s: Releasing Lock %s\n",currentThread->getName(),
-	   t2_l1.getName());
+       t2_l1.getName());
     t2_l1.Release();
 }
 // --------------------------------------------------
 // Test 3 - see TestSuite() for details
 // --------------------------------------------------
-Lock t3_l1("t3_l1");		// For mutual exclusion
-Condition t3_c1("t3_c1");	// The condition variable to test
-Semaphore t3_s1("t3_s1",0);	// To ensure the Signal comes before the wait
+Lock t3_l1("t3_l1");        // For mutual exclusion
+Condition t3_c1("t3_c1");   // The condition variable to test
+Semaphore t3_s1("t3_s1",0); // To ensure the Signal comes before the wait
 Semaphore t3_done("t3_done",0); // So that TestSuite knows when Test 3 is
                                 // done
 
@@ -140,9 +140,9 @@ Semaphore t3_done("t3_done",0); // So that TestSuite knows when Test 3 is
 // --------------------------------------------------
 void t3_waiter() {
     t3_l1.Acquire();
-    t3_s1.V();		// Let the signaller know we're ready to wait
+    t3_s1.V();      // Let the signaller know we're ready to wait
     printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
-	   t3_l1.getName(), t3_c1.getName());
+       t3_l1.getName(), t3_c1.getName());
     t3_c1.Wait(&t3_l1);
     printf("%s: freed from %s\n",currentThread->getName(), t3_c1.getName());
     t3_l1.Release();
@@ -160,10 +160,10 @@ void t3_signaller() {
     // Don't signal until someone's waiting
     
     for ( int i = 0; i < 5 ; i++ ) 
-	t3_s1.P();
+    t3_s1.P();
     t3_l1.Acquire();
     printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName(),
-	   t3_l1.getName(), t3_c1.getName());
+       t3_l1.getName(), t3_c1.getName());
     t3_c1.Signal(&t3_l1);
     printf("%s: Releasing %s\n",currentThread->getName(), t3_l1.getName());
     t3_l1.Release();
@@ -173,9 +173,9 @@ void t3_signaller() {
 // --------------------------------------------------
 // Test 4 - see TestSuite() for details
 // --------------------------------------------------
-Lock t4_l1("t4_l1");		// For mutual exclusion
-Condition t4_c1("t4_c1");	// The condition variable to test
-Semaphore t4_s1("t4_s1",0);	// To ensure the Signal comes before the wait
+Lock t4_l1("t4_l1");        // For mutual exclusion
+Condition t4_c1("t4_c1");   // The condition variable to test
+Semaphore t4_s1("t4_s1",0); // To ensure the Signal comes before the wait
 Semaphore t4_done("t4_done",0); // So that TestSuite knows when Test 4 is
                                 // done
 
@@ -186,9 +186,9 @@ Semaphore t4_done("t4_done",0); // So that TestSuite knows when Test 4 is
 // --------------------------------------------------
 void t4_waiter() {
     t4_l1.Acquire();
-    t4_s1.V();		// Let the signaller know we're ready to wait
+    t4_s1.V();      // Let the signaller know we're ready to wait
     printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
-	   t4_l1.getName(), t4_c1.getName());
+       t4_l1.getName(), t4_c1.getName());
     t4_c1.Wait(&t4_l1);
     printf("%s: freed from %s\n",currentThread->getName(), t4_c1.getName());
     t4_l1.Release();
@@ -206,10 +206,10 @@ void t4_signaller() {
     // Don't broadcast until someone's waiting
     
     for ( int i = 0; i < 5 ; i++ ) 
-	t4_s1.P();
+    t4_s1.P();
     t4_l1.Acquire();
     printf("%s: Lock %s acquired, broadcasting %s\n",currentThread->getName(),
-	   t4_l1.getName(), t4_c1.getName());
+       t4_l1.getName(), t4_c1.getName());
     t4_c1.Broadcast(&t4_l1);
     printf("%s: Releasing %s\n",currentThread->getName(), t4_l1.getName());
     t4_l1.Release();
@@ -218,10 +218,10 @@ void t4_signaller() {
 // --------------------------------------------------
 // Test 5 - see TestSuite() for details
 // --------------------------------------------------
-Lock t5_l1("t5_l1");		// For mutual exclusion
-Lock t5_l2("t5_l2");		// Second lock for the bad behavior
-Condition t5_c1("t5_c1");	// The condition variable to test
-Semaphore t5_s1("t5_s1",0);	// To make sure t5_t2 acquires the lock after
+Lock t5_l1("t5_l1");        // For mutual exclusion
+Lock t5_l2("t5_l2");        // Second lock for the bad behavior
+Condition t5_c1("t5_c1");   // The condition variable to test
+Semaphore t5_s1("t5_s1",0); // To make sure t5_t2 acquires the lock after
                                 // t5_t1
 
 // --------------------------------------------------
@@ -230,12 +230,12 @@ Semaphore t5_s1("t5_s1",0);	// To make sure t5_t2 acquires the lock after
 // --------------------------------------------------
 void t5_t1() {
     t5_l1.Acquire();
-    t5_s1.V();	// release t5_t2
+    t5_s1.V();  // release t5_t2
     printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
-	   t5_l1.getName(), t5_c1.getName());
+       t5_l1.getName(), t5_c1.getName());
     t5_c1.Wait(&t5_l1);
     printf("%s: Releasing Lock %s\n",currentThread->getName(),
-	   t5_l1.getName());
+       t5_l1.getName());
     t5_l1.Release();
 }
 
@@ -245,17 +245,17 @@ void t5_t1() {
 //     a Fatal error
 // --------------------------------------------------
 void t5_t2() {
-    t5_s1.P();	// Wait for t5_t1 to get into the monitor
+    t5_s1.P();  // Wait for t5_t1 to get into the monitor
     t5_l1.Acquire();
     t5_l2.Acquire();
     printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName(),
-	   t5_l2.getName(), t5_c1.getName());
+       t5_l2.getName(), t5_c1.getName());
     t5_c1.Signal(&t5_l2);
     printf("%s: Releasing Lock %s\n",currentThread->getName(),
-	   t5_l2.getName());
+       t5_l2.getName());
     t5_l2.Release();
     printf("%s: Releasing Lock %s\n",currentThread->getName(),
-	   t5_l1.getName());
+       t5_l1.getName());
     t5_l1.Release();
 }
 
@@ -272,7 +272,7 @@ void t5_t2() {
 //
 //       3.  Show that Signal only wakes 1 thread
 //
-//	 4.  Show that Broadcast wakes all waiting threads
+//   4.  Show that Broadcast wakes all waiting threads
 //
 //       5.  Show that Signalling a thread waiting under one lock
 //       while holding another is a Fatal error
@@ -299,7 +299,7 @@ void TestSuite() {
 
     // Wait for Test 1 to complete
     for (  i = 0; i < 2; i++ )
-	t1_done.P();
+    t1_done.P();
 
     // Test 2
 
@@ -320,34 +320,34 @@ void TestSuite() {
     printf("Starting Test 3\n");
 
     for (  i = 0 ; i < 5 ; i++ ) {
-	name = new char [20];
-	sprintf(name,"t3_waiter%d",i);
-	t = new Thread(name);
-	t->Fork((VoidFunctionPtr)t3_waiter,0);
+    name = new char [20];
+    sprintf(name,"t3_waiter%d",i);
+    t = new Thread(name);
+    t->Fork((VoidFunctionPtr)t3_waiter,0);
     }
     t = new Thread("t3_signaller");
     t->Fork((VoidFunctionPtr)t3_signaller,0);
 
     // Wait for Test 3 to complete
     for (  i = 0; i < 2; i++ )
-	t3_done.P();
+    t3_done.P();
 
     // Test 4
 
     printf("Starting Test 4\n");
 
     for (  i = 0 ; i < 5 ; i++ ) {
-	name = new char [20];
-	sprintf(name,"t4_waiter%d",i);
-	t = new Thread(name);
-	t->Fork((VoidFunctionPtr)t4_waiter,0);
+    name = new char [20];
+    sprintf(name,"t4_waiter%d",i);
+    t = new Thread(name);
+    t->Fork((VoidFunctionPtr)t4_waiter,0);
     }
     t = new Thread("t4_signaller");
     t->Fork((VoidFunctionPtr)t4_signaller,0);
 
     // Wait for Test 4 to complete
     for (  i = 0; i < 6; i++ )
-	t4_done.P();
+    t4_done.P();
 
     // Test 5
 
@@ -410,19 +410,20 @@ class Customer : public Thread{
       pic_clerk = false;
       passport_clerk = false;
       cashier = false;
+      sendToBackOfLine = false;
       money = rand()%4*500 + 100;
     }
 
     void CustomerStart();
     int FindAppLine();
-
     void GetApplicationFiled(int my_line);
     int FindPicLine();
     void GetPictureTaken(int my_line);
+    int FindPassportLine();
+    void GetPassport(int my_line);
+
     // int FindCashierLine();
     // void PayCashier(int my_line);
-    // int FindPassportLine();
-    // void GetPassport(int my_line);
 
     bool is_app_completed() {
       return app_clerk && pic_clerk && passport_clerk;
@@ -464,6 +465,10 @@ class Customer : public Thread{
       return ssn;
     }
 
+    void setSendToBackOfLine() {
+      sendToBackOfLine == true;
+    }
+
   private:
     char* name;
     int ssn;
@@ -471,6 +476,7 @@ class Customer : public Thread{
     bool pic_clerk;
     bool passport_clerk;
     bool cashier;
+    bool sendToBackOfLine;
     int money;
 };
 
@@ -532,7 +538,14 @@ class AppClerk : public Thread {
         std::cout << name << " has received SSN " << currentCustomer->getSSN();
         std::cout << " from " << currentCustomer->getName() << std::endl;
 
-        //Do my job, customer now waiting
+        // File application
+        lock->Release(); // no busy waiting
+        for(int i =20; i<100; ++i){
+            currentThread->Yield();
+        }
+        lock->Acquire();
+
+        // Application filed
         cv->Signal(this->lock);
         std::cout << name << " has recorded a completed application for ";
         std::cout << currentCustomer->getName() << std::endl;
@@ -598,9 +611,6 @@ class AppClerk : public Thread {
     }
 
     void addToLine(Customer* customer) {
-      if (line->empty()) {
-        currentCustomer = customer;
-      }
       line->push(customer);
     }
 
@@ -703,14 +713,14 @@ class PicClerk : public Thread {
           std::cout << name << " has been told that " << currentCustomer->getName();
           std::cout << " does like their picture" << std::endl;
 
-          // file application
+          // file picture
           lock->Release(); // no busy waiting
-          for(int i =100; i<1000; ++i){
+          for(int i =20; i<100; ++i){
               currentThread->Yield();
           }
           lock->Acquire();
 
-          //appliation filed
+          //picture filed
           cv->Signal(this->lock);
           totalServiced++;
         }
@@ -774,10 +784,7 @@ class PicClerk : public Thread {
         return name;
     }
 
-    void addToLine(Customer* customer) {
-      if (line->empty()) {
-        currentCustomer = customer;
-      }  
+    void addToLine(Customer* customer) {  
       line->push(customer);
     }
 
@@ -809,131 +816,180 @@ class PicClerk : public Thread {
     std::queue<Customer*>* bribeLine;
 };
 
-// class PassportClerk : public Thread {
-//   public:
-//     PassportClerk(char* debugName, int id) : Thread(debugName) {
-//       name = debugName;
-//       this->id = id;
-//       state = 0; //0 is available, 1 is busy, 2 is on break
-//       lineSize = 0;
-//       bribeLineSize = 0;
-//       totalServiced = 0;
-//       lock = new Lock(debugName);
-//       cv = new Condition(debugName);
-//       lineCV = new Condition(debugName);
-//       bribeLineCV = new Condition(debugName);
+class PassportClerk : public Thread {
+  public:
+    PassportClerk(char* debugName, int id) : Thread(debugName) {
+      name = debugName;
+      this->id = id;
+      state = 0; //0 is available, 1 is busy, 2 is on break
+      lineSize = 0;
+      bribeLineSize = 0;
+      totalServiced = 0;
+      lock = new Lock(debugName);
+      cv = new Condition(debugName);
+      lineCV = new Condition(debugName);
+      bribeLineCV = new Condition(debugName);
 
-//       currentCustomer = NULL;
+      currentCustomer = NULL;
+      line = new std::queue<Customer*>();
+      bribeLine = new std::queue<Customer*>();
+    }
 
-//       if (id == 0) {
-//         PassportClerkBribeMoney = 0;
-//       }
-//     }
+    ~PassportClerk() {
+      delete lock;
+      delete cv;
+      delete lineCV;
+      delete bribeLineCV;
+      delete line;
+      delete bribeLine;
+    }
 
-//     void PassportClerkStart() {
-//       while(true) {
-//         PassportClerkLineLock->Acquire();
+    void PassportClerkStart() {
+      while(true) {
+        PassportClerkLineLock->Acquire();
 
-//         //TODO: check for bribes
-//         if(lineSize != 0) {
-//           PassportClerkLineCV->Signal(PassportClerkLineLock);
-//           this->state = 1;
-//         } else {
-//           //TODO: Add code for on break
-//           this->state = 0;
-//         }
+        if (bribeLine->size() != 0) {
+          bribeLineCV->Signal(PassportClerkLineLock);
+          currentCustomer = bribeLine->front();
+          PassportClerkBribeMoney += 500;
+          this->state = 1;
+          bribeLine->pop();
+        } else if(line->size() != 0) {
+          lineCV->Signal(PassportClerkLineLock);
+          currentCustomer = line->front();
+          std::cout << name << " has signalled a Customer to come to their counter" << std::endl;
+          this->state = 1;
+          line->pop();
+        } else {
+          std::cout << name << " is going on break" << std::endl;
+          //TODO: Add code for on break
+          std::cout << name << " is coming off break" << std::endl;
+          this->state = 0;
+        }
 
-//         this->lock->Acquire();
-//         PassportClerkLineLock->Release();
+        PassportClerkLineLock->Release();
+        this->lock->Acquire();
 
-//         std::cout << name << " waiting for application" << std::endl;
-//         PassportClerkCV->Wait(this->lock);
+        // Wait for customer to come to counter.
+        cv->Wait(this->lock);
 
-//         std::cout << name << " recording application" << std::endl;
-//         PassportClerkCV->Signal(this->lock);
+        // 5% chance that passport clerk makes a mistake.
+        int random = rand()%20;
+        if (random == 0) {
+          std::cout << name << " has determined that " << currentCustomer->getName();
+          std::cout << " does not have both their application and picture completed" << std::endl;
+          // Signals customer to go to the back of the line
+          // make customer wait
+          currentCustomer->setSendToBackOfLine();
+          cv->Signal(this->lock);
+        }
+        else {
+          std::cout << name << " has determined that " << currentCustomer->getName();
+          std::cout << " has both their application and picture completed" << std::endl;
+          cv->Signal(this->lock);
 
+          // Wait for SSN
+          cv->Wait(this->lock);
+
+          // Record customer
+          lock->Release(); // no busy waiting
+          for(int i =20; i<100; ++i){
+              currentThread->Yield();
+          }
+          lock->Acquire();
+
+          // customer recorded
+          cv->Signal(this->lock);
+          std::cout << name << " has recorded " << currentCustomer->getName() << " passport documentation" << std::endl;
+          totalServiced++;
+        }
+
+        currentCustomer = NULL;
+        this->lock->Release();
         
-//         this->lock->Release();
-        
-//         if (test) {
-//           sem.V();
-//         }
-//       }
-//     }
+        if (test) {
+          sem.V();
+        }
+      }
+    }
 
    
-//     void Acquire() {
-//       this->lock->Acquire();
-//     }
+    void Acquire() {
+      this->lock->Acquire();
+    }
 
-//     void Release() {
-//       this->lock->Release();
-//     }
+    void Release() {
+      this->lock->Release();
+    }
 
-//     int getState() {
-//       return this->state;
-//     }
+    int getState() {
+      return this->state;
+    }
 
-//     void setState(int s) {
-//       this->state = s;
-//     } 
+     void setState(int s) {
+      this->state = s;
+    } 
 
-//     int getLineSize() {
-//       return this->lineSize;
+    int getLineSize() {
+      return line->size();
+    }
 
-//     int getBribeLineSize() {
-//       return this->bribeLineSize;
-//     }
+    int getBribeLineSize() {
+      return bribeLine->size();
+    }
 
-//     void incrementBribeLineSize() {
-//       this->bribeLineSize++;
-//     }
+    int getTotalServiced() {
+        return totalServiced;
+    }
 
-//     void decrementBribeLineSize() {
-//       this->bribeLineSize--;
-//     }
+    Lock* getLock() {
+        return lock;
+    }
 
-//     int getTotalServiced() {
-//         return totalServiced;
-//     }
+    Condition* getCV() {
+        return cv;
+    }
 
-//     Lock* getLock() {
-//         return lock;
-//     }
+    Condition* getLineCV() {
+      return lineCV;
+    }
 
-//     Condition* getCV() {
-//         return cv;
-//     }
+    Condition* getBribeLineCV() {
+      return bribeLineCV;
+    }
 
-//     Condition* getLineCV() {
-//       return lineCV;
-//     }
+    char* getName() {
+        return name;
+    }
 
-//     Condition* getBribeLineCV() {
-//       return bribeLineCV;
-//     }
+    void addToLine(Customer* customer) {
+      line->push(customer);
+    }
 
-//     char* getName() {
-//         return name;
-//     }
+    void addToBribeLine(Customer* customer) {
+      bribeLine->push(customer);
+    }
 
-//     void setCustomer(Customer* customer) {
-//       currentCustomer = customer;
-//     }
+    void setCurrentCustomer(Customer* customer) {
+      currentCustomer = customer;
+    }
 
-//   private:
-//     int id;
-//     int state;
-//     int lineSize;
-//     int bribeLineSize;
-//     int totalServiced;
-//     Lock* lock;
-//     Condition* cv;
-//     Condition* lineCV;
-//     Condition* bribeLineCV;
+  private:
+    char* name;
+    int id;
+    int state;
+    int lineSize;
+    int bribeLineSize;
+    int totalServiced;
+    Lock* lock;
+    Condition* cv;
+    Condition* lineCV;
+    Condition* bribeLineCV;
 
-//     Customer* currentCustomer;
-// };
+    Customer* currentCustomer;
+    std::queue<Customer*>* line;
+    std::queue<Customer*>* bribeLine;
+};
 
 // class Cashier : public Thread {
 //   public:
@@ -1035,7 +1091,7 @@ class PicClerk : public Thread {
 // List of Clerks
 AppClerk** AppClerks;
 PicClerk** PicClerks;
-// PassportClerk** PassportClerks;
+PassportClerk** PassportClerks;
 // Cashier** Cashiers;
 
 //List of Customers
@@ -1057,11 +1113,11 @@ void Customer::CustomerStart() {
     my_line = FindAppLine();
     GetApplicationFiled(my_line);
   }
-
-  std::cout << "DEBUG: " << name << " done with app/pic clerks" << std::endl;
   
-  //my_line = FindPassportLine();
-  //GetPassport(my_line);
+  my_line = FindPassportLine();
+  GetPassport(my_line);
+
+  std::cout << "DEBUG: " << name << " done with clerks" << std::endl;
 
   if (test) {
     sem.V();
@@ -1198,65 +1254,84 @@ void Customer::GetPictureTaken(int my_line){
     PicClerks[my_line]->Release();  
 }
 
-// int Customer::FindPassportLine() {
-//   PassportClerkLineLock->Acquire();
-//   int my_line = -1;
-//   int line_size = 9999;
-//   for(int i = 0; i < NUM_PASSPORTCLERKS; i++) {
-//     if(PassportClerks[i]->getLineSize() < line_size && PassportClerks[i]->getState() != 2) {
-//       line_size = PassportClerks[i]->getLineSize();
-//       my_line = i;
-//     }
-//   }
+int Customer::FindPassportLine() {
+  PassportClerkLineLock->Acquire();
+  int my_line = -1;
+  int line_size = 9999;
+  for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
+    if(PassportClerks[i]->getLineSize() < line_size && PassportClerks[i]->getState() != 2) {
+      line_size = PassportClerks[i]->getLineSize();
+      my_line = i;
+    }
+  }
 
-//   if (PassportClerks[my_line]->getState() == 1) {
-//     PassportClerks[my_line]->incrementLineSize();
-//     PassportClerkLineCV->Wait(PassportClerkLineLock);
-//     PassportClerks[my_line]->decrementLineSize();
-//   }
+  // Bribe
+  // Only go on bribe line if you have enough money and 
+  // the clerk is busy (else you'd be spending $500 for no reason)
+  // 30% chance customer will bribe the clerk.
+  int random = rand()%10;
+  if (money >= 600 && PassportClerks[my_line]->getState() == 1
+      && random < 3) {
+    PassportClerks[my_line]->addToBribeLine(this);
+    std::cout << this->name << " has gotten in bribe line for " << PassportClerks[my_line]->getName() << std::endl;
+    PassportClerks[my_line]->getBribeLineCV()->Wait(PassportClerkLineLock);
+    money -= 500;
+  } else {
+    if (PassportClerks[my_line]->getState() == 1) {
+      PassportClerks[my_line]->addToLine(this);
+      std::cout << this->name << " has gotten in regular line for " << PassportClerks[my_line]->getName() << std::endl;
+      PassportClerks[my_line]->getLineCV()->Wait(PicClerkLineLock);
+    } else {
+      PassportClerks[my_line]->setCurrentCustomer(this);
+    }
+  }
 
-//   PassportClerks[my_line]->setState(1);
-//   std::cout << this->name << " just entered line " << my_line << " with size " << PassportClerks[my_line]->getLineSize() << std::endl;
-//   PassportClerkLineLock->Release();
+  PassportClerks[my_line]->setState(1);
+  PassportClerkLineLock->Release();
 
-//   return my_line;
-// }
+  return my_line;
+}
 
-// void Customer::GetPassport(int my_line) {
-//     /*PassportClerks will "certify" a Customer ONLY if the 
-//     Customer has a filed application and picture.f a Customer shows up
-//      to the PassportClerk BEFORE both documenets are filed, they they 
-//      (the Customer) are punished by being forec to wait for some arbitrary amount of time. 
-//      This is to be from 100 to 1000 currentThread->Yield() calls. 
-//      After these calls are completed, ,the Customer goes to the back of the PassportClerk line. 
-//      NOTE It takes time for a PassportClerk to "record" a Customer's completed documents. */
+void Customer::GetPassport(int my_line) {
+    /*PassportClerks will "certify" a Customer ONLY if the 
+    Customer has a filed application and picture.f a Customer shows up
+     to the PassportClerk BEFORE both documenets are filed, they they 
+     (the Customer) are punished by being forec to wait for some arbitrary amount of time. 
+     This is to be from 100 to 1000 currentThread->Yield() calls. 
+     After these calls are completed, ,the Customer goes to the back of the PassportClerk line. 
+     NOTE It takes time for a PassportClerk to "record" a Customer's completed documents. */
 
-//     PassportClerks[my_line]->Acquire();
-//     std::cout << this->name << " Going to passport clerk to get passport taken " << PicClerks[my_line]->getName() << std::endl;
+    PassportClerks[my_line]->Acquire();
 
-//     if(this->pic_clerk == false || this->app_clerk == false){
-//         //send customer to back of line after yield
-//     } else{
+    // Approach counter
+    PassportClerks[my_line]->getCV()->Signal(PassportClerks[my_line]->getLock());
+    // Wait to determine whether they go back in line
+    PassportClerks[my_line]->getCV()->Wait(PassportClerks[my_line]->getLock());
 
+    if(sendToBackOfLine){
+      //send customer to back of line after yield
+      std::cout << this->name << " has gone to " << PassportClerks[my_line]->getName() << " too soon. ";
+      std::cout << "They are going to the back of the line." << std::endl;
 
-//         PassportClerks[my_line]->getCV()->Signal(PassportClerks[my_line]->getLock());
-//         //waits for passport clerk to certify passport
+      // Punishment
+      PassportClerks[my_line]->Release(); // no busy waiting
+      for(int i =100; i<1000; ++i){
+          currentThread->Yield();
+      }
 
-//         PicClerks[my_line]->Release(); // no busy waiting
-//     for(int i =100; i<1000; ++i){
-//         currentThread->Yield();
-//     }
-//     PassportClerks[my_line]->Acquire();
-//     if(PassportClerks[my_line]->getState() == 0 ){
-//         PassportClerks[my_line]->getCV()->Signal(PassportClerks[my_line]->getLock());
-//         std::cout << this->name << "Passport is certified by" << PassportClerks[my_line]->getName() << std::endl;
-//     }
-//     this->passport_clerk = true;
-//     PassportClerks[my_line]->Release();  
+      sendToBackOfLine = false;
+      GetPassport(my_line);
+      return;
+    } else{
+        PassportClerks[my_line]->getCV()->Signal(PassportClerks[my_line]->getLock());
+        std::cout << this->name << " has given SSN " << ssn << " to " << PassportClerks[my_line]->getName() << std::endl;
 
-//     }
-
-// }
+        //waits for passport clerk to record passport
+        PassportClerks[my_line]->getCV()->Wait(PassportClerks[my_line]->getLock());    
+        this->passport_clerk = true;
+        PassportClerks[my_line]->Release();  
+    }
+}
 
 // int Customer::FindCashierLine() {
 //   CashierLineLock->Acquire();
@@ -1312,9 +1387,9 @@ void PicClerkStart(int index){
   PicClerks[index]->PicClerkStart();
 }
 
-// void PassportClerkStart(int index){
-//   PassportClerks[index]->PassportClerkStart();
-//}
+void PassportClerkStart(int index){
+  PassportClerks[index]->PassportClerkStart();
+}
 
 void TEST_1() {
   /* Customers always take the shortest line, but no 2 customers 
@@ -1387,10 +1462,12 @@ void FULL_SIMULATION() {
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
   PicClerks = new PicClerk*[NUM_PIC_CLERKS];
+  PassportClerks = new PassportClerk*[NUM_PASSPORT_CLERKS];
   int SSN = 10000000;
 
   AppClerkLineLock = new Lock("appClerk_lineLock");
   PicClerkLineLock = new Lock("picClerk_lineLock");
+  PassportClerkLineLock = new Lock("passportClerk_lineLock");
 
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
     char* debugName = new char[20];
@@ -1402,6 +1479,12 @@ void FULL_SIMULATION() {
     char* debugName = new char[20];
     sprintf(debugName, "PictureClerk %d", i);
     PicClerks[i] = new PicClerk(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "PassportClerk %d", i);
+    PassportClerks[i] = new PassportClerk(debugName, i);
   }
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
@@ -1419,13 +1502,17 @@ void FULL_SIMULATION() {
     PicClerks[i]->Fork((VoidFunctionPtr)PicClerkStart, i);
   }
 
+  for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
+    PassportClerks[i]->Fork((VoidFunctionPtr)PassportClerkStart, i);
+  }
+
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
   }
 }
 
 void Problem2() {
-	// Tests we have to write for problem 2
+    // Tests we have to write for problem 2
   Thread *t;
   test = false;
   AppClerkBribeMoney = 0;
@@ -1508,6 +1595,10 @@ void Problem2() {
       std::cin >> NUM_APP_CLERKS;
       std::cout << "How many picture clerks? ";
       std::cin >> NUM_PIC_CLERKS;
+      std::cout << "How many passport clerks? ";
+      std::cin >> NUM_PASSPORT_CLERKS;
+
+      // make sure to print out how many for each var
       t = new Thread("ts2_fullsimulation");
       t->Fork((VoidFunctionPtr)FULL_SIMULATION, 0);
       //for (int i = 0; i < NUM_APP_CLERKS + NUM_CUSTOMERS; i++) {
