@@ -566,9 +566,7 @@ class AppClerk : public Thread {
     } 
 
     int getLineSize() {
-      // queue includes current customer.
-      if (line->empty()) return 0;
-      return line->size() - 1;
+      return line->size();
     }
 
     int getBribeLineSize() {
@@ -608,6 +606,10 @@ class AppClerk : public Thread {
 
     void addToBribeLine(Customer* customer) {
       bribeLine->push(customer);
+    }
+
+    void setCurrentCustomer(Customer* customer) {
+      currentCustomer = customer;
     }
 
   private:
@@ -676,11 +678,6 @@ class PicClerk : public Thread {
           this->state = 0;
         }
 
-        if (currentCustomer == NULL && getLineSize() == 0) {
-          currentCustomer = line->front();
-          line->pop();
-        }
-
         this->lock->Acquire();
         PicClerkLineLock->Release();
 
@@ -746,8 +743,7 @@ class PicClerk : public Thread {
 
     int getLineSize() {
       // line includes currentCustomer
-      if (line->empty()) return 0;
-      return line->size() - 1;
+      return line->size();
     }
 
     int getBribeLineSize() {
@@ -791,6 +787,10 @@ class PicClerk : public Thread {
 
     void setLikePicture(bool like) {
       likePicture = like;
+    }
+
+    void setCurrentCustomer(Customer* customer) {
+      currentCustomer = customer;
     }
 
   private:
@@ -1090,10 +1090,12 @@ int Customer::FindAppLine() {
     AppClerks[my_line]->getBribeLineCV()->Wait(AppClerkLineLock);
     money -= 500;
   } else {
-    AppClerks[my_line]->addToLine(this);
     if (AppClerks[my_line]->getState() == 1) {
+      AppClerks[my_line]->addToLine(this);
       std::cout << this->name << " has gotten in regular line for " << AppClerks[my_line]->getName() << std::endl;
       AppClerks[my_line]->getLineCV()->Wait(AppClerkLineLock);
+    } else {
+      AppClerks[my_line]->setCurrentCustomer(this);
     }
   }
 
@@ -1145,10 +1147,12 @@ int Customer::FindPicLine() {
     PicClerks[my_line]->getBribeLineCV()->Wait(PicClerkLineLock);
     money -= 500;
   } else {
-    PicClerks[my_line]->addToLine(this);
     if (PicClerks[my_line]->getState() == 1) {
+      PicClerks[my_line]->addToLine(this);
       std::cout << this->name << " has gotten in regular line for " << PicClerks[my_line]->getName() << std::endl;
       PicClerks[my_line]->getLineCV()->Wait(PicClerkLineLock);
+    } else {
+      PicClerks[my_line]->setCurrentCustomer(this);
     }
   }
 
@@ -1178,6 +1182,7 @@ void Customer::GetPictureTaken(int my_line){
 
         PicClerks[my_line]->Release();
         GetPictureTaken(FindPicLine());
+        return;
     }
 
     //Customer likes picture enough
