@@ -363,6 +363,8 @@ void TestSuite() {
 }
 #endif
 
+#include <queue>
+
 //Code for our Passport Office Simulation
 //By: Anjali Ahuja, Anne Kao, and Bernard Xie, Started 09/13/15
 //
@@ -370,31 +372,26 @@ void TestSuite() {
 
 //Application Clerk Line
 Lock* AppClerkLineLock;
-Condition* AppClerkLineCV;
+int AppClerkBribeMoney;
 
 //Picture Clerk Line
-List* PicClerkLine;
 Lock* PicClerkLineLock;
-Condition* PicClerkLineCV;
+int PicClerkBribeMoney;
 
 //Passport Clerk Line
-List* PassportClerkLine;
 Lock* PassportClerkLineLock;
-Condition* PassportClerkLineCV;
+int PassportClerkBribeMoney;
 
 //Cashier Line
-List* CashierLine;
 Lock* CashierLineLock;
-Condition* CashierLineCV;
 
 Semaphore sem("sem", 0);
 
-int NUM_APPCLERKS;
-int NUM_CUSTOMERS;
+int NUM_APP_CLERKS;
+int NUM_PIC_CLERKS;
+int NUM_PASSPORT_CLERKS;
 int NUM_CASHIERS;
-int NUM_PICCLERKS;
-int NUM_PASSPORTCLERKS;
-
+int NUM_CUSTOMERS;
 
 // For tests.  Have to sem.V() for test to finish.
 bool test;
@@ -422,10 +419,10 @@ class Customer : public Thread{
     void GetApplicationFiled(int my_line);
     int FindPicLine();
     void GetPictureTaken(int my_line);
-    int FindCashierLine();
-    void PayCashier(int my_line);
-    int FindPassportLine();
-    void GetPassport(int my_line);
+    // int FindCashierLine();
+    // void PayCashier(int my_line);
+    // int FindPassportLine();
+    // void GetPassport(int my_line);
 
     bool is_app_completed() {
       return app_clerk && pic_clerk && passport_clerk;
@@ -463,6 +460,10 @@ class Customer : public Thread{
       return cashier;
     }
 
+    int getSSN() {
+      return ssn;
+    }
+
   private:
     char* name;
     int ssn;
@@ -480,38 +481,67 @@ class AppClerk : public Thread {
       this->id = id;
       state = 0; //0 is available, 1 is busy, 2 is on break
       lineSize = 0;
+      bribeLineSize = 0;
       totalServiced = 0;
       lock = new Lock(debugName);
-      AppClerkCV = new Condition(debugName);
+      cv = new Condition(debugName);
+      lineCV = new Condition(debugName);
+      bribeLineCV = new Condition(debugName);
+
+      currentCustomer = NULL;
+      line = new std::queue<Customer*>();
+      bribeLine = new std::queue<Customer*>();
+    }
+
+    ~AppClerk() {
+      delete lock;
+      delete cv;
+      delete lineCV;
+      delete bribeLineCV;
+      delete line;
+      delete bribeLine;
     }
 
     void AppClerkStart() {
       while(true) {
-        AppClerkLineLock->Acquire();
+         AppClerkLineLock->Acquire();
 
-        //TODO: check for bribes
-        if(lineSize != 0) {
-          AppClerkLineCV->Signal(AppClerkLineLock);
+        if (bribeLine->size() != 0) {
+          bribeLineCV->Signal(AppClerkLineLock);
+          currentCustomer = bribeLine->front();
+          std::cout << name << " has received $500 from " << currentCustomer->getName() << std::endl;
+          AppClerkBribeMoney += 500;
           this->state = 1;
+          bribeLine->pop();
+        } else if(line->size() != 0) {
+          lineCV->Signal(AppClerkLineLock);
+          currentCustomer = line->front();
+          std::cout << name << " has signalled a Customer to come to their counter" << std::endl;
+          this->state = 1;
+          line->pop();
         } else {
+          currentCustomer = NULL;
+          std::cout << name << " is going on break" << std::endl;
           //TODO: Add code for on break
-          this->state = 0;
+          std::cout << name << " is coming off break" << std::endl;
+          //this->state = 0;
         }
 
-        this->lock->Acquire();
         AppClerkLineLock->Release();
+        this->lock->Acquire();
 
         //Wait for customer data
-        std::cout << name << " waiting for application" << std::endl;
-        AppClerkCV->Wait(this->lock);
+        cv->Wait(this->lock);
+        std::cout << name << " has received SSN " << currentCustomer->getSSN();
+        std::cout << " from " << currentCustomer->getName() << std::endl;
 
         //Do my job, customer now waiting
-        std::cout << name << " filed application. " << std::endl; //<< " now waiting." << std::endl;
-        AppClerkCV->Signal(this->lock);
+        cv->Signal(this->lock);
+        std::cout << name << " has recorded a completed application for ";
+        std::cout << currentCustomer->getName() << std::endl;
         this->totalServiced++;
 
-        AppClerkCV->Wait(this->lock);
-
+        cv->Wait(this->lock);
         this->lock->Release();
 
         if (test) {
@@ -537,15 +567,11 @@ class AppClerk : public Thread {
     } 
 
     int getLineSize() {
-      return this->lineSize;
+      return line->size();
     }
 
-    void incrementLineSize() {
-      this->lineSize++;
-    }
-
-    void decrementLineSize() {
-      this->lineSize--;
+    int getBribeLineSize() {
+      return bribeLine->size();
     }
 
     int getTotalServiced() {
@@ -557,11 +583,31 @@ class AppClerk : public Thread {
     }
 
     Condition* getCV() {
-        return AppClerkCV;
+        return cv;
+    }
+
+    Condition* getLineCV() {
+      return lineCV;
+    }
+
+    Condition* getBribeLineCV() {
+      return bribeLineCV;
     }
 
     char* getName() {
         return name;
+    }
+
+    void addToLine(Customer* customer) {
+      if (currentCustomer != NULL){
+        line->push(customer);
+      } else if (line->empty()) {
+        currentCustomer = customer;
+      }
+    }
+
+    void addToBribeLine(Customer* customer) {
+      bribeLine->push(customer);
     }
 
   private:
@@ -569,10 +615,16 @@ class AppClerk : public Thread {
     int id;
     int state;
     int lineSize;
+    int bribeLineSize;
     int totalServiced;
     Lock* lock;
-    Condition* AppClerkCV;
-    // need current customer??
+    Condition* cv;
+    Condition* lineCV;
+    Condition* bribeLineCV;
+
+    Customer* currentCustomer;
+    std::queue<Customer*>* line;
+    std::queue<Customer*>* bribeLine;
 };
 
 
@@ -583,9 +635,25 @@ class PicClerk : public Thread {
       this->id = id;
       state = 0; //0 is available, 1 is busy, 2 is on break
       lineSize = 0;
+      bribeLineSize = 0;
       totalServiced = 0;
       lock = new Lock(debugName);
-      PicClerkCV = new Condition(debugName);
+      cv = new Condition(debugName);
+      lineCV = new Condition(debugName);
+      bribeLineCV = new Condition(debugName);
+
+      currentCustomer = NULL;
+      line = new std::queue<Customer*>();
+      bribeLine = new std::queue<Customer*>();
+    }
+
+    ~PicClerk() {
+      delete lock;
+      delete cv;
+      delete lineCV;
+      delete bribeLineCV;
+      delete line;
+      delete bribeLine;
     }
 
     void PicClerkStart() {
@@ -593,11 +661,23 @@ class PicClerk : public Thread {
         PicClerkLineLock->Acquire();
 
         //TODO: check for bribes
-        if(lineSize != 0) {
-          PicClerkLineCV->Signal(PicClerkLineLock);
+        if (bribeLine->size() != 0) {
+          bribeLineCV->Signal(PicClerkLineLock);
+          currentCustomer = bribeLine->front();
+          PicClerkBribeMoney += 500;
           this->state = 1;
+          bribeLine->pop();
+        } else if(line->size() != 0) {
+          lineCV->Signal(PicClerkLineLock);
+          currentCustomer = line->front();
+          std::cout << name << " has signalled a Customer to come to their counter" << std::endl;
+          this->state = 1;
+          line->pop();
         } else {
+          currentCustomer = NULL;
+          std::cout << name << " is going on break" << std::endl;
           //TODO: Add code for on break
+          std::cout << name << " is coming off break" << std::endl;
           this->state = 0;
         }
 
@@ -605,24 +685,30 @@ class PicClerk : public Thread {
         PicClerkLineLock->Release();
 
          //Wait for customer data
-        std::cout << name << " waiting for application" << std::endl;
-        PicClerkCV->Wait(this->lock);
+        cv->Wait(this->lock);
+        std::cout << name << " has received SSN " << currentCustomer->getSSN();
+        std::cout << " from " << currentCustomer->getName() << std::endl;
 
         //Do my job, customer now waiting
-        std::cout << name << " took picture. " << std::endl; //<< " now waiting." << std::endl;
-        PicClerkCV->Signal(this->lock);
+        cv->Signal(this->lock);
+        std::cout << name << " has taken a picture of " << currentCustomer->getName() << std::endl;
 
+        //waiting for approval
+        cv->Wait(this->lock);
 
-        std::cout << name << " waiting for customer approval" << std::endl;
-        PicClerkCV->Wait(this->lock);
+        // TODO: Implement.  call a function from customer when they reject it?
+        std::cout << name << " has been told that " << currentCustomer->getName();
+        std::cout << " does not like their picture" << std::endl;
 
-        std::cout << name << " filed application" << std::endl;
-        PicClerkCV->Signal(this->lock);
+        std::cout << name << " has been told that " << currentCustomer->getName();
+        std::cout << " does like their picture" << std::endl;
+
+        //appliation filed
+        cv->Signal(this->lock);
 
         totalServiced++;
 
-
-        PicClerkCV->Wait(this->lock);
+        cv->Wait(this->lock);
 
         this->lock->Release();
         
@@ -632,7 +718,6 @@ class PicClerk : public Thread {
       }
     }
 
-   
     void Acquire() {
       this->lock->Acquire();
     }
@@ -650,15 +735,11 @@ class PicClerk : public Thread {
     } 
 
     int getLineSize() {
-      return this->lineSize;
+      return line->size();
     }
 
-    void incrementLineSize() {
-      this->lineSize++;
-    }
-
-    void decrementLineSize() {
-      this->lineSize--;
+    int getBribeLineSize() {
+      return bribeLine->size();
     }
 
     int getTotalServiced() {
@@ -670,283 +751,339 @@ class PicClerk : public Thread {
     }
 
     Condition* getCV() {
-        return PicClerkCV;
+        return cv;
+    }
+
+    Condition* getLineCV() {
+      return lineCV;
+    }
+
+    Condition* getBribeLineCV() {
+      return bribeLineCV;
     }
 
     char* getName() {
         return name;
     }
 
-
-
-  private:
-    char* name;
-    int id;
-    int state;
-    int lineSize;
-    int totalServiced;
-    Lock* lock;
-    Condition* PicClerkCV;
-    Customer* currentCustomer;
-    // need current customer??
-};
-
-class PassportClerk : public Thread {
-  public:
-    PassportClerk(char* debugName, int id) : Thread(debugName) {
-      name = debugName;
-      this->id = id;
-      state = 0; //0 is available, 1 is busy, 2 is on break
-      lineSize = 0;
-      totalServiced = 0;
-      lock = new Lock(debugName);
-      PassportClerkCV = new Condition(debugName);
-    }
-
-    void PassportClerkStart() {
-      while(true) {
-        PassportClerkLineLock->Acquire();
-
-        //TODO: check for bribes
-        if(lineSize != 0) {
-          PassportClerkLineCV->Signal(PassportClerkLineLock);
-          this->state = 1;
-        } else {
-          //TODO: Add code for on break
-          this->state = 0;
-        }
-
-        this->lock->Acquire();
-        PassportClerkLineLock->Release();
-
-        std::cout << name << " waiting for application" << std::endl;
-        PassportClerkCV->Wait(this->lock);
-
-        std::cout << name << " recording application" << std::endl;
-        PassportClerkCV->Signal(this->lock);
-
-        
-        this->lock->Release();
-        
-        if (test) {
-          sem.V();
-        }
-      }
-    }
-
-   
-    void Acquire() {
-      this->lock->Acquire();
-    }
-
-    void Release() {
-      this->lock->Release();
-    }
-
-    int getState() {
-      return this->state;
-    }
-
-    void setState(int s) {
-      this->state = s;
-    } 
-
-    int getLineSize() {
-      return this->lineSize;
-    }
-
-    void incrementLineSize() {
-      this->lineSize++;
-    }
-
-    void decrementLineSize() {
-      this->lineSize--;
-    }
-
-    int getTotalServiced() {
-        return totalServiced;
-    }
-
-    Lock* getLock() {
-        return lock;
-    }
-
-    Condition* getCV() {
-        return PassportClerkCV;
-    }
-
-    char* getName() {
-        return name;
-    }
-
-
-
-  private:
-    char* name;
-    int id;
-    int state;
-    int lineSize;
-    int totalServiced;
-    Lock* lock;
-    Condition* PassportClerkCV;
-    Customer* currentCustomer;
-    // need current customer??
-};
-
-class Cashier : public Thread {
-  public:
-     Cashier(char* debugName, int id) : Thread(debugName) {
-      name = debugName;
-      this->id = id;
-      state = 0; //0 is available, 1 is busy, 2 is on break
-      lineSize = 0;
-      totalServiced = 0;
-      lock = new Lock(debugName);
-      CashierCV = new Condition(debugName);
-    }
-    void CashierStart() {
-
-        ////FINISH THIS//////
-      while(true) {
-        CashierLineLock->Acquire();
-
-        //TODO: check for bribes
-        if(lineSize != 0) {
-          CashierLineCV->Signal(CashierLineLock);
-          this->state = 1;
-        } else {
-          //TODO: Add code for on break
-          this->state = 0;
-        }
-
-        this->lock->Acquire();
-        CashierLineLock->Release();
-
-    }
-    }
-    void Acquire() {
-      this->lock->Acquire();
-    }
-
-    void Release() {
-      this->lock->Release();
-    }
-
-    int getState() {
-      return this->state;
-    }
-
-    void setState(int s) {
-      this->state = s;
-    } 
-
-    int getLineSize() {
-      return this->lineSize;
-    }
-
-    void incrementLineSize() {
-      this->lineSize++;
-    }
-
-    void decrementLineSize() {
-      this->lineSize--;
-    }
-
-    int getTotalServiced() {
-        return totalServiced;
-    }
-
-    Lock* getLock() {
-        return lock;
-    }
-
-    Condition* getCV() {
-        return CashierCV;
-    }
-
-    char* getName() {
-        return name;
-    }
-
-    void TakeMoneyFromCustomer(Customer* customer){
-        money += 100; 
+    void addToLine(Customer* customer) {
+      if (currentCustomer != NULL){
+        line->push(customer);
+      } else if (line->empty()) {
         currentCustomer = customer;
-
+      }
     }
 
-
+    void addToBribeLine(Customer* customer) {
+      bribeLine->push(customer);
+    }
 
   private:
     char* name;
     int id;
     int state;
     int lineSize;
+    int bribeLineSize;
     int totalServiced;
-    int money;
     Lock* lock;
-    Condition* CashierCV;
+    Condition* cv;
+    Condition* lineCV;
+    Condition* bribeLineCV;
+
     Customer* currentCustomer;
-    // need current customer??
+    std::queue<Customer*>* line;
+    std::queue<Customer*>* bribeLine;
 };
 
+// class PassportClerk : public Thread {
+//   public:
+//     PassportClerk(char* debugName, int id) : Thread(debugName) {
+//       name = debugName;
+//       this->id = id;
+//       state = 0; //0 is available, 1 is busy, 2 is on break
+//       lineSize = 0;
+//       bribeLineSize = 0;
+//       totalServiced = 0;
+//       lock = new Lock(debugName);
+//       cv = new Condition(debugName);
+//       lineCV = new Condition(debugName);
+//       bribeLineCV = new Condition(debugName);
+
+//       currentCustomer = NULL;
+
+//       if (id == 0) {
+//         PassportClerkBribeMoney = 0;
+//       }
+//     }
+
+//     void PassportClerkStart() {
+//       while(true) {
+//         PassportClerkLineLock->Acquire();
+
+//         //TODO: check for bribes
+//         if(lineSize != 0) {
+//           PassportClerkLineCV->Signal(PassportClerkLineLock);
+//           this->state = 1;
+//         } else {
+//           //TODO: Add code for on break
+//           this->state = 0;
+//         }
+
+//         this->lock->Acquire();
+//         PassportClerkLineLock->Release();
+
+//         std::cout << name << " waiting for application" << std::endl;
+//         PassportClerkCV->Wait(this->lock);
+
+//         std::cout << name << " recording application" << std::endl;
+//         PassportClerkCV->Signal(this->lock);
+
+        
+//         this->lock->Release();
+        
+//         if (test) {
+//           sem.V();
+//         }
+//       }
+//     }
+
+   
+//     void Acquire() {
+//       this->lock->Acquire();
+//     }
+
+//     void Release() {
+//       this->lock->Release();
+//     }
+
+//     int getState() {
+//       return this->state;
+//     }
+
+//     void setState(int s) {
+//       this->state = s;
+//     } 
+
+//     int getLineSize() {
+//       return this->lineSize;
+
+//     int getBribeLineSize() {
+//       return this->bribeLineSize;
+//     }
+
+//     void incrementBribeLineSize() {
+//       this->bribeLineSize++;
+//     }
+
+//     void decrementBribeLineSize() {
+//       this->bribeLineSize--;
+//     }
+
+//     int getTotalServiced() {
+//         return totalServiced;
+//     }
+
+//     Lock* getLock() {
+//         return lock;
+//     }
+
+//     Condition* getCV() {
+//         return cv;
+//     }
+
+//     Condition* getLineCV() {
+//       return lineCV;
+//     }
+
+//     Condition* getBribeLineCV() {
+//       return bribeLineCV;
+//     }
+
+//     char* getName() {
+//         return name;
+//     }
+
+//     void setCustomer(Customer* customer) {
+//       currentCustomer = customer;
+//     }
+
+//   private:
+//     int id;
+//     int state;
+//     int lineSize;
+//     int bribeLineSize;
+//     int totalServiced;
+//     Lock* lock;
+//     Condition* cv;
+//     Condition* lineCV;
+//     Condition* bribeLineCV;
+
+//     Customer* currentCustomer;
+// };
+
+// class Cashier : public Thread {
+//   public:
+//      Cashier(char* debugName, int id) : Thread(debugName) {
+//       name = debugName;
+//       this->id = id;
+//       state = 0; //0 is available, 1 is busy, 2 is on break
+//       lineSize = 0;
+//       totalServiced = 0;
+//       lock = new Lock(debugName);
+//       CashierCV = new Condition(debugName);
+//     }
+//     void CashierStart() {
+
+//         ////FINISH THIS//////
+//       while(true) {
+//         CashierLineLock->Acquire();
+
+//         //TODO: check for bribes
+//         if(lineSize != 0) {
+//           CashierLineCV->Signal(CashierLineLock);
+//           this->state = 1;
+//         } else {
+//           //TODO: Add code for on break
+//           this->state = 0;
+//         }
+
+//         this->lock->Acquire();
+//         CashierLineLock->Release();
+
+//     }
+//     }
+//     void Acquire() {
+//       this->lock->Acquire();
+//     }
+
+//     void Release() {
+//       this->lock->Release();
+//     }
+
+//     int getState() {
+//       return this->state;
+//     }
+
+//     void setState(int s) {
+//       this->state = s;
+//     } 
+
+//     int getLineSize() {
+//       return this->lineSize;
+//     }
+
+//     void incrementLineSize() {
+//       this->lineSize++;
+//     }
+
+//     void decrementLineSize() {
+//       this->lineSize--;
+//     }
+
+//     int getTotalServiced() {
+//         return totalServiced;
+//     }
+
+//     Lock* getLock() {
+//         return lock;
+//     }
+
+//     Condition* getCV() {
+//         return CashierCV;
+//     }
+
+//     char* getName() {
+//         return name;
+//     }
+
+//     void TakeMoneyFromCustomer(Customer* customer){
+//         money += 100; 
+//         currentCustomer = customer;
+
+//     }
+//   private:
+//     char* name;
+//     int id;
+//     int state;
+//     int lineSize;
+//     int bribeLineSize;
+//     int totalServiced;
+//     Lock* lock;
+//     Condition* cv;
+//     Condition* lineCV;
+//     Condition* bribeLineCV;
+
+//     Customer* currentCustomer;
+// };
 
 
 // Declaring class global variables.
 // List of Clerks
 AppClerk** AppClerks;
 PicClerk** PicClerks;
-PassportClerk** PassportClerks;
-Cashier** Cashiers;
+// PassportClerk** PassportClerks;
+// Cashier** Cashiers;
 
 //List of Customers
 Customer** Customers;
 
 void Customer::CustomerStart() {
-  //int task = rand()%2;
-  int task = 0;
+  int task = rand()%2;
   int my_line = -10;
   if (task == 0) {
-    // Part 1: Deciding what line for customer to enter.
     my_line = FindAppLine();
-
-    // Part 2: Reached clerk counter
     GetApplicationFiled(my_line);
-  } else if (task == 1) { // Go to picture line
-    
-    my_line = FindPicLine();
 
+    my_line = FindPicLine();
+    GetPictureTaken(my_line);
+  } else if (task == 1) { // Go to picture line
+    my_line = FindPicLine();
     GetPictureTaken(my_line);
 
-  }
-  else { // go to passport clerk
-    my_line = FindPassportLine();
-
-    GetPassport(my_line);
-
+    my_line = FindAppLine();
+    GetApplicationFiled(my_line);
   }
 
-  sem.V();
+  std::cout << "DEBUG: " << name << " done with app/pic clerks" << std::endl;
+  
+  //my_line = FindPassportLine();
+  //GetPassport(my_line);
+
+  if (test) {
+    sem.V();
+  }
 }
 
 int Customer::FindAppLine() {
   AppClerkLineLock->Acquire();
   int my_line = -1;
   int line_size = 9999;
-  for(int i = 0; i < NUM_APPCLERKS; i++) {
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
     if(AppClerks[i]->getLineSize() < line_size && AppClerks[i]->getState() != 2) {
       line_size = AppClerks[i]->getLineSize();
       my_line = i;
     }
   }
-
-  if (AppClerks[my_line]->getState() == 1) {
-    AppClerks[my_line]->incrementLineSize();
-    AppClerkLineCV->Wait(AppClerkLineLock);
-    AppClerks[my_line]->decrementLineSize();
+  // Bribe
+  // Only go on bribe line if you have enough money and 
+  // the clerk is busy (else you'd be spending $500 for no reason)
+  // 30% chance customer will bribe the clerk.
+  int random = rand()%10;
+  if (money >= 600 && AppClerks[my_line]->getState() == 1
+      && random < 3) {
+    AppClerks[my_line]->addToBribeLine(this);
+    std::cout << this->name << " has gotten in bribe line for " << AppClerks[my_line]->getName() << std::endl;
+    AppClerks[my_line]->getBribeLineCV()->Wait(AppClerkLineLock);
+    money -= 500;
+  } else {
+    AppClerks[my_line]->addToLine(this);
+    if (AppClerks[my_line]->getState() == 1) {
+      std::cout << this->name << " has gotten in regular line for " << AppClerks[my_line]->getName() << std::endl;
+      AppClerks[my_line]->getLineCV()->Wait(AppClerkLineLock);
+    }
   }
 
   AppClerks[my_line]->setState(1);
-  std::cout << this->name << " just entered line " << my_line << " with size " << AppClerks[my_line]->getLineSize() << std::endl;
   AppClerkLineLock->Release();
 
   return my_line;
@@ -955,13 +1092,13 @@ int Customer::FindAppLine() {
 void Customer::GetApplicationFiled(int my_line) {
   AppClerks[my_line]->Acquire();
   // Give my data to my clerk
-  std::cout << this->name << " giving application to " << AppClerks[my_line]->getName() << std::endl;
   AppClerks[my_line]->getCV()->Signal(AppClerks[my_line]->getLock());
+  std::cout << this->name << " has given SSN " << ssn << " to " << AppClerks[my_line]->getName() << std::endl;
+
   // Wait for clerk to do their job
-  std::cout << this->name << " waiting for " << AppClerks[my_line]->getName() << std::endl;
   AppClerks[my_line]->getCV()->Wait(AppClerks[my_line]->getLock());
+
   // Read my data
-  std::cout << this->name << "'s application is filed" << std::endl;
   AppClerks[my_line]->getCV()->Signal(AppClerks[my_line]->getLock());
   AppClerks[my_line]->Release();
   this->app_clerk = true;
@@ -975,47 +1112,60 @@ int Customer::FindPicLine() {
   PicClerkLineLock->Acquire();
   int my_line = -1;
   int line_size = 9999;
-  for(int i = 0; i < NUM_PICCLERKS; i++) {
+  for(int i = 0; i < NUM_PIC_CLERKS; i++) {
     if(PicClerks[i]->getLineSize() < line_size && PicClerks[i]->getState() != 2) {
       line_size = PicClerks[i]->getLineSize();
       my_line = i;
     }
   }
 
-  if (PicClerks[my_line]->getState() == 1) {
-    PicClerks[my_line]->incrementLineSize();
-    PicClerkLineCV->Wait(PicClerkLineLock);
-    PicClerks[my_line]->decrementLineSize();
+  // Bribe
+  // Only go on bribe line if you have enough money and 
+  // the clerk is busy (else you'd be spending $500 for no reason)
+  // 30% chance customer will bribe the clerk.
+  int random = rand()%10;
+  if (money >= 600 && PicClerks[my_line]->getState() == 1
+      && random < 3) {
+    PicClerks[my_line]->addToBribeLine(this);
+    std::cout << this->name << " has gotten in bribe line for " << PicClerks[my_line]->getName() << std::endl;
+    PicClerks[my_line]->getBribeLineCV()->Wait(PicClerkLineLock);
+    money -= 500;
+  } else {
+    PicClerks[my_line]->addToLine(this);
+    if (PicClerks[my_line]->getState() == 1) {
+      std::cout << this->name << " has gotten in regular line for " << PicClerks[my_line]->getName() << std::endl;
+      PicClerks[my_line]->getLineCV()->Wait(PicClerkLineLock);
+    }
   }
 
   PicClerks[my_line]->setState(1);
-  std::cout << this->name << " just entered line " << my_line << " with size " << PicClerks[my_line]->getLineSize() << std::endl;
   PicClerkLineLock->Release();
 
   return my_line;
 }
+
 void Customer::GetPictureTaken(int my_line){
     PicClerks[my_line]->Acquire();
-    std::cout << this->name << " Going to pic clerk to get picture taken " << PicClerks[my_line]->getName() << std::endl;
 
     PicClerks[my_line]->getCV()->Signal(PicClerks[my_line]->getLock());
+    std::cout << this->name << " has given SSN " << ssn << " to " << PicClerks[my_line]->getName() << std::endl;
+
     //Waits for pic clerk to take picture
-    std::cout << this->name << " waiting for " << PicClerks[my_line]->getName() << std::endl;
     PicClerks[my_line]->getCV()->Wait(PicClerks[my_line]->getLock());
     //Checking picture
     int dislikePicture = 51; //chooses percentage between 1-99
     while(dislikePicture > 50)  {      
         dislikePicture = rand () % 100 + 1;
 
-        std::cout << this->name << " dislikes picture. Wants it retaken by " << PicClerks[my_line]->getName() << std::endl;
+        std::cout << this->name << " does not like their picture from " << PicClerks[my_line]->getName() << std::endl;
         PicClerks[my_line]->getCV()->Signal(PicClerks[my_line]->getLock());
+        
         //Waits for pic clerk to take picture
-        std::cout << this->name << " waiting for " << PicClerks[my_line]->getName() << std::endl;
         PicClerks[my_line]->getCV()->Wait(PicClerks[my_line]->getLock());
         //Checking picture
     }
     //Customer likes picture enough
-    std::cout << this->name << " accepts picture. Tells pic clerk to file it. " << PicClerks[my_line]->getName() << std::endl;
+    std::cout << this->name << " does like their picture from " << PicClerks[my_line]->getName() << std::endl;
     //PicClerkDoesJob after waiting
     PicClerks[my_line]->Release(); // no busy waiting
     for(int i =100; i<1000; ++i){
@@ -1024,116 +1174,112 @@ void Customer::GetPictureTaken(int my_line){
     PicClerks[my_line]->Acquire();
     if(PicClerks[my_line]->getState() == 0 ){
         PicClerks[my_line]->getCV()->Signal(PicClerks[my_line]->getLock());
-        std::cout << this->name << "Picture is filed by" << PicClerks[my_line]->getName() << std::endl;
     }
     this->pic_clerk = true;
     PicClerks[my_line]->Release();  
-
 }
 
-int Customer::FindPassportLine() {
-  PassportClerkLineLock->Acquire();
-  int my_line = -1;
-  int line_size = 9999;
-  for(int i = 0; i < NUM_PASSPORTCLERKS; i++) {
-    if(PassportClerks[i]->getLineSize() < line_size && PassportClerks[i]->getState() != 2) {
-      line_size = PassportClerks[i]->getLineSize();
-      my_line = i;
-    }
-  }
+// int Customer::FindPassportLine() {
+//   PassportClerkLineLock->Acquire();
+//   int my_line = -1;
+//   int line_size = 9999;
+//   for(int i = 0; i < NUM_PASSPORTCLERKS; i++) {
+//     if(PassportClerks[i]->getLineSize() < line_size && PassportClerks[i]->getState() != 2) {
+//       line_size = PassportClerks[i]->getLineSize();
+//       my_line = i;
+//     }
+//   }
 
-  if (PassportClerks[my_line]->getState() == 1) {
-    PassportClerks[my_line]->incrementLineSize();
-    PassportClerkLineCV->Wait(PassportClerkLineLock);
-    PassportClerks[my_line]->decrementLineSize();
-  }
+//   if (PassportClerks[my_line]->getState() == 1) {
+//     PassportClerks[my_line]->incrementLineSize();
+//     PassportClerkLineCV->Wait(PassportClerkLineLock);
+//     PassportClerks[my_line]->decrementLineSize();
+//   }
 
-  PassportClerks[my_line]->setState(1);
-  std::cout << this->name << " just entered line " << my_line << " with size " << PassportClerks[my_line]->getLineSize() << std::endl;
-  PassportClerkLineLock->Release();
+//   PassportClerks[my_line]->setState(1);
+//   std::cout << this->name << " just entered line " << my_line << " with size " << PassportClerks[my_line]->getLineSize() << std::endl;
+//   PassportClerkLineLock->Release();
 
-  return my_line;
-}
+//   return my_line;
+// }
 
-void Customer::GetPassport(int my_line) {
-    /*PassportClerks will "certify" a Customer ONLY if the 
-    Customer has a filed application and picture.f a Customer shows up
-     to the PassportClerk BEFORE both documenets are filed, they they 
-     (the Customer) are punished by being forec to wait for some arbitrary amount of time. 
-     This is to be from 100 to 1000 currentThread->Yield() calls. 
-     After these calls are completed, ,the Customer goes to the back of the PassportClerk line. 
-     NOTE It takes time for a PassportClerk to "record" a Customer's completed documents. */
+// void Customer::GetPassport(int my_line) {
+//     /*PassportClerks will "certify" a Customer ONLY if the 
+//     Customer has a filed application and picture.f a Customer shows up
+//      to the PassportClerk BEFORE both documenets are filed, they they 
+//      (the Customer) are punished by being forec to wait for some arbitrary amount of time. 
+//      This is to be from 100 to 1000 currentThread->Yield() calls. 
+//      After these calls are completed, ,the Customer goes to the back of the PassportClerk line. 
+//      NOTE It takes time for a PassportClerk to "record" a Customer's completed documents. */
 
-    PassportClerks[my_line]->Acquire();
-    std::cout << this->name << " Going to passport clerk to get passport taken " << PicClerks[my_line]->getName() << std::endl;
+//     PassportClerks[my_line]->Acquire();
+//     std::cout << this->name << " Going to passport clerk to get passport taken " << PicClerks[my_line]->getName() << std::endl;
 
-    if(this->pic_clerk == false || this->app_clerk == false){
-        //send customer to back of line after yield
-    } else{
-
-
-        PassportClerks[my_line]->getCV()->Signal(PassportClerks[my_line]->getLock());
-        //waits for passport clerk to certify passport
-
-        PicClerks[my_line]->Release(); // no busy waiting
-    for(int i =100; i<1000; ++i){
-        currentThread->Yield();
-    }
-    PassportClerks[my_line]->Acquire();
-    if(PassportClerks[my_line]->getState() == 0 ){
-        PassportClerks[my_line]->getCV()->Signal(PassportClerks[my_line]->getLock());
-        std::cout << this->name << "Passport is certified by" << PassportClerks[my_line]->getName() << std::endl;
-    }
-    this->passport_clerk = true;
-    PassportClerks[my_line]->Release();  
-
-    }
-
-}
-
-int Customer::FindCashierLine() {
-  CashierLineLock->Acquire();
-  int my_line = -1;
-  int line_size = 9999;
-  for(int i = 0; i < NUM_CASHIERS; i++) {
-    if(Cashiers[i]->getLineSize() < line_size && Cashiers[i]->getState() != 2) {
-      line_size = Cashiers[i]->getLineSize();
-      my_line = i;
-    }
-  }
-
-  if (Cashiers[my_line]->getState() == 1) {
-    Cashiers[my_line]->incrementLineSize();
-    CashierLineCV->Wait(CashierLineLock);
-    Cashiers[my_line]->decrementLineSize();
-  }
-
-  Cashiers[my_line]->setState(1);
-  std::cout << this->name << " just entered line " << my_line << " with size " << Cashiers[my_line]->getLineSize() << std::endl;
-  CashierLineLock->Release();
-
-  return my_line;
-}
-
-void Customer::PayCashier(int my_line) {
-    Cashiers[my_line]->Acquire();
-    std::cout << this->name << " Going to cashier to pay for passport " << Cashiers[my_line]->getName() << std::endl;
-
-    if(this->passport_clerk == false){
-        //yield and send customer to back of line
-    }
-    else{
-        Cashiers[my_line]->TakeMoneyFromCustomer(this);
-        this->money -= 100; 
-
-        Cashiers[my_line]->getCV()->Signal(Cashiers[my_line]->getLock());    
-        Cashiers[my_line]->getCV()->Wait(Cashiers[my_line]->getLock());    
+//     if(this->pic_clerk == false || this->app_clerk == false){
+//         //send customer to back of line after yield
+//     } else{
 
 
-    }
+//         PassportClerks[my_line]->getCV()->Signal(PassportClerks[my_line]->getLock());
+//         //waits for passport clerk to certify passport
 
-}
+//         PicClerks[my_line]->Release(); // no busy waiting
+//     for(int i =100; i<1000; ++i){
+//         currentThread->Yield();
+//     }
+//     PassportClerks[my_line]->Acquire();
+//     if(PassportClerks[my_line]->getState() == 0 ){
+//         PassportClerks[my_line]->getCV()->Signal(PassportClerks[my_line]->getLock());
+//         std::cout << this->name << "Passport is certified by" << PassportClerks[my_line]->getName() << std::endl;
+//     }
+//     this->passport_clerk = true;
+//     PassportClerks[my_line]->Release();  
 
+//     }
+
+// }
+
+// int Customer::FindCashierLine() {
+//   CashierLineLock->Acquire();
+//   int my_line = -1;
+//   int line_size = 9999;
+//   for(int i = 0; i < NUM_CASHIERS; i++) {
+//     if(Cashiers[i]->getLineSize() < line_size && Cashiers[i]->getState() != 2) {
+//       line_size = Cashiers[i]->getLineSize();
+//       my_line = i;
+//     }
+//   }
+
+//   if (Cashiers[my_line]->getState() == 1) {
+//     Cashiers[my_line]->incrementLineSize();
+//     CashierLineCV->Wait(CashierLineLock);
+//     Cashiers[my_line]->decrementLineSize();
+//   }
+
+//   Cashiers[my_line]->setState(1);
+//   std::cout << this->name << " just entered line " << my_line << " with size " << Cashiers[my_line]->getLineSize() << std::endl;
+//   CashierLineLock->Release();
+
+//   return my_line;
+// }
+
+// void Customer::PayCashier(int my_line) {
+//     Cashiers[my_line]->Acquire();
+//     std::cout << this->name << " Going to cashier to pay for passport " << Cashiers[my_line]->getName() << std::endl;
+
+//     if(this->passport_clerk == false){
+//         //yield and send customer to back of line
+//     }
+//     else{
+//         Cashiers[my_line]->TakeMoneyFromCustomer(this);
+//         this->money -= 100; 
+
+//         Cashiers[my_line]->getCV()->Signal(Cashiers[my_line]->getLock());    
+//         Cashiers[my_line]->getCV()->Wait(Cashiers[my_line]->getLock());    
+
+
+//     }
+// }
 
 void CustomerStart(int index) {
   Customers[index]->CustomerStart();
@@ -1144,44 +1290,45 @@ void AppClerkStart(int index) {
 }
 
 void PicClerkStart(int index){
-    PicClerks[index]->PicClerkStart();
+  PicClerks[index]->PicClerkStart();
 }
 
-void PassportClerkStart(int index){
-    PassportClerks[index]->PassportClerkStart();
-}
+// void PassportClerkStart(int index){
+//   PassportClerks[index]->PassportClerkStart();
+//}
 
 void TEST_1() {
   /* Customers always take the shortest line, but no 2 customers 
   ever choose the same shortest line at the same time */
   NUM_CUSTOMERS = 2;
-  NUM_APPCLERKS = 2;
+  NUM_APP_CLERKS = 2;
+  int SSN = 100000000;
 
   Customers = new Customer*[NUM_CUSTOMERS];
-  AppClerks = new AppClerk*[NUM_APPCLERKS];
+  AppClerks = new AppClerk*[NUM_APP_CLERKS];
 
-  AppClerkLineLock = new Lock("App Clerk Line Lock");
-  AppClerkLineCV = new Condition("App Clerk Line CV");
+  AppClerkLineLock = new Lock("appClerk_lineLock");
 
-  for(int i = 0; i < NUM_APPCLERKS; i++) {
-    char* debugName = new char[15];
-    sprintf(debugName, "appClerk_%d", i);
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "ApplicationClerk %d", i);
     AppClerks[i] = new AppClerk(debugName, i);
   }
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
-    char* debugName = new char[15];
-    sprintf(debugName, "customer_%d", i);
-    Customers[i] = new Customer(debugName, i);
+    char* debugName = new char[20];
+    SSN += rand()%(90000000/NUM_CUSTOMERS);
+    sprintf(debugName, "Customer %d", i);
+    Customers[i] = new Customer(debugName, SSN);
   }
 
   // Because we're inappropriately incrementing lineSize,
-  // an error will be thrown on the App Clerk Line CV
-  AppClerks[0]->incrementLineSize();
-  AppClerks[0]->incrementLineSize();
-  std::cout << "Ignore Condition::Signal error" << std::endl;
+  // an error will be thrown on the appClerk_lineCV
+  // AppClerks[0]->incrementLineSize();
+  // AppClerks[0]->incrementLineSize();
+  // std::cout << "Ignore Condition::Signal error" << std::endl;
 
-  for(int i = 0; i < NUM_APPCLERKS; i++) {
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
     AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
   }
 
@@ -1192,7 +1339,6 @@ void TEST_1() {
 
 void TEST_2() {
   // Managers only read one from one Clerk's total money received, at a time
-
 }
 
 void TEST_3() {
@@ -1219,49 +1365,53 @@ void TEST_7() {
 }
 
 void FULL_SIMULATION() {
+  Customers = new Customer*[NUM_CUSTOMERS];
+  AppClerks = new AppClerk*[NUM_APP_CLERKS];
+  PicClerks = new PicClerk*[NUM_PIC_CLERKS];
+  int SSN = 10000000;
 
+  AppClerkLineLock = new Lock("appClerk_lineLock");
+  PicClerkLineLock = new Lock("picClerk_lineLock");
+
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "ApplicationClerk %d", i);
+    AppClerks[i] = new AppClerk(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_PIC_CLERKS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "PictureClerk %d", i);
+    PicClerks[i] = new PicClerk(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    char* debugName = new char[15];
+    SSN += rand()%(90000000/NUM_CUSTOMERS);
+    sprintf(debugName, "Customer %d", i);
+    Customers[i] = new Customer(debugName, SSN);
+  }
+
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
+  }
+
+  for(int i = 0; i < NUM_PIC_CLERKS; i++) {
+    PicClerks[i]->Fork((VoidFunctionPtr)PicClerkStart, i);
+  }
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
+  }
 }
-
-/*
- *  int NUM_CUSTOMERS = 50;
- *  int NUM_APPCLERKS = 5;
- * 
- *  //Declaring customers and clerks
- *  Customers = new Customer*[NUM_CUSTOMERS];
- *  AppClerks = new AppClerks*[NUM_APPCLERKS];
- *  PicClerks = new PicClerks*[NUM_APPCLERKS];
- *  PassportClerks = new PassportClerks*[NUM_APPCLERKS];
- *  Cashiers = new Cashiers*[NUM_APPCLERKS];
- * 
- *  //Initializing different clerks' lines
- *  AppClerkLineLock = new Lock("App Clerk Line Lock");
- *  AppClerkLineCV = new Condition("App Clerk Line CV");
- *
- *  PicClerkLineLock = new Lock("Pic Clerk Line Lock");
- *  PicClerkLineCV = new Condition("Pic Clerk Line CV");
- *
- *  PassportClerkLineLock = new Lock("PP Clerk Line Lock");
- *  PassportClerkLineCV = new Condition("PP Clerk Line CV");
- *
- *  CashierLineLock = new Lock("Cashier Line Lock");
- *  CashierLineCV = new Condition("Cashier Line CV");
- *
- *  for(int i = 0; i < NUM_CUSTOMERS; i++){
- *    Customers[i] = new Customer("customer_" + i);
- *  }
- *
- *  for(int i = 0; i < NUM_APPCLERKS; i++) {
- *    AppClerks[i] = new AppClerk("appClerk_" + i);
- *    PicClerks[i] = new PicClerk("picClerk_" + i);
- *    PassportClerks[i] = new PassportClerk("ppClerk_" + i);
- *    Cashiers[i] = new Cashier("cashier_" + i);
- *  }
- */
 
 void Problem2() {
 	// Tests we have to write for problem 2
   Thread *t;
   test = false;
+  AppClerkBribeMoney = 0;
+  PicClerkBribeMoney = 0;
+  PassportClerkBribeMoney = 0;
 
   std::cout << "Please select which test you would like to run:" << std::endl;
   std::cout << " 1. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time" << std::endl;
@@ -1331,10 +1481,21 @@ void Problem2() {
       printf("-- Test 7 Completed");
     }
     else if(testSelection == 8) {
-      printf("-- Starting Full Simulation\n");
-      t = new Thread("ts2_t8");
-      //t->Fork((VoidFunctionPtr)TEST_8, 0);
-      printf("-- Full Simulation Completed");
+      test = false;
+      std::cout << "-- Starting Full Simulation" << std::endl;
+      std::cout << "How many customers? ";
+      std::cin >> NUM_CUSTOMERS;
+      std::cout << "How many application clerks? ";
+      std::cin >> NUM_APP_CLERKS;
+      std::cout << "How many picture clerks? ";
+      std::cin >> NUM_PIC_CLERKS;
+      t = new Thread("ts2_fullsimulation");
+      t->Fork((VoidFunctionPtr)FULL_SIMULATION, 0);
+      //for (int i = 0; i < NUM_APP_CLERKS + NUM_CUSTOMERS; i++) {
+        sem.P();
+      //}
+      std::cout << "-- Full Simulation Completed" << std::endl;
+      std::cout << "Exiting!" << std::endl;
     }
     else if(testSelection == 9) {    
       printf("Quitting!");
