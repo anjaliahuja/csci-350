@@ -1596,6 +1596,14 @@ void TEST_3() {
   The Cashier does not start on another customer until they know that the last 
   Customer has left their area */
 
+  // TODO: Create a queue to push statements onto.. check if they are in the 
+  // correct order.. ex:
+  // Cashier 0 has provided Customer 5 their completed passport
+  // Cashier 0 has recorded that Customer 5 has been given their completed passport
+  // Customer 5 is leaving the Passport Office
+  // Cashier 0 has signalled a Customer to come to their counter
+  // can't think of another way....
+
   NUM_CUSTOMERS = 2;
   NUM_CASHIERS = 1;
   int SSN = 100000000;
