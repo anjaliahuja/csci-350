@@ -553,7 +553,7 @@ class AppClerk : public Thread {
         std::cout << currentCustomer->getName() << std::endl;
         this->totalServiced++;
 
-        // do you need this wait? why does the customer need to signal back
+        // Wait for customer to leave
         cv->Wait(this->lock);
         currentCustomer = NULL;
         this->lock->Release();
@@ -727,7 +727,8 @@ class PicClerk : public Thread {
           totalServiced++;
         }
 
-        //cv->Wait(this->lock);
+        // Wait for customer to leave
+        cv->Wait(this->lock);
         currentCustomer = NULL;
         this->lock->Release();
         
@@ -905,6 +906,8 @@ class PassportClerk : public Thread {
           totalServiced++;
         }
 
+        // Wait for customer to leave
+        cv->Wait(this->lock);
         currentCustomer = NULL;
         this->lock->Release();
         
@@ -1083,6 +1086,8 @@ class Cashier : public Thread {
           totalServiced++;
         }
 
+        // Wait for customer to leave
+        cv->Wait(this->lock);
         currentCustomer = NULL;
         this->lock->Release();
         
@@ -1260,7 +1265,7 @@ void Customer::GetApplicationFiled(int my_line) {
   // Wait for clerk to do their job
   AppClerks[my_line]->getCV()->Wait(AppClerks[my_line]->getLock());
 
-  // why do we need to signal the clerk again.
+  // Signal clerk that I'm leaving
   AppClerks[my_line]->getCV()->Signal(AppClerks[my_line]->getLock());
   AppClerks[my_line]->Release();
   this->app_clerk = true;
@@ -1326,6 +1331,9 @@ void Customer::GetPictureTaken(int my_line){
         // Wait to make sure that clerk acknowledges & then go back in line
         PicClerks[my_line]->getCV()->Wait(PicClerks[my_line]->getLock());
 
+         // Signal clerk that I'm leaving
+        PicClerks[my_line]->getCV()->Signal(PicClerks[my_line]->getLock());
+        
         PicClerks[my_line]->Release();
         GetPictureTaken(FindPicLine());
         return;
@@ -1340,6 +1348,8 @@ void Customer::GetPictureTaken(int my_line){
     // Wait for application to be complete
     PicClerks[my_line]->getCV()->Wait(PicClerks[my_line]->getLock());
 
+    // Signal clerk that I'm leaving
+    PicClerks[my_line]->getCV()->Signal(PicClerks[my_line]->getLock());
     this->pic_clerk = true;
     PicClerks[my_line]->Release();  
 }
@@ -1405,6 +1415,9 @@ void Customer::GetPassport(int my_line) {
       std::cout << this->name << " has gone to " << PassportClerks[my_line]->getName() << " too soon. ";
       std::cout << "They are going to the back of the line." << std::endl;
 
+      // Signal clerk that I'm leaving
+      PassportClerks[my_line]->getCV()->Signal(PassportClerks[my_line]->getLock());
+
       // Punishment
       PassportClerks[my_line]->Release(); // no busy waiting
       for(int i =100; i<1000; ++i){
@@ -1415,12 +1428,15 @@ void Customer::GetPassport(int my_line) {
       // Assuming back of line does not mean their current line
       GetPassport(FindPassportLine());
       return;
-    } else{
-        //waits for passport clerk to record passport
-        PassportClerks[my_line]->getCV()->Wait(PassportClerks[my_line]->getLock());    
-        this->passport_clerk = true;
-        PassportClerks[my_line]->Release();  
-    }
+    } 
+    
+    //waits for passport clerk to record passport
+    PassportClerks[my_line]->getCV()->Wait(PassportClerks[my_line]->getLock());    
+    
+    // Signal clerk that I'm leaving
+    PassportClerks[my_line]->getCV()->Signal(PassportClerks[my_line]->getLock());
+    this->passport_clerk = true;
+    PassportClerks[my_line]->Release();  
 }
 
 int Customer::FindCashierLine() {
@@ -1475,6 +1491,9 @@ void Customer::PayCashier(int my_line) {
       std::cout << this->name << " has gone to " << Cashiers[my_line]->getName() << " too soon. ";
       std::cout << "They are going to the back of the line." << std::endl;
 
+      // Signal cashier that I'm leaving
+      Cashiers[my_line]->getCV()->Signal(Cashiers[my_line]->getLock());
+      
       // Punishment
       Cashiers[my_line]->Release(); // no busy waiting
       for(int i =100; i<1000; ++i){
@@ -1484,22 +1503,24 @@ void Customer::PayCashier(int my_line) {
       sendToBackOfLine = false;
       PayCashier(FindCashierLine());
       return;
-    } else{
-        Cashiers[my_line]->getCV()->Signal(Cashiers[my_line]->getLock());
-        money -= 100;
-        std::cout << this->name << " has given " << Cashiers[my_line]->getName() << " $100" << std::endl;
-
-        //waits for cashier to give me passport
-        Cashiers[my_line]->getCV()->Wait(Cashiers[my_line]->getLock());
-
-        //ensure cashier that i've been given my passport
-        Cashiers[my_line]->getCV()->Signal(Cashiers[my_line]->getLock());
-
-        Cashiers[my_line]->getCV()->Wait(Cashiers[my_line]->getLock());
-
-        Cashiers[my_line]->Release();  
     }
+    
+    Cashiers[my_line]->getCV()->Signal(Cashiers[my_line]->getLock());
+    money -= 100;
+    std::cout << this->name << " has given " << Cashiers[my_line]->getName() << " $100" << std::endl;
 
+    //waits for cashier to give me passport
+    Cashiers[my_line]->getCV()->Wait(Cashiers[my_line]->getLock());
+
+    //ensure cashier that i've been given my passport
+    Cashiers[my_line]->getCV()->Signal(Cashiers[my_line]->getLock());
+
+    Cashiers[my_line]->getCV()->Wait(Cashiers[my_line]->getLock());
+
+    // Signal cashier that I'm leaving
+    Cashiers[my_line]->getCV()->Signal(Cashiers[my_line]->getLock());
+
+    Cashiers[my_line]->Release();  
 }
 
 void CustomerStart(int index) {
