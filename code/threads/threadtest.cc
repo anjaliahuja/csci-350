@@ -396,7 +396,8 @@ int NUM_CASHIERS;
 int NUM_CUSTOMERS;
 
 // For tests.  Have to sem.V() for test to finish.
-bool test;
+bool test; // TODO: Remove... too lazy find them all
+bool test1;
 
 
 //Defining Classes
@@ -508,9 +509,9 @@ class AppClerk : public Thread {
       delete bribeLine;
     }
 
-    void AppClerkStart() {
+    void AppClerkStart() { 
       while(true) {
-         AppClerkLineLock->Acquire();
+        AppClerkLineLock->Acquire();
 
         if (getBribeLineSize() != 0) {
           bribeLineCV->Signal(AppClerkLineLock);
@@ -557,10 +558,7 @@ class AppClerk : public Thread {
         cv->Wait(this->lock);
         currentCustomer = NULL;
         this->lock->Release();
-
-        if (test) {
-          sem.V();
-        }
+        if (test1) sem.V();
       }
     }
 
@@ -731,10 +729,6 @@ class PicClerk : public Thread {
         cv->Wait(this->lock);
         currentCustomer = NULL;
         this->lock->Release();
-        
-        if (test) {
-          sem.V();
-        }
       }
     }
 
@@ -910,10 +904,6 @@ class PassportClerk : public Thread {
         cv->Wait(this->lock);
         currentCustomer = NULL;
         this->lock->Release();
-        
-        if (test) {
-          sem.V();
-        }
       }
     }
  
@@ -1090,10 +1080,6 @@ class Cashier : public Thread {
         cv->Wait(this->lock);
         currentCustomer = NULL;
         this->lock->Release();
-        
-        if (test) {
-          sem.V();
-        }
       }
     }
 
@@ -1191,7 +1177,7 @@ void Customer::CustomerStart() {
   // Not even entirely sure if this is a requiremetn
   int task = rand()%2;
   int my_line = -10;
-  if (task == 0) {
+  if (task == 0 || test1) {
     my_line = FindAppLine();
     GetApplicationFiled(my_line);
 
@@ -1214,9 +1200,6 @@ void Customer::CustomerStart() {
   PayCashier(my_line);
 
   std::cout << name << " is leaving the Passport Office" << std::endl;
-  if (test) {
-    sem.V();
-  }
 }
 
 int Customer::FindAppLine() {
@@ -1493,7 +1476,7 @@ void Customer::PayCashier(int my_line) {
 
       // Signal cashier that I'm leaving
       Cashiers[my_line]->getCV()->Signal(Cashiers[my_line]->getLock());
-      
+
       // Punishment
       Cashiers[my_line]->Release(); // no busy waiting
       for(int i =100; i<1000; ++i){
@@ -1543,12 +1526,28 @@ void CashierStart(int index) {
   Cashiers[index]->CashierStart();
 }
 
+void CustomerTest1(int index) {
+  Customers[index]->GetApplicationFiled(Customers[index]->FindAppLine());
+  sem.V();
+}
+
 void TEST_1() {
   /* Customers always take the shortest line, but no 2 customers 
   ever choose the same shortest line at the same time */
   NUM_CUSTOMERS = 2;
   NUM_APP_CLERKS = 2;
   int SSN = 100000000;
+
+  std::cout << "Number of Customers = " << NUM_CUSTOMERS << std::endl;
+  std::cout << "Number of ApplicationClerks = " << NUM_APP_CLERKS << std::endl;
+  std::cout << "Number of PictureClerks = 0" << std::endl;
+  std::cout << "Number of PassportClerks = 0" << std::endl;
+  std::cout << "Number of Cashiers = 0" << std::endl;
+  std::cout << "Number of Senators = 0" << std::endl;
+  std::cout << std::endl;
+  std::cout << "This test will only run for the ApplicationClerk." << std::endl;
+  std::cout << "ApplicationClerk 0 will start with 2 customers, simulating a 'longer' line" << std::endl;
+  std::cout << std::endl;
 
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
@@ -1568,18 +1567,13 @@ void TEST_1() {
     Customers[i] = new Customer(debugName, SSN);
   }
 
-  // Because we're inappropriately incrementing lineSize,
-  // an error will be thrown on the appClerk_lineCV
-  // AppClerks[0]->incrementLineSize();
-  // AppClerks[0]->incrementLineSize();
-  // std::cout << "Ignore Condition::Signal error" << std::endl;
+  AppClerks[0]->addToLine(new Customer("dummy", 0));
+  AppClerks[0]->addToLine(new Customer("dummy", 1));
 
-  for(int i = 0; i < NUM_APP_CLERKS; i++) {
-    AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
-  }
+  AppClerks[1]->Fork((VoidFunctionPtr)AppClerkStart, 1);
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
-    Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
+    Customers[i]->Fork((VoidFunctionPtr)CustomerTest1, i);
   }
 }
 
@@ -1701,7 +1695,7 @@ void Problem2() {
     std::cin >> testSelection;
     if(testSelection == 1) {
       std::cout << "-- Starting Test 1"<<std::endl;
-      test = true;
+      test1 = true;
       t = new Thread("ts2_t1");
       t->Fork((VoidFunctionPtr)TEST_1,0);
       for (int i = 0; i < 4; i++) {
