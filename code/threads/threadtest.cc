@@ -396,8 +396,8 @@ int NUM_CASHIERS;
 int NUM_CUSTOMERS;
 
 // For tests.  Have to sem.V() for test to finish.
-bool test; // TODO: Remove... too lazy find them all
 bool test1;
+bool test3;
 
 
 //Defining Classes
@@ -1080,6 +1080,8 @@ class Cashier : public Thread {
         cv->Wait(this->lock);
         currentCustomer = NULL;
         this->lock->Release();
+
+        if (test3) sem.V();
       }
     }
 
@@ -1531,6 +1533,11 @@ void CustomerTest1(int index) {
   sem.V();
 }
 
+void CustomerTest3(int index) {
+  Customers[index]->PayCashier(Customers[index]->FindCashierLine());
+  sem.V();
+}
+
 void TEST_1() {
   /* Customers always take the shortest line, but no 2 customers 
   ever choose the same shortest line at the same time */
@@ -1585,6 +1592,42 @@ void TEST_3() {
   /* Customers do not leave until they are given their passport by the Cashier. 
   The Cashier does not start on another customer until they know that the last 
   Customer has left their area */
+
+  NUM_CUSTOMERS = 2;
+  NUM_CASHIERS = 1;
+  int SSN = 100000000;
+
+  std::cout << "Number of Customers = " << NUM_CUSTOMERS << std::endl;
+  std::cout << "Number of ApplicationClerks = 0" << std::endl;
+  std::cout << "Number of PictureClerks = 0" << std::endl;
+  std::cout << "Number of PassportClerks = 0" << std::endl;
+  std::cout << "Number of Cashiers = " << NUM_CASHIERS << std::endl;
+  std::cout << "Number of Senators = 0" << std::endl;
+  std::cout << std::endl;
+  std::cout << "This test will only run for the Cashier." << std::endl;
+  std::cout << std::endl;
+
+  Customers = new Customer*[NUM_CUSTOMERS];
+  Cashiers = new Cashier*[NUM_CASHIERS];
+
+  CashierLineLock = new Lock("cashier_lineLock");
+
+  char* debugName = new char[20];
+  sprintf(debugName, "Cashier %d", 0);
+  Cashiers[0] = new Cashier(debugName, 0);
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    debugName = new char[20];
+    SSN += rand()%(90000000/NUM_CUSTOMERS);
+    sprintf(debugName, "Customer %d", i);
+    Customers[i] = new Customer(debugName, SSN);
+  }
+
+  Cashiers[0]->Fork((VoidFunctionPtr)CashierStart, 0);
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    Customers[i]->Fork((VoidFunctionPtr)CustomerTest3, i);
+  }
 }
 
 void TEST_4() {
@@ -1672,11 +1715,12 @@ void FULL_SIMULATION() {
 void Problem2() {
     // Tests we have to write for problem 2
   Thread *t;
-  test = false;
   AppClerkBribeMoney = 0;
   PicClerkBribeMoney = 0;
   PassportClerkBribeMoney = 0;
   CashierMoney = 0;
+  test1 = false;
+  test3 = false;
 
   std::cout << "Please select which test you would like to run:" << std::endl;
   std::cout << " 1. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time" << std::endl;
@@ -1716,10 +1760,14 @@ void Problem2() {
       printf("-- Test 2 Completed");
     }
     else if(testSelection == 3) {
-      printf("-- Starting Test 3\n");
+      std::cout << "-- Starting Test 3" << std::endl;
+      test3 = true;
       t = new Thread("ts2_t3");
-      //t->Fork((VoidFunctionPtr)TEST_3, 0);
-      printf("-- Test 3 Completed");
+      t->Fork((VoidFunctionPtr)TEST_3, 0);
+      for (int i = 0; i < 3; i++) {
+        sem.P();
+      }
+      std::cout << "-- Test 3 Completed" << std::endl;
     }
     else if(testSelection == 4) {
       printf("-- Starting Test 4\n");
@@ -1746,7 +1794,6 @@ void Problem2() {
       printf("-- Test 7 Completed");
     }
     else if(testSelection == 8) {
-      test = false;
       std::cout << "-- Starting Full Simulation" << std::endl;
       std::cout << "How many customers? ";
       std::cin >> NUM_CUSTOMERS;
