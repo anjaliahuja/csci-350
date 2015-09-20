@@ -396,8 +396,8 @@ int NUM_CASHIERS;
 int NUM_CUSTOMERS;
 
 // For tests.  Have to sem.V() for test to finish.
-bool test1;
-bool test3;
+bool test6;
+int MONEY;
 
 
 //Defining Classes
@@ -558,7 +558,6 @@ class AppClerk : public Thread {
         cv->Wait(this->lock);
         currentCustomer = NULL;
         this->lock->Release();
-        if (test1) sem.V();
       }
     }
 
@@ -1080,8 +1079,6 @@ class Cashier : public Thread {
         cv->Wait(this->lock);
         currentCustomer = NULL;
         this->lock->Release();
-
-        if (test3) sem.V();
       }
     }
 
@@ -1179,7 +1176,7 @@ void Customer::CustomerStart() {
   // Not even entirely sure if this is a requiremetn
   int task = rand()%2;
   int my_line = -10;
-  if (task == 0 || test1) {
+  if (task == 0) {
     my_line = FindAppLine();
     GetApplicationFiled(my_line);
 
@@ -1202,6 +1199,7 @@ void Customer::CustomerStart() {
   PayCashier(my_line);
 
   std::cout << name << " is leaving the Passport Office" << std::endl;
+  sem.V();
 }
 
 int Customer::FindAppLine() {
@@ -1225,6 +1223,7 @@ int Customer::FindAppLine() {
     std::cout << this->name << " has gotten in bribe line for " << AppClerks[my_line]->getName() << std::endl;
     AppClerks[my_line]->getBribeLineCV()->Wait(AppClerkLineLock);
     money -= 500;
+    if (test6) MONEY += 500;
   } else {
     if (AppClerks[my_line]->getState() == 1) {
       AppClerks[my_line]->addToLine(this);
@@ -1282,6 +1281,7 @@ int Customer::FindPicLine() {
     std::cout << this->name << " has gotten in bribe line for " << PicClerks[my_line]->getName() << std::endl;
     PicClerks[my_line]->getBribeLineCV()->Wait(PicClerkLineLock);
     money -= 500;
+    if (test6) MONEY += 500;
   } else {
     if (PicClerks[my_line]->getState() == 1) {
       PicClerks[my_line]->addToLine(this);
@@ -1361,6 +1361,7 @@ int Customer::FindPassportLine() {
     std::cout << this->name << " has gotten in bribe line for " << PassportClerks[my_line]->getName() << std::endl;
     PassportClerks[my_line]->getBribeLineCV()->Wait(PassportClerkLineLock);
     money -= 500;
+    if (test6) MONEY += 500;
   } else {
     if (PassportClerks[my_line]->getState() == 1) {
       PassportClerks[my_line]->addToLine(this);
@@ -1446,6 +1447,7 @@ int Customer::FindCashierLine() {
     std::cout << this->name << " has gotten in bribe line for " << Cashiers[my_line]->getName() << std::endl;
     Cashiers[my_line]->getBribeLineCV()->Wait(CashierLineLock);
     money -= 500;
+    if (test6) MONEY += 500;
   } else {
     if (Cashiers[my_line]->getState() == 1) {
       Cashiers[my_line]->addToLine(this);
@@ -1492,6 +1494,7 @@ void Customer::PayCashier(int my_line) {
     
     Cashiers[my_line]->getCV()->Signal(Cashiers[my_line]->getLock());
     money -= 100;
+    if (test6) MONEY += 100;
     std::cout << this->name << " has given " << Cashiers[my_line]->getName() << " $100" << std::endl;
 
     //waits for cashier to give me passport
@@ -1640,6 +1643,88 @@ void TEST_5() {
 
 void TEST_6() {
   // Total sales never suffers from a race condition
+
+  // TODO: 
+  // basically check if all bribe money + cashier money 
+  // = customer money spent
+  // confused because why would there be a race condition?
+  // not like your money needs a lock?
+  MONEY = 0;
+  NUM_CUSTOMERS = 7;
+  NUM_APP_CLERKS = 2;
+  NUM_PIC_CLERKS = 2;
+  NUM_PASSPORT_CLERKS = 2;
+  NUM_CASHIERS = 2;
+  Customers = new Customer*[NUM_CUSTOMERS];
+  AppClerks = new AppClerk*[NUM_APP_CLERKS];
+  PicClerks = new PicClerk*[NUM_PIC_CLERKS];
+  PassportClerks = new PassportClerk*[NUM_PASSPORT_CLERKS];
+  Cashiers = new Cashier*[NUM_CASHIERS];
+  int SSN = 10000000;
+
+  std::cout << "Number of Customers = " << NUM_CUSTOMERS << std::endl;
+  std::cout << "Number of ApplicationClerks = " << NUM_APP_CLERKS << std::endl;
+  std::cout << "Number of PictureClerks = " << NUM_PIC_CLERKS << std::endl;
+  std::cout << "Number of PassportClerks = " << NUM_PASSPORT_CLERKS << std::endl;
+  std::cout << "Number of Cashiers = " << NUM_CASHIERS << std::endl;
+  std::cout << "Number of Senators = 0" << std::endl;
+  std::cout << std::endl;
+
+  AppClerkLineLock = new Lock("appClerk_lineLock");
+  PicClerkLineLock = new Lock("picClerk_lineLock");
+  PassportClerkLineLock = new Lock("passportClerk_lineLock");
+  CashierLineLock = new Lock("cashier_lineLock");
+
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "ApplicationClerk %d", i);
+    AppClerks[i] = new AppClerk(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_PIC_CLERKS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "PictureClerk %d", i);
+    PicClerks[i] = new PicClerk(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "PassportClerk %d", i);
+    PassportClerks[i] = new PassportClerk(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_CASHIERS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "Cashier %d", i);
+    Cashiers[i] = new Cashier(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    char* debugName = new char[15];
+    SSN += rand()%(90000000/NUM_CUSTOMERS);
+    sprintf(debugName, "Customer %d", i);
+    Customers[i] = new Customer(debugName, SSN);
+  }
+
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
+  }
+
+  for(int i = 0; i < NUM_PIC_CLERKS; i++) {
+    PicClerks[i]->Fork((VoidFunctionPtr)PicClerkStart, i);
+  }
+
+  for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
+    PassportClerks[i]->Fork((VoidFunctionPtr)PassportClerkStart, i);
+  }
+
+  for(int i = 0; i < NUM_CASHIERS; i++) {
+    Cashiers[i]->Fork((VoidFunctionPtr)CashierStart, i);
+  }
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
+  }
 }
 
 void TEST_7() {
@@ -1648,6 +1733,14 @@ void TEST_7() {
 }
 
 void FULL_SIMULATION() {
+  std::cout << "Number of Customers = " << NUM_CUSTOMERS << std::endl;
+  std::cout << "Number of ApplicationClerks = " << NUM_APP_CLERKS << std::endl;
+  std::cout << "Number of PictureClerks = " << NUM_PIC_CLERKS << std::endl;
+  std::cout << "Number of PassportClerks = " << NUM_PASSPORT_CLERKS << std::endl;
+  std::cout << "Number of Cashiers = " << NUM_CASHIERS << std::endl;
+  std::cout << "Number of Senators = 0" << std::endl;
+  std::cout << std::endl;
+
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
   PicClerks = new PicClerk*[NUM_PIC_CLERKS];
@@ -1719,8 +1812,7 @@ void Problem2() {
   PicClerkBribeMoney = 0;
   PassportClerkBribeMoney = 0;
   CashierMoney = 0;
-  test1 = false;
-  test3 = false;
+  test6 = false;
 
   std::cout << "Please select which test you would like to run:" << std::endl;
   std::cout << " 1. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time" << std::endl;
@@ -1739,10 +1831,9 @@ void Problem2() {
     std::cin >> testSelection;
     if(testSelection == 1) {
       std::cout << "-- Starting Test 1"<<std::endl;
-      test1 = true;
       t = new Thread("ts2_t1");
       t->Fork((VoidFunctionPtr)TEST_1,0);
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 2; i++) {
         sem.P();
       }
       if (AppClerks[0]->getLineSize() == 2 &&
@@ -1754,44 +1845,53 @@ void Problem2() {
       std::cout << "-- Test 1 Completed" << std::endl;
     }
     else if(testSelection == 2) {
-      printf("-- Starting Test 2\n");
+      std::cout << "-- Starting Test 2" << std::endl;
       t = new Thread("ts2_t2");
       //t->Fork((VoidFunctionPtr)TEST_2, 0);
-      printf("-- Test 2 Completed");
+      std::cout << "-- Test 2 Completed" << std::endl;
     }
     else if(testSelection == 3) {
       std::cout << "-- Starting Test 3" << std::endl;
-      test3 = true;
       t = new Thread("ts2_t3");
       t->Fork((VoidFunctionPtr)TEST_3, 0);
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < 2; i++) {
         sem.P();
       }
       std::cout << "-- Test 3 Completed" << std::endl;
     }
     else if(testSelection == 4) {
-      printf("-- Starting Test 4\n");
+      std::cout << "-- Starting Test 4" << std::endl;
       t = new Thread("ts2_t4");
       //t->Fork((VoidFunctionPtr)TEST_4, 0);
-      printf("-- Test 4 Completed");
+      std::cout << "-- Test 4 Completed" << std::endl;
     }
     else if(testSelection == 5) {
-      printf("-- Starting Test 5\n");
+      std::cout << "-- Starting Test 5" << std::endl;
       t = new Thread("ts2_t5");
       //t->Fork((VoidFunctionPtr)TEST_5, 0);
-      printf("-- Test 5 Completed");
+      std::cout << "-- Test 5 Completed" << std::endl;
     }
     else if(testSelection == 6) {
-      printf("-- Starting Test 6\n");
+      std::cout << "-- Starting Test 6" << std::endl;
+      test6 = true;
       t = new Thread("ts2_t6");
-      //t->Fork((VoidFunctionPtr)TEST_6, 0);
-      printf("-- Test 6 Completed");
+      t->Fork((VoidFunctionPtr)TEST_6, 0);
+      for (int i = 0; i < 7; i++) {
+        sem.P();
+      }
+      if (MONEY == (AppClerkBribeMoney + PicClerkBribeMoney + 
+        PassportClerkBribeMoney + CashierMoney)) { 
+        std::cout << "Test 6 PASSED" << std::endl;
+      } else {
+        std::cout << "Test 6 FAILED" << std::endl;
+      }
+      std::cout << "-- Test 6 Completed" << std::endl;
     }
     else if(testSelection == 7) {
-      printf("-- Starting Test 7\n");
+      std::cout << "-- Starting Test 7" << std::endl;
       t = new Thread("ts2_t7");
       //t->Fork((VoidFunctionPtr)TEST_7, 0);
-      printf("-- Test 7 Completed");
+      std::cout << "-- Test 7 Completed" << std::endl;
     }
     else if(testSelection == 8) {
       std::cout << "-- Starting Full Simulation" << std::endl;
@@ -1809,14 +1909,13 @@ void Problem2() {
       // make sure to print out how many for each var
       t = new Thread("ts2_fullsimulation");
       t->Fork((VoidFunctionPtr)FULL_SIMULATION, 0);
-      //for (int i = 0; i < NUM_APP_CLERKS + NUM_CUSTOMERS; i++) {
+      for (int i = 0; i < NUM_CUSTOMERS; i++) {
         sem.P();
-      //}
+      }
       std::cout << "-- Full Simulation Completed" << std::endl;
-      std::cout << "Exiting!" << std::endl;
     }
     else if(testSelection == 9) {    
-      printf("Quitting!");
+      std::cout << "Quitting!" << std::endl;
       return;
     }
     else {
