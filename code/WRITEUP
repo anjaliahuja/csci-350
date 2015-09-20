@@ -236,5 +236,17 @@ V. TESTING
 
 VI. DISCUSSION: 
 
+	i. Experiment expectation 
+
+	-Up to 50 customers, 5 clerks of each type, 10 senators and a manager can be fully synchronized and run in proper sequence for a full simulation
+	-Locks are properly acquired and released for the correct interations between customers and clerks and cashiers to take place
+	
+
+	ii. Experiment result
+
+
+	iii. Explanation (Explain how your project proves what its supposed to prove)
+
+	
 
 VII. MISCELLANEOUS 
