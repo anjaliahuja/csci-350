@@ -8,12 +8,15 @@ Title:  Writeup for Project 1, Fall 2015 CSCI 350
 
 I. REQUIREMENTS:
 
-	This project required us to utilize thread syncrhonization in nachos to simulate the multiprocess execution streams that may take place at a bank. To solve the issues of thread synchronization and the possible race conditions that could arise from the sharing of data and improper sequencing of events, we were required to implement Test & Lock methodology using the necessary conditions of mutual exclusion- ensuring that no 1 thread is in a critical section that another thread is currently in. To eliminate any chance of busy waiting, we disabled interrupts and utilized Test & Lock methodology to properly acquire and release shared data. Specifically, we had to ensure that all instances of customers, cashiers, clerks and the manager could share the correct locks, condition variables and monitor variables to pass a test suite of sequence variations and conditions.
+	This project required us to utilize thread syncrhonization in nachos to simulate the multiprocess execution streams that may take place at a passport office. To solve the issues of thread synchronization and the possible race conditions that could arise from the sharing of data and improper sequencing of events, we were required to implement Test & Lock methodology using the necessary conditions of mutual exclusion- ensuring that no 1 thread is in a critical section that another thread is currently in. To eliminate any chance of busy waiting, we disabled interrupts and utilized Test & Lock methodology to properly acquire and release shared data. Specifically, we had to ensure that all instances of customers, cashiers, clerks and the manager could share the correct locks, condition variables and monitor variables to pass a test suite of sequence variations and conditions.
 
 II. ASSUMPTIONS:
 	-Up to 5 of each type of clerk, 50 customers, 1 manager and 10 senators can be simulated and properly synchronized without the program crashing and with the correct sharing of locks, condition variables and monitor variables.
 	-Customers enter the passport office with a completed application
 	-Actions written in the assignment requirements are simulated through the proper implementation of waking up threads, acquiring/releasing locks and using print statements to simualte the exchange of data. 
+	-When a customer gets sent to the "back of the line", they must start over the process of looking for the shortest line.
+	-For PassportClerk & Cashier, there is no official verification of whether they went to the ApplicationClerk or PictureClerk.  Instead, there is a small random chance that the PassportClerk/Cashier tells them to go to the back of the line.  This is because the way our clerks were implemented were that Customers can not move onto the next clerk without a Signal from their current clerk that they can leave.  See https://piazza.com/class/idqhn1k3sfn267?cid=74#
+	-All Clerks and the Cashier have bribe lines.
 
 III. DESIGN
 	-First implemented acquire and release methods of lock to be used by each type of person in the bank
