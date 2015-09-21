@@ -387,6 +387,7 @@ Lock* CashierLineLock;
 // App money + bribe money
 int CashierMoney;
 
+
 Semaphore sem("sem", 0);
 
 int NUM_APP_CLERKS;
@@ -1040,7 +1041,7 @@ class Cashier : public Thread {
                     //TODO: Add code for on break
           this->state = 2;
           std::cout << name << " is going on break" << std::endl;
-          CahierLineLock->Release();
+          CashierLineLock->Release();
           this->lock->Acquire();
           cv->Wait(this->lock);
           std::cout << name << " has woken up" << std::endl;
@@ -1203,6 +1204,9 @@ AppClerk** AppClerks;
 PicClerk** PicClerks;
 PassportClerk** PassportClerks;
 Cashier** Cashiers;
+
+//and Manager
+Manager* manager;
 
 //List of Customers
 Customer** Customers;
@@ -1511,7 +1515,7 @@ int Customer::FindCashierLine() {
     money -= 500;
     if (test6) MONEY += 500;
   } else {
-    if (Cashiers[my_line]->getState() == 1 || Cashier[my_line]->getState() == 2) {
+    if (Cashiers[my_line]->getState() == 1 || Cashiers[my_line]->getState() == 2) {
       Cashiers[my_line]->addToLine(this);
       std::cout << this->name << " has gotten in regular line for " << Cashiers[my_line]->getName() << std::endl;
       Cashiers[my_line]->getLineCV()->Wait(CashierLineLock);
@@ -1592,6 +1596,10 @@ void PassportClerkStart(int index){
 
 void CashierStart(int index) {
   Cashiers[index]->CashierStart();
+}
+
+void ManagerStart() {
+  manager->ManagerStart();
 }
 
 void CustomerTest1(int index) {
@@ -1980,13 +1988,15 @@ void Problem2() {
     else if(testSelection == 4) {
       std::cout << "-- Starting Test 4" << std::endl;
       t = new Thread("ts2_t4");
-      //t->Fork((VoidFunctionPtr)TEST_4, 0);
+      t->Fork((VoidFunctionPtr)TEST_4, 0);
+      sem.P();
       std::cout << "-- Test 4 Completed" << std::endl;
     }
     else if(testSelection == 5) {
       std::cout << "-- Starting Test 5" << std::endl;
       t = new Thread("ts2_t5");
-      //t->Fork((VoidFunctionPtr)TEST_5, 0);
+      t->Fork((VoidFunctionPtr)TEST_5, 0);
+      sem.P();
       std::cout << "-- Test 5 Completed" << std::endl;
     }
     else if(testSelection == 6) {
