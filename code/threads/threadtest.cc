@@ -1469,6 +1469,7 @@ void Customer::PayCashier(int my_line) {
 
     // Give SSN
     Cashiers[my_line]->getCV()->Signal(Cashiers[my_line]->getLock());
+    std::cout << this->name << " has given SSN " << ssn << " to " << PassportClerks[my_line]->getName() << std::endl;
 
     // Wait to determine whether they go back in line
     Cashiers[my_line]->getCV()->Wait(Cashiers[my_line]->getLock());

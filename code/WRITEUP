@@ -19,10 +19,99 @@ II. ASSUMPTIONS:
 	-All Clerks and the Cashier have bribe lines.
 
 III. DESIGN
-	-First implemented acquire and release methods of lock to be used by each type of person in the bank
+	-First implemented acquire and release methods of lock to be used by each type of person in the passport office
 	-Wrote condition wait and signal to implement the sleep and wake of threads
-	-Designed classes for the customer, each type of clerk and manager that contained the condition variables, line locks, monitor variables for line count
+	-Designed classes for the customer, each type of clerk, cashier, and manager that contained the condition variables, line locks, monitor variables for line count
 	-Global variables and arrays are stored as monitor variables 
+
+	Main Function for Full Simulation
+	-Creates customers, clerks, and cashiers depending on user input.
+	-Then starts the threads (customer is started last).
+
+		Customer
+		-A customer is responsible for going through each type of clerk and a cashier.  Each clerk/cashier can be broken down into two parts.  Finding the shortest line and then performing the necessary action when it's the customer's turn.  
+		-The customer will start at either the ApplicationClerk or PictureClerk, move to the clerk they didn't start at and then finish off with the PassportClerk, then the Cashier.  After this is done, they leave.
+		-All finding the shortest line functions are the same.  Separate functions are created in order to find the shortest line at the appropriate clerk.
+			-The shortest line is found by going through each line's size for that type of clerk/cashier.
+			-The customer can then go to the bribe line, regular line, or be serviced immediately.  
+			-The customer has a 30% chance of being on the bribe line if and only if they have at least $600 and the clerk/cashier is currently busy.  They will then add themselves to the bribe line and wait for a signal from the clerk/cashier to come to the counter.  Once they approach the counter, they will have to give the clerk/cashier $500.
+			-If the customer is on the regular line, they will have to wait for a signal from the clerk/cashier to come to the counter.
+			-When the clerk/cashier is not currently servicing another customer, they can be serviced immediately.  In this case, the customer will go directly to the counter.
+			- During this time, the clerk/cashier's line lock is acquired so that the line cannot be modified while the customer is "making decisions".
+			-From here the customer will be serviced depending on which clerk/cashier they are at.
+		-ApplicationClerk - GetApplicationFiled
+			-Their ApplicationClerk's lock is acquired.  This lock is specific for their line.
+			-The Customer will first give their application to the ApplicationClerk (represented by giving the SSN).
+			-After, they wait for the the ApplicationClerk to do their job.
+			-Once the job is completed, they signal the clerk to let them know they are leaving.
+			-They release the lock so that the next Customer can acquire it.
+			-Customer leaves
+		-PictureClerk - GetPictureTaken
+			-Their PictureClerk's lock is acquired.  This lock is specific for their line.
+			-The Customer will first give their application to the PictureClerk (represented by giving the SSN).
+			-The Customer will wait for the PictureClerk to take the picture.
+			-After the picture is taken, the Customer will "decide" whether they like the picture or not.  There is a 50% chance they will not like the picture.
+				-Does not like the picture-They will inform the PictureClerk that they do not like the picture by setting PictureClerk::likePicture as false and then signalling.  The Customer waits for the clerk to acknowledge that they do not like the picture and signals the clerk that they are leaving.  The PictureClerk's lock is released.  The Customer gets back in line for the PictureClerk.
+				-Does like the picture-They will inform the PictureClerk that they do like the picture by setting PictureClerk::likePicture as true and then signalling.  The Customer then waits for their application to be complete.  After they are notified, they then signal the PictureClerk they are leaving.  The PictureClerk's lock is released and they leave.
+		-PassportClerk - GetPassport
+			-Their PassportClerk's lock is acquired.  This lock is specific for their line.
+			-The Customer will first give their application to the PassportClerk (represented by giving the SSN).
+			-The Customer will wait for the PassportClerk to determine whether they have gone to them too soon (random 5% chance).
+				-Too soon-The Customer will signal the PassportClerk that they are leaving and then be punished.  They release the PassportClerk's lock and go to the back of the line.
+				-Not too soon-The Customer will wait for the PassportClerk to record their passport.  They then signal the PassportClerk they are leaving.  The PassportClerk's lock is released and they leave.
+		-Cashier - PayCashier
+			-Their Cashier's lock is acquired.  This lock is specific for their line.
+			-The Customer will first give their application to the Cashier (represented by giving the SSN).
+			-The Customer will wait for the Cashier to determine whether they have gone to them too soon (random 5% chance).
+				-Too soon-The Customer will signal the Cashier that they are leaving and then be punished.  They release the Cashier's lock and go to the back of the line.
+				-Not too soon-The Customer will give the Cashier the application fee ($100).  They then wait for the Cashier to give them their passport.  The Customer informs the Cashier that their passport has been received.  The Customer waits for the Cashier to confirm that the passport has been received. The Cashier's lock is released and they leave.
+
+		ApplicationClerk
+			-The ApplicationClerk starts by checking whether there is anyone on the bribe line.  If so, they take the $500 bribe and then service the Customer.  If not, they check the regular line.  If there is someone on the regular line, they signal a Customer to their counter to service them.
+			// ADD DESCRIPTION FOR ON BREAK // !!!!~~~~!!!!~!!~!~!
+			During this time, the line's lock is Acquired so that the line cannot be modified.
+			-The ApplicationClerk acquires the lock for their specific line.
+			-The ApplicationClerk waits for the Customer's application (SSN).
+			-The ApplicationClerk files the application (takes some time).
+			-The ApplicationClerk then informs the Customer that their application has been filed.  They wait for the customer to leave.
+			-The ApplicationClerk's lock is released so they may begin to service another Customer.
+
+		PictureClerk
+			-The PictureClerk starts by checking whether there is anyone on the bribe line.  If so, they take the $500 bribe and then service the Customer.  If not, they check the regular line.  If there is someone on the regular line, they signal a Customer to their counter to service them.
+			// ADD DESCRIPTION FOR ON BREAK // !!!!~~~~!!!!~!!~!~!
+			During this time, the line's lock is Acquired so that the line cannot be modified.
+			-The PictureClerk acquires the lock for their specific line.
+			-The PictureClerk waits for the Customer's application (SSN).
+			-The PictureClerk then takes the photo of the Customer and waits to hear whether the Customer has liked the photo or not.
+			-If the Customer does not like the photo, they inform the Customer to go to the back to the line. 
+			-If the Customer does like the photo, the PictureClerk files the photo (takes some time).
+			-The PictureClerk then informs the Customer that their photo has been filed.  They wait for the customer to leave.
+			-The PictureClerk's lock is released so they may begin to service another Customer.
+
+		PassportClerk
+			-The PassportClerk starts by checking whether there is anyone on the bribe line.  If so, they take the $500 bribe and then service the Customer.  If not, they check the regular line.  If there is someone on the regular line, they signal a Customer to their counter to service them.
+			// ADD DESCRIPTION FOR ON BREAK // !!!!~~~~!!!!~!!~!~!
+			During this time, the line's lock is Acquired so that the line cannot be modified.
+			-The PassportClerk acquires the lock for their specific line.
+			-The PassportClerk waits for the Customer's application (SSN).
+			-The PassportClerk then determines whether the Customer has both their application and picture completed.  Since both will always be completed, this is decided by a 5% random chance that the PassportClerk will make a mistake and tell them they are both not completed.
+			-If the Customer did not "complete" both items, they inform the Customer to go to the back to the line. The Customer is punished and then goes to the back of the line.
+			-If the Customer did complete both items, the PassportClerk informs the customer that both items are completed and records their passport (takes some time).
+			-The PassportClerk then informs the Customer that their photo has been filed.  They wait for the customer to leave.
+			-The PassportClerk's lock is released so they may begin to service another Customer.
+
+		Cashier
+			-The Cashier starts by checking whether there is anyone on the bribe line.  If so, they take the $500 bribe and then service the Customer.  If not, they check the regular line.  If there is someone on the regular line, they signal a Customer to their counter to service them.
+			// ADD DESCRIPTION FOR ON BREAK // !!!!~~~~!!!!~!!~!~!
+			During this time, the line's lock is Acquired so that the line cannot be modified.
+			-The Cashier acquires the lock for their specific line.
+			-The Cashier waits for the Customer's application (SSN).
+			-The Cashier then determines whether the Customer has been verified by the PassportClerk.  Since the Customer will always be verified, this is decided by a 5% random chance that the Cashier will make a mistake and tell them they are not verified.
+			-If the Customer did not "get verified", they inform the Customer to go to the back to the line.  The Customer is punished and then goes to the back of the line.
+			-If the Customer did get verified, the Cashier informs the customer that they are verified and waits for their payment.
+			-After the Cashier is paid, they provide the Customer with their completed passport (takes some time).
+			-The Cashier then waits for the Customer to receive their completed passport.  They inform the Customer that they are free to leave.  They wait for the customer to leave.
+			-The Cashier's lock is released so they may begin to service another Customer.
 
 IV. IMPLEMENTATION
 
