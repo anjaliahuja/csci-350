@@ -17,7 +17,7 @@ II. ASSUMPTIONS:
 	-When a customer gets sent to the "back of the line", they must start over the process of looking for the shortest line.
 	-For PassportClerk & Cashier, there is no official verification of whether they went to the ApplicationClerk or PictureClerk.  Instead, there is a small random chance that the PassportClerk/Cashier tells them to go to the back of the line.  This is because the way our clerks were implemented were that Customers can not move onto the next clerk without a Signal from their current clerk that they can leave.  See https://piazza.com/class/idqhn1k3sfn267?cid=74#
 	-All Clerks and the Cashier have bribe lines.
-	- When a customer shows up to choose a line, it first looks through all lines to see if it can get into one of those lines that has a clerk not on break, if it can't find one of those lines then it looks through all the lines including ones where the clerk is busy to get into one of those lines
+	- When a customer shows up to choose a line, it first looks through all lines to see if it can get into one of those lines that has a clerk not on break, if it can't find one of those lines then it goes to the first on break clerk.
 	-Customers can wait on lines that are on break.
 
 III. DESIGN
@@ -70,7 +70,7 @@ III. DESIGN
 
 		ApplicationClerk
 			-The ApplicationClerk starts by checking whether there is anyone on the bribe line.  If so, they take the $500 bribe and then service the Customer.  If not, they check the regular line.  If there is someone on the regular line, they signal a Customer to their counter to service them.
-			// ADD DESCRIPTION FOR ON BREAK // !!!!~~~~!!!!~!!~!~!
+			-If there is no one on line, the ApplicationClerk will go on break and wait for a Manager to wake them up.  After they have woken up, they notify the Manager that they've been woken up.
 			During this time, the line's lock is Acquired so that the line cannot be modified.
 			-The ApplicationClerk acquires the lock for their specific line.
 			-The ApplicationClerk waits for the Customer's application (SSN).
@@ -80,7 +80,7 @@ III. DESIGN
 
 		PictureClerk
 			-The PictureClerk starts by checking whether there is anyone on the bribe line.  If so, they take the $500 bribe and then service the Customer.  If not, they check the regular line.  If there is someone on the regular line, they signal a Customer to their counter to service them.
-			// ADD DESCRIPTION FOR ON BREAK // !!!!~~~~!!!!~!!~!~!
+			-If there is no one on line, the PictureClerk will go on break and wait for a Manager to wake them up.  After they have woken up, they notify the Manager that they've been woken up.
 			During this time, the line's lock is Acquired so that the line cannot be modified.
 			-The PictureClerk acquires the lock for their specific line.
 			-The PictureClerk waits for the Customer's application (SSN).
@@ -92,7 +92,7 @@ III. DESIGN
 
 		PassportClerk
 			-The PassportClerk starts by checking whether there is anyone on the bribe line.  If so, they take the $500 bribe and then service the Customer.  If not, they check the regular line.  If there is someone on the regular line, they signal a Customer to their counter to service them.
-			// ADD DESCRIPTION FOR ON BREAK // !!!!~~~~!!!!~!!~!~!
+			-If there is no one on line, the PassportClerk will go on break and wait for a Manager to wake them up.  After they have woken up, they notify the Manager that they've been woken up.
 			During this time, the line's lock is Acquired so that the line cannot be modified.
 			-The PassportClerk acquires the lock for their specific line.
 			-The PassportClerk waits for the Customer's application (SSN).
@@ -104,7 +104,7 @@ III. DESIGN
 
 		Cashier
 			-The Cashier starts by checking whether there is anyone on the bribe line.  If so, they take the $500 bribe and then service the Customer.  If not, they check the regular line.  If there is someone on the regular line, they signal a Customer to their counter to service them.
-			// ADD DESCRIPTION FOR ON BREAK // !!!!~~~~!!!!~!!~!~!
+			-If there is no one on line, the Cashier will go on break and wait for a Manager to wake them up.  After they have woken up, they notify the Manager that they've been woken up.
 			During this time, the line's lock is Acquired so that the line cannot be modified.
 			-The Cashier acquires the lock for their specific line.
 			-The Cashier waits for the Customer's application (SSN).
@@ -118,7 +118,8 @@ III. DESIGN
 		Manager
 			- The manager is within a while loop to constantly check for certain things
 			- It loops through all the clerks of each individual type, checking the number of people in their line to see if there's at least 3 people
-			- If there are at least 3 people in that line, then it wakes up all the clerks of that particular type that are on break by signaling that particular clerk's lock to wake up
+			- If there are at least 3 people in that line, then it wakes up all the clerks of that particular type that are on break by signaling that particular clerk's lock to wake up.  The Manager will then wait for the clerk/cashier to inform him they have woken up.
+			- The manager will also look to see if there are any straggling customers in line. If all the clerks are on break and there are still people in line, then the manager will wake up that line so that the customers can finish their passport.
 			- It will also print out the amount of money that is contained by all the clerks and the total amount of money the office has made, these are stored in global variables that the clerks constantly update
 			- the manager will then yield 100 times as to not keep continuously printing out the money amounts
 
@@ -238,6 +239,8 @@ IV. IMPLEMENTATION
 	    std::queue<Customer*>* bribeLine;
 
 	class Manager:
+		char* name
+
 		
 
 	// Declaring class global variables.
@@ -320,6 +323,7 @@ IV. IMPLEMENTATION
     void PassportClerkStart();
    	void CashierStart();
 
+   	void ManagerStart();
 
 
 
@@ -355,6 +359,7 @@ V. TESTING
 		Customer 1 has gotten in regular line for ApplicationClerk 1
 
 	TEST_2: Managers only read one from one Clerk's total money received, at a time
+	//
 
 	TEST_3: Customers do not leave until they are given their passport by the Cashier. 
 	The Cashier does not start on another customer until they know that the last 
@@ -368,8 +373,29 @@ V. TESTING
 	As the test requires: "Customer 0 is leaving the Passport Office" comes after "Cashier 0 has recorded that Customer 0 has been given their completed passport".  Only when the Customer has left the passport office does the "Cashier 0 signal a Customer to come to their counter"
 
 	TEST_4: Clerks go on break when they have no one waiting in their line
+	- There are 1 AppClerks and 1 Customers, thus the moment the test begins the AppClerk should go on break immediately. The manager will wake up that customer and allow the application clerk to process that customer. Then when the customer moves on the app clerk should immediately go back on break because there are no more customers in line.
+	See:
+		appClerk_0 is going on break
+		Customer 0 has gotten in regular line for appClerk_0
+		Manager has woken up appClerk_0
+		appClerk_0 has woken up
+		appClerk_0 has signalled a Customer to come to their counter
+		Customer 0 has given SSN 0 to appClerk_0
+		appClerk_0 has received SSN 0 from Customer 0
+		appClerk_0 has recorded a completed application for Customer 0
+		appClerk_0 is going on break
+
+
 
 	TEST_5: Managers get Clerks off their break when lines get too long
+	There will be 3 customers and 1 application clerk. The clerk will go break the moment they are initialized because there are no customers are in line. Then 3 customers will enter the line and the application clerk will wake up and process all the customers.
+	See:
+		ApplicationClerk 0 is going on break
+		Customer 0 has gotten in regular line for ApplicationClerk 0
+		Customer 1 has gotten in regular line for ApplicationClerk 0
+		Customer 2 has gotten in regular line for ApplicationClerk 0
+		Manager has woken up ApplicationClerk 0
+		...
 
 	TEST_6: Total sales never suffers from a race condition
 	-There are 7 Customers and 2 of each type of Clerk and Cashier.  A global MONEY variable will increment the appropriate amount (500 or 100) whenever a Customer spends money.  This is then compared to the summation of AppClerkBribeMoney, PicClerkBribeMoney, PassportClerkBribeMoney, and CashierMoney.  If they are equal the test will pass.
