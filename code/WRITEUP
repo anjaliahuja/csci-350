@@ -17,6 +17,8 @@ II. ASSUMPTIONS:
 	-When a customer gets sent to the "back of the line", they must start over the process of looking for the shortest line.
 	-For PassportClerk & Cashier, there is no official verification of whether they went to the ApplicationClerk or PictureClerk.  Instead, there is a small random chance that the PassportClerk/Cashier tells them to go to the back of the line.  This is because the way our clerks were implemented were that Customers can not move onto the next clerk without a Signal from their current clerk that they can leave.  See https://piazza.com/class/idqhn1k3sfn267?cid=74#
 	-All Clerks and the Cashier have bribe lines.
+	- When a customer shows up to choose a line, it first looks through all lines to see if it can get into one of those lines that has a clerk not on break, if it can't find one of those lines then it looks through all the lines including ones where the clerk is busy to get into one of those lines
+	-Customers can wait on lines that are on break.
 
 III. DESIGN
 	-First implemented acquire and release methods of lock to be used by each type of person in the passport office
@@ -112,6 +114,14 @@ III. DESIGN
 			-After the Cashier is paid, they provide the Customer with their completed passport (takes some time).
 			-The Cashier then waits for the Customer to receive their completed passport.  They inform the Customer that they are free to leave.  They wait for the customer to leave.
 			-The Cashier's lock is released so they may begin to service another Customer.
+
+		Manager
+			- The manager is within a while loop to constantly check for certain things
+			- It loops through all the clerks of each individual type, checking the number of people in their line to see if there's at least 3 people
+			- If there are at least 3 people in that line, then it wakes up all the clerks of that particular type that are on break by signaling that particular clerk's lock to wake up
+			- It will also print out the amount of money that is contained by all the clerks and the total amount of money the office has made, these are stored in global variables that the clerks constantly update
+			- the manager will then yield 100 times as to not keep continuously printing out the money amounts
+
 
 IV. IMPLEMENTATION
 
@@ -227,6 +237,9 @@ IV. IMPLEMENTATION
 	    std::queue<Customer*>* line;
 	    std::queue<Customer*>* bribeLine;
 
+	class Manager:
+		
+
 	// Declaring class global variables.
 	// List of Clerks
 	AppClerk** AppClerks;
@@ -329,21 +342,24 @@ V. TESTING
 	Disclaimer: Not all tests will say "Test X PASSED".  Depending on the test it may be required to view the print statements and read the below documentation to verify the test has passed.
 
 	TEST_1: Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
-	-There are 2 ApplicationClerks and 3 Customers.  ApplicationClerk 0 will start off with 2 dummy Customers.  These dummy Customers do not start their threads and do nothing except to feign that ApplicationClerk 0 has a line.  Then AppicationClerk 1 and the 3 real Customers starts their threads.  
-	-This test will print out "Test 1 PASSED" when ApplicationClerk 0 still has 2 dummy Customers in their line and ApplicationClerk 1 has serviced a total of 3 real Customers (totalServiced starts at 0).
+	-There are 2 ApplicationClerks and 2 Customers.  ApplicationClerk 0 will start off with 2 dummy Customers.  These dummy Customers do not start their threads and do nothing except to feign that ApplicationClerk 0 has a line.  Then AppicationClerk 1 and the 2 real Customers starts their threads.
+	See: 
+		TEST_1: ApplicationClerk 0 has 2 Customers
+		TEST_1: ApplicationClerk 1 has 0 Customers
+	-The regular output guidelines will show that the 2 real Customers enter ApplicationClerk 1's line.
 	-The "TEST_1:" statements show that the Customers enter the line at different times because the lock for Customer 2 is acquired after Customer 1 has gotten in line.
 	See: 
+		TEST_1: Customer 0 has acquired ApplicationClerk's line lock
+		Customer 0 has gotten in regular line for ApplicationClerk 1
 		TEST_1: Customer 1 has acquired ApplicationClerk's line lock
 		Customer 1 has gotten in regular line for ApplicationClerk 1
-		TEST_1: Customer 2 has acquired ApplicationClerk's line lock
-		Customer 2 has gotten in regular line for ApplicationClerk 1
 
 	TEST_2: Managers only read one from one Clerk's total money received, at a time
 
 	TEST_3: Customers do not leave until they are given their passport by the Cashier. 
 	The Cashier does not start on another customer until they know that the last 
 	Customer has left their area
-	-There are 2 Customers and 1 Cashier.  The print statements of the output guidelines should give indication of whether the test passes or not.
+	-There are 3 Customers and 1 Cashier.  The print statements of the output guidelines should give indication of whether the test passes or not.
 	See: 
 		Cashier 0 has provided Customer 0 their completed passport
 		Cashier 0 has recorded that Customer 0 has been given their completed passport

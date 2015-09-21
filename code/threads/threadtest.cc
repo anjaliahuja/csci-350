@@ -387,6 +387,7 @@ Lock* CashierLineLock;
 // App money + bribe money
 int CashierMoney;
 
+
 Semaphore sem("sem", 0);
 
 int NUM_APP_CLERKS;
@@ -528,10 +529,18 @@ class AppClerk : public Thread {
           this->state = 1;
           line->pop();
         } else {
-          std::cout << name << " is going on break" << std::endl;
           //TODO: Add code for on break
-          std::cout << name << " is coming off break" << std::endl;
+          this->state = 2;
+          std::cout << name << " is going on break" << std::endl;
+          AppClerkLineLock->Release();
+          this->lock->Acquire();
+          cv->Wait(this->lock);
+          std::cout << name << " has woken up" << std::endl;
+          // Signal manager that i'm awake
+          cv->Signal(this->lock);
+          this->lock->Release();
           this->state = 0;
+          continue;
         }
 
         AppClerkLineLock->Release();
@@ -681,10 +690,17 @@ class PicClerk : public Thread {
           this->state = 1;
           line->pop();
         } else {
+                    //TODO: Add code for on break
+          this->state = 2;
           std::cout << name << " is going on break" << std::endl;
-          //TODO: Add code for on break
-          std::cout << name << " is coming off break" << std::endl;
+          PicClerkLineLock->Release();
+          this->lock->Acquire();
+          cv->Wait(this->lock);
+          std::cout << name << " has woken up" << std::endl;
+          cv->Signal(this->lock);
+          this->lock->Release();
           this->state = 0;
+          continue;
         }
 
         this->lock->Acquire();
@@ -857,10 +873,17 @@ class PassportClerk : public Thread {
           this->state = 1;
           line->pop();
         } else {
+                    //TODO: Add code for on break
+          this->state = 2;
           std::cout << name << " is going on break" << std::endl;
-          //TODO: Add code for on break
-          std::cout << name << " is coming off break" << std::endl;
+          PassportClerkLineLock->Release();
+          this->lock->Acquire();
+          cv->Wait(this->lock);
+          std::cout << name << " has woken up" << std::endl;
+          cv->Signal(this->lock);
+          this->lock->Release();
           this->state = 0;
+          continue;
         }
 
         PassportClerkLineLock->Release();
@@ -1019,10 +1042,17 @@ class Cashier : public Thread {
           this->state = 1;
           line->pop();
         } else {
+                    //TODO: Add code for on break
+          this->state = 2;
           std::cout << name << " is going on break" << std::endl;
-          //TODO: Add code for on break
-          std::cout << name << " is coming off break" << std::endl;
+          CashierLineLock->Release();
+          this->lock->Acquire();
+          cv->Wait(this->lock);
+          std::cout << name << " has woken up" << std::endl;
+          cv->Signal(this->lock);
+          this->lock->Release();
           this->state = 0;
+          continue;
         }
 
         CashierLineLock->Release();
@@ -1159,6 +1189,17 @@ class Cashier : public Thread {
     std::queue<Customer*>* bribeLine;
 };
 
+class Manager : public Thread{
+  public:
+    Manager(char* debugName, int id) : Thread(debugName) {
+      name = debugName;
+    }
+
+    void ManagerStart();
+  private:
+    char* name;
+
+};
 
 // Declaring class global variables.
 // List of Clerks
@@ -1167,8 +1208,158 @@ PicClerk** PicClerks;
 PassportClerk** PassportClerks;
 Cashier** Cashiers;
 
+//and Manager
+Manager* manager;
+
 //List of Customers
 Customer** Customers;
+
+void Manager::ManagerStart() {
+  //TODO: Implement code for when all clerks are on break.  Wake them all up (or just clerk 0). 
+  // Anne: I think we should wake up all of them or else clerk 0 will be the only clerk servicing
+
+  while(true) {
+    for(int i = 0; i < NUM_APP_CLERKS; i++) {
+      //If the clerk is on break, aka their state is 2 and their line has more than 3 people
+      //Wake up the thread
+      if(AppClerks[i]->getLineSize() > 2) {
+        for(int j = 0; j < NUM_APP_CLERKS; j++) {
+          if(AppClerks[i]->getState() == 2) {
+            AppClerks[i]->Acquire();
+            AppClerks[i]->getCV()->Signal(AppClerks[i]->getLock());
+            std::cout << "Manager has woken up " << AppClerks[i]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            AppClerks[i]->getCV()->Wait(AppClerks[i]->getLock());
+            AppClerks[i]->Release();
+          }
+        }
+        break;
+      }
+
+      if (i == NUM_APP_CLERKS-1) {
+        for(int j = 0; j < NUM_APP_CLERKS; j++) {
+          if (AppClerks[j]->getLineSize() > 0 && AppClerks[j] ->getState() == 2) {
+            AppClerks[j]->Acquire();
+            AppClerks[j]->getCV()->Signal(AppClerks[j]->getLock());
+            std::cout << "Manager has woken up " << AppClerks[j]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            AppClerks[j]->getCV()->Wait(AppClerks[j]->getLock());
+            AppClerks[j]->Release();
+          }
+        }
+      }
+    }
+     
+    for(int i = 0; i < NUM_PIC_CLERKS; i++) {
+       if(PicClerks[i]->getLineSize() > 2) {
+          for(int j = 0; j < NUM_PIC_CLERKS; j++) {
+            if(PicClerks[i]->getState() == 2) {
+              PicClerks[i]->Acquire();
+              PicClerks[i]->getCV()->Signal(PicClerks[i]->getLock());
+              std::cout << "Manager has woken up " << PicClerks[i]->getName() << std::endl;
+              
+              // Wait for PicClerk to Acknowledge
+              PicClerks[i]->getCV()->Wait(PicClerks[i]->getLock());
+              PicClerks[i]->Release();
+            }
+          }
+          break;
+        }
+
+      if (i == NUM_PIC_CLERKS-1) {
+        for(int j = 0; j < NUM_PIC_CLERKS; j++) {
+          if (PicClerks[j]->getLineSize() > 0 && PicClerks[j] ->getState() == 2) {
+            PicClerks[j]->Acquire();
+            PicClerks[j]->getCV()->Signal(PicClerks[j]->getLock());
+            std::cout << "Manager has woken up " << PicClerks[j]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            PicClerks[j]->getCV()->Wait(PicClerks[j]->getLock());
+            PicClerks[j]->Release();
+          }
+        }
+      }
+    }
+
+    for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
+      if(PassportClerks[i]->getLineSize() > 2) {
+        for(int j = 0; j < NUM_PASSPORT_CLERKS; j++) {
+          if(PassportClerks[i]->getState() == 2) {
+            PassportClerks[i]->Acquire();
+            PassportClerks[i]->getCV()->Signal(PassportClerks[i]->getLock());
+            std::cout << "Manager has woken up " << PassportClerks[i]->getName() << std::endl;
+          
+            // Wait for PassportClerk to Acknowledge
+            PassportClerks[i]->getCV()->Wait(PassportClerks[i]->getLock());
+            PassportClerks[i]->Release();
+          }
+        }
+        break;
+      }
+
+      if (i == NUM_PASSPORT_CLERKS-1) {
+        for(int j = 0; j < NUM_PASSPORT_CLERKS; j++) {
+          if (PassportClerks[j]->getLineSize() > 0 && PassportClerks[j] ->getState() == 2) {
+            PassportClerks[j]->Acquire();
+            PassportClerks[j]->getCV()->Signal(PassportClerks[j]->getLock());
+            std::cout << "Manager has woken up " << PassportClerks[j]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            PassportClerks[j]->getCV()->Wait(PassportClerks[j]->getLock());
+            PassportClerks[j]->Release();
+          }
+        }
+      }
+    }
+
+    for(int i = 0; i < NUM_CASHIERS; i++) {
+      if(Cashiers[i]->getLineSize() > 2) {
+        for(int j = 0; j < NUM_CASHIERS; j++) {
+          if(Cashiers[i]->getState() == 2) {
+            Cashiers[i]->Acquire();
+            Cashiers[i]->getCV()->Signal(Cashiers[i]->getLock());
+            std::cout << "Manager has woken up " << Cashiers[i]->getName() << std::endl;
+
+            // Wait for Cashier to acknowledge
+            Cashiers[i]->getCV()->Wait(Cashiers[i]->getLock());
+            Cashiers[i]->Release();
+          }
+        }
+        break;
+      }
+
+      if (i == NUM_CASHIERS-1) {
+        for(int j = 0; j < NUM_CASHIERS; j++) {
+          if (Cashiers[j]->getLineSize() > 0 && Cashiers[j] ->getState() == 2) {
+            Cashiers[j]->Acquire();
+            Cashiers[j]->getCV()->Signal(Cashiers[j]->getLock());
+            std::cout << "Manager has woken up " << Cashiers[j]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            Cashiers[j]->getCV()->Wait(Cashiers[j]->getLock());
+            Cashiers[j]->Release();
+          }
+        }
+      }
+    }
+
+    for(int i = 0; i < 100; i++) {
+      currentThread->Yield();
+    }
+
+    //Add code for checking amount of money we have
+
+    int total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
+    std::cout << "Manager has counted a total of " << AppClerkBribeMoney << " for Application Clerks" << std::endl;
+    std::cout << "Manager has counted a total of " << PicClerkBribeMoney << " for Picture Clerks" << std::endl;
+    std::cout << "Manager has counted a total of " << PassportClerkBribeMoney << " for Passport Clerks" << std::endl;
+    std::cout << "Manager has counted a total of " << CashierMoney << " for Cashiers" << std::endl;
+    std::cout << "Manager has counted a total of " << total << " for the Passport Office" << std::endl;
+    
+  }
+}
 
 void Customer::CustomerStart() {
   // TODO: Implement random chance it goes to things in the wrong order
@@ -1193,8 +1384,6 @@ void Customer::CustomerStart() {
   my_line = FindPassportLine();
   GetPassport(my_line);
 
-  std::cout << "DEBUG: " << name << " done with clerks" << std::endl;
-
   my_line = FindCashierLine();
   PayCashier(my_line);
 
@@ -1214,6 +1403,12 @@ int Customer::FindAppLine() {
       my_line = i;
     }
   }
+
+  if (my_line = -1) {
+    line_size = AppClerks[0]->getLineSize();
+    my_line = 0;
+  }
+
   // Bribe
   // Only go on bribe line if you have enough money and 
   // the clerk is busy (else you'd be spending $500 for no reason)
@@ -1223,13 +1418,15 @@ int Customer::FindAppLine() {
       && random < 3) {
     AppClerks[my_line]->addToBribeLine(this);
     std::cout << this->name << " has gotten in bribe line for " << AppClerks[my_line]->getName() << std::endl;
+    if (test1) sem.V();
     AppClerks[my_line]->getBribeLineCV()->Wait(AppClerkLineLock);
     money -= 500;
     if (test6) MONEY += 500;
   } else {
-    if (AppClerks[my_line]->getState() == 1) {
+    if (AppClerks[my_line]->getState() == 1 || AppClerks[my_line]->getState() == 2) {
       AppClerks[my_line]->addToLine(this);
       std::cout << this->name << " has gotten in regular line for " << AppClerks[my_line]->getName() << std::endl;
+      if (test1) sem.V();
       AppClerks[my_line]->getLineCV()->Wait(AppClerkLineLock);
     } else {
       AppClerks[my_line]->setCurrentCustomer(this);
@@ -1272,6 +1469,11 @@ int Customer::FindPicLine() {
     }
   }
 
+  if (my_line == -1) {
+    line_size = PicClerks[0]->getLineSize();
+    my_line = 0;
+  }
+
   // Bribe
   // Only go on bribe line if you have enough money and 
   // the clerk is busy (else you'd be spending $500 for no reason)
@@ -1285,7 +1487,7 @@ int Customer::FindPicLine() {
     money -= 500;
     if (test6) MONEY += 500;
   } else {
-    if (PicClerks[my_line]->getState() == 1) {
+    if (PicClerks[my_line]->getState() == 1 || PicClerks[my_line]->getState() == 2) {
       PicClerks[my_line]->addToLine(this);
       std::cout << this->name << " has gotten in regular line for " << PicClerks[my_line]->getName() << std::endl;
       PicClerks[my_line]->getLineCV()->Wait(PicClerkLineLock);
@@ -1321,7 +1523,13 @@ void Customer::GetPictureTaken(int my_line){
          // Signal clerk that I'm leaving
         PicClerks[my_line]->getCV()->Signal(PicClerks[my_line]->getLock());
         
-        PicClerks[my_line]->Release();
+        // Implemented so that the if the clerk they were at can become available again
+        // Not necessarily punishment
+        PicClerks[my_line]->Release(); // no busy waiting
+        for(int i =100; i<1000; ++i){
+            currentThread->Yield();
+        }
+
         GetPictureTaken(FindPicLine());
         return;
     }
@@ -1350,6 +1558,11 @@ int Customer::FindPassportLine() {
       line_size = PassportClerks[i]->getLineSize();
       my_line = i;
     }
+  } 
+
+  if (my_line == -1) {
+    line_size = PassportClerks[0]->getLineSize();
+    my_line = 0;
   }
 
   // Bribe
@@ -1365,7 +1578,7 @@ int Customer::FindPassportLine() {
     money -= 500;
     if (test6) MONEY += 500;
   } else {
-    if (PassportClerks[my_line]->getState() == 1) {
+    if (PassportClerks[my_line]->getState() == 1 || PassportClerks[my_line]->getState() == 2) {
       PassportClerks[my_line]->addToLine(this);
       std::cout << this->name << " has gotten in regular line for " << PassportClerks[my_line]->getName() << std::endl;
       PassportClerks[my_line]->getLineCV()->Wait(PassportClerkLineLock);
@@ -1438,6 +1651,11 @@ int Customer::FindCashierLine() {
     }
   }
 
+  if (my_line == -1) {
+    line_size = Cashiers[0]->getLineSize();
+    my_line = 0;
+  }
+
   // Bribe
   // Only go on bribe line if you have enough money and 
   // the clerk is busy (else you'd be spending $500 for no reason)
@@ -1451,7 +1669,7 @@ int Customer::FindCashierLine() {
     money -= 500;
     if (test6) MONEY += 500;
   } else {
-    if (Cashiers[my_line]->getState() == 1) {
+    if (Cashiers[my_line]->getState() == 1 || Cashiers[my_line]->getState() == 2) {
       Cashiers[my_line]->addToLine(this);
       std::cout << this->name << " has gotten in regular line for " << Cashiers[my_line]->getName() << std::endl;
       Cashiers[my_line]->getLineCV()->Wait(CashierLineLock);
@@ -1534,9 +1752,12 @@ void CashierStart(int index) {
   Cashiers[index]->CashierStart();
 }
 
+void ManagerStart() {
+  manager->ManagerStart();
+}
+
 void CustomerTest1(int index) {
   Customers[index]->GetApplicationFiled(Customers[index]->FindAppLine());
-  sem.V();
 }
 
 void CustomerTest3(int index) {
@@ -1545,10 +1766,15 @@ void CustomerTest3(int index) {
   sem.V();
 }
 
+void CustomerTest5(int index) {
+  Customers[index]->GetApplicationFiled(Customers[index]->FindAppLine());
+  sem.V();
+}
+
 void TEST_1() {
   /* Customers always take the shortest line, but no 2 customers 
   ever choose the same shortest line at the same time */
-  NUM_CUSTOMERS = 3;
+  NUM_CUSTOMERS = 2;
   NUM_APP_CLERKS = 2;
   int SSN = 100000000;
 
@@ -1584,6 +1810,10 @@ void TEST_1() {
   AppClerks[0]->addToLine(new Customer("dummy", 0));
   AppClerks[0]->addToLine(new Customer("dummy", 1));
 
+  std::cout << "TEST_1: ApplicationClerk 0 has " << AppClerks[0]->getLineSize() << "Customers" << std::endl;
+  std::cout << "TEST_1: ApplicationClerk 1 has " << AppClerks[1]->getLineSize() << "Customers" << std::endl;
+
+
   AppClerks[1]->Fork((VoidFunctionPtr)AppClerkStart, 1);
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
@@ -1600,7 +1830,7 @@ void TEST_3() {
   The Cashier does not start on another customer until they know that the last 
   Customer has left their area */
 
-  NUM_CUSTOMERS = 2;
+  NUM_CUSTOMERS = 3;
   NUM_CASHIERS = 1;
   int SSN = 100000000;
 
@@ -1616,6 +1846,7 @@ void TEST_3() {
 
   Customers = new Customer*[NUM_CUSTOMERS];
   Cashiers = new Cashier*[NUM_CASHIERS];
+  manager = new Manager("Manager", 0);
 
   CashierLineLock = new Lock("cashier_lineLock");
 
@@ -1631,6 +1862,7 @@ void TEST_3() {
   }
 
   Cashiers[0]->Fork((VoidFunctionPtr)CashierStart, 0);
+  manager->Fork((VoidFunctionPtr)ManagerStart, 0);
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     Customers[i]->Fork((VoidFunctionPtr)CustomerTest3, i);
@@ -1638,17 +1870,83 @@ void TEST_3() {
 }
 
 void TEST_4() {
-  // Clerks go on break when they have no one waiting in their line
+    // Clerks go on break when they have no one waiting in their line
+
+  NUM_CUSTOMERS = 1;
+  NUM_APP_CLERKS = 1;
+
+  AppClerks = new AppClerk*[NUM_APP_CLERKS];
+  Customers = new Customer*[NUM_CUSTOMERS];
+  manager = new Manager("Manager", 0);
+  AppClerkLineLock = new Lock("appClerk_lineLock");
+
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    char* debugName = new char[15];
+    sprintf(debugName, "appClerk_%d", i);
+    AppClerks[i] = new AppClerk(debugName, i);
+  }
+
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    char* debugName = new char[15];
+    sprintf(debugName, "Customer %d", i);
+    Customers[i] = new Customer(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
+  }
+
+
+  manager->Fork((VoidFunctionPtr)ManagerStart, 0);
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    Customers[i]->Fork((VoidFunctionPtr)CustomerTest5, i);
+  }
 }
 
 void TEST_5() {
   // Managers get Clerks off their break when lines get too long
+
+  NUM_CUSTOMERS = 3;
+  NUM_APP_CLERKS = 1;
+
+  Customers = new Customer*[NUM_CUSTOMERS];
+  AppClerks = new AppClerk*[NUM_APP_CLERKS];
+  AppClerkLineLock = new Lock("appClerk_lineLock");
+
+
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    char* debugName = new char[15];
+    sprintf(debugName, "ApplicationClerk %d", i);
+    AppClerks[i] = new AppClerk(debugName, i);
+  }
+
+  AppClerks[0] -> setState(2);
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    char* debugName = new char[15];
+    sprintf(debugName, "Customer %d", i);
+    Customers[i] = new Customer(debugName, i);
+  }
+
+  manager = new Manager("Manager", 0);
+
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
+  }
+
+  manager->Fork((VoidFunctionPtr)ManagerStart, 0);
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    Customers[i]->Fork((VoidFunctionPtr)CustomerTest5, i);
+  }
 }
 
 void TEST_6() {
   // Total sales never suffers from a race condition
   MONEY = 0;
-  NUM_CUSTOMERS = 7;
+  NUM_CUSTOMERS = 12;
   NUM_APP_CLERKS = 2;
   NUM_PIC_CLERKS = 2;
   NUM_PASSPORT_CLERKS = 2;
@@ -1658,6 +1956,7 @@ void TEST_6() {
   PicClerks = new PicClerk*[NUM_PIC_CLERKS];
   PassportClerks = new PassportClerk*[NUM_PASSPORT_CLERKS];
   Cashiers = new Cashier*[NUM_CASHIERS];
+  manager = new Manager("Manager", 0);
   int SSN = 10000000;
 
   std::cout << "Number of Customers = " << NUM_CUSTOMERS << std::endl;
@@ -1719,6 +2018,8 @@ void TEST_6() {
   for(int i = 0; i < NUM_CASHIERS; i++) {
     Cashiers[i]->Fork((VoidFunctionPtr)CashierStart, i);
   }
+
+  manager->Fork((VoidFunctionPtr)ManagerStart, 0);
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
@@ -1833,14 +2134,8 @@ void Problem2() {
       std::cout << "-- Starting Test 1"<<std::endl;
       t = new Thread("ts2_t1");
       t->Fork((VoidFunctionPtr)TEST_1,0);
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < 2; i++) {
         sem.P();
-      }
-      if (AppClerks[0]->getLineSize() == 2 &&
-            AppClerks[1]->getTotalServiced() == 3) {
-        std::cout << "Test 1 PASSED" << std::endl;
-      } else {
-        std::cout << "Test 1 FAILED" << std::endl;
       }
       std::cout << "-- Test 1 Completed" << std::endl;
       test1 = false;
@@ -1855,7 +2150,7 @@ void Problem2() {
       std::cout << "-- Starting Test 3" << std::endl;
       t = new Thread("ts2_t3");
       t->Fork((VoidFunctionPtr)TEST_3, 0);
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < 3; i++) {
         sem.P();
       }
       std::cout << "-- Test 3 Completed" << std::endl;
@@ -1863,13 +2158,17 @@ void Problem2() {
     else if(testSelection == 4) {
       std::cout << "-- Starting Test 4" << std::endl;
       t = new Thread("ts2_t4");
-      //t->Fork((VoidFunctionPtr)TEST_4, 0);
+      t->Fork((VoidFunctionPtr)TEST_4, 0);
+      sem.P();
       std::cout << "-- Test 4 Completed" << std::endl;
     }
     else if(testSelection == 5) {
       std::cout << "-- Starting Test 5" << std::endl;
       t = new Thread("ts2_t5");
-      //t->Fork((VoidFunctionPtr)TEST_5, 0);
+      t->Fork((VoidFunctionPtr)TEST_5, 0);
+      for (int i = 0; i < 3; i++){
+        sem.P();
+      }
       std::cout << "-- Test 5 Completed" << std::endl;
     }
     else if(testSelection == 6) {
@@ -1877,7 +2176,7 @@ void Problem2() {
       test6 = true;
       t = new Thread("ts2_t6");
       t->Fork((VoidFunctionPtr)TEST_6, 0);
-      for (int i = 0; i < 7; i++) {
+      for (int i = 0; i < 12; i++) {
         sem.P();
       }
       if (MONEY == (AppClerkBribeMoney + PicClerkBribeMoney + 
