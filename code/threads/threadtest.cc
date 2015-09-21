@@ -1217,6 +1217,9 @@ Manager* manager;
 Customer** Customers;
 
 void Manager::ManagerStart() {
+  //TODO: Implement code for when all clerks are on break.  Wake them all up (or just clerk 0). 
+  // Anne: I think we should wake up all of them or else clerk 0 will be the only clerk servicing
+
   while(true) {
     for(int i = 0; i < NUM_APP_CLERKS; i++) {
       //If the clerk is on break, aka their state is 2 and their line has more than 3 people
@@ -1235,6 +1238,20 @@ void Manager::ManagerStart() {
         }
         break;
       }
+
+      if (i == NUM_APP_CLERKS-1) {
+        for(int j = 0; j < NUM_APP_CLERKS; j++) {
+          if (AppClerks[j]->getLineSize() > 0 && AppClerks[j] ->getState() == 2) {
+            AppClerks[j]->Acquire();
+            AppClerks[j]->getCV()->Signal(AppClerks[j]->getLock());
+            std::cout << "Manager has woken up " << AppClerks[j]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            AppClerks[j]->getCV()->Wait(AppClerks[j]->getLock());
+            AppClerks[j]->Release();
+          }
+        }
+      }
     }
      
     for(int i = 0; i < NUM_PIC_CLERKS; i++) {
@@ -1252,6 +1269,20 @@ void Manager::ManagerStart() {
           }
           break;
         }
+
+      if (i == NUM_PIC_CLERKS-1) {
+        for(int j = 0; j < NUM_PIC_CLERKS; j++) {
+          if (PicClerks[j]->getLineSize() > 0 && PicClerks[j] ->getState() == 2) {
+            PicClerks[j]->Acquire();
+            PicClerks[j]->getCV()->Signal(PicClerks[j]->getLock());
+            std::cout << "Manager has woken up " << PicClerks[j]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            PicClerks[j]->getCV()->Wait(PicClerks[j]->getLock());
+            PicClerks[j]->Release();
+          }
+        }
+      }
     }
 
     for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
@@ -1268,6 +1299,20 @@ void Manager::ManagerStart() {
           }
         }
         break;
+      }
+
+      if (i == NUM_PASSPORT_CLERKS-1) {
+        for(int j = 0; j < NUM_PASSPORT_CLERKS; j++) {
+          if (PassportClerks[j]->getLineSize() > 0 && PassportClerks[j] ->getState() == 2) {
+            PassportClerks[j]->Acquire();
+            PassportClerks[j]->getCV()->Signal(PassportClerks[j]->getLock());
+            std::cout << "Manager has woken up " << PassportClerks[j]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            PassportClerks[j]->getCV()->Wait(PassportClerks[j]->getLock());
+            PassportClerks[j]->Release();
+          }
+        }
       }
     }
 
@@ -1286,9 +1331,23 @@ void Manager::ManagerStart() {
         }
         break;
       }
+
+      if (i == NUM_CASHIERS-1) {
+        for(int j = 0; j < NUM_CASHIERS; j++) {
+          if (Cashiers[j]->getLineSize() > 0 && Cashiers[j] ->getState() == 2) {
+            Cashiers[j]->Acquire();
+            Cashiers[j]->getCV()->Signal(Cashiers[j]->getLock());
+            std::cout << "Manager has woken up " << Cashiers[j]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            Cashiers[j]->getCV()->Wait(Cashiers[j]->getLock());
+            Cashiers[j]->Release();
+          }
+        }
+      }
     }
 
-    for(int i = 0; i < 1000; i++) {
+    for(int i = 0; i < 100; i++) {
       currentThread->Yield();
     }
 
@@ -1305,6 +1364,7 @@ void Manager::ManagerStart() {
     std::cout << "Manager has counted a total of " << CashierMoney << " for Cashiers" << std::endl;
     std::cout << "Manager has counted a total of " << total << " for the Passport Office" << std::endl;
     */
+  }
 }
 
 void Customer::CustomerStart() {
