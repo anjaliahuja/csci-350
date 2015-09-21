@@ -1219,8 +1219,44 @@ void Manager::ManagerStart() {
       if(AppClerks[i]->getLineSize() > 2) {
         for(int j = 0; j < NUM_APP_CLERKS; j++) {
           if(AppClerks[i]->getState() == 2) {
-            std::cout << "Manager is waking up " << AppClerks[i]->getName() << std::endl;
+            std::cout << "Manager has woken up " << AppClerks[i]->getName() << std::endl;
             AppClerks[i]->getCV()->Signal(AppClerks[i]->getLock());
+          }
+        }
+        break;
+      }
+    }
+     
+    for(int i = 0; i < NUM_PIC_CLERKS; i++) {
+       if(PicClerks[i]->getLineSize() > 2) {
+          for(int j = 0; j < NUM_PIC_CLERKS; j++) {
+            if(PicClerks[i]->getState() == 2) {
+              std::cout << "Manager has woken up " << PicClerks[i]->getName() << std::endl;
+              PicClerks[i]->getCV()->Signal(PicClerks[i]->getLock());
+            }
+          }
+          break;
+        }
+    }
+
+    for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
+      if(PassportClerks[i]->getLineSize() > 2) {
+        for(int j = 0; j < NUM_PASSPORT_CLERKS; j++) {
+          if(PassportClerks[i]->getState() == 2) {
+            std::cout << "Manager has woken up " << PassportClerks[i]->getName() << std::endl;
+            PassportClerks[i]->getCV()->Signal(PassportClerks[i]->getLock());
+          }
+        }
+        break;
+      }
+    }
+
+    for(int i = 0; i < NUM_CASHIERS; i++) {
+      if(Cashiers[i]->getLineSize() > 2) {
+        for(int j = 0; j < NUM_CASHIERS; j++) {
+          if(Cashiers[i]->getState() == 2) {
+            std::cout << "Manager has woken up " << Cashiers[i]->getName() << std::endl;
+            Cashiers[i]->getCV()->Signal(Cashiers[i]->getLock());
           }
         }
         break;
@@ -1231,6 +1267,18 @@ void Manager::ManagerStart() {
       currentThread->Yield();
     }
     //Add code for checking amount of money we have
+    // int AppClerkBribeMoney;
+    // int PicClerkBribeMoney;
+    // int PassportClerkBribeMoney;
+    // int CashierMoney;
+
+    int total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
+    std::cout << "Manager has counted a total of " << AppClerkBribeMoney << " for Application Clerks" << std::endl;
+    std::cout << "Manager has counted a total of " << PicClerkBribeMoney << " for Picture Clerks" << std::endl;
+    std::cout << "Manager has counted a total of " << PassportClerkBribeMoney << " for Passport Clerks" << std::endl;
+    std::cout << "Manager has counted a total of " << CashierMoney << " for Cashiers" << std::endl;
+    std::cout << "Manager has counted a total of " << total << " for the Passport Office" << std::endl;
+
   }
 }
 
