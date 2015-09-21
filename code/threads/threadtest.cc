@@ -1287,6 +1287,7 @@ int Customer::FindAppLine() {
       && random < 3) {
     AppClerks[my_line]->addToBribeLine(this);
     std::cout << this->name << " has gotten in bribe line for " << AppClerks[my_line]->getName() << std::endl;
+    if (test1) sem.V();
     AppClerks[my_line]->getBribeLineCV()->Wait(AppClerkLineLock);
     money -= 500;
     if (test6) MONEY += 500;
@@ -1294,6 +1295,7 @@ int Customer::FindAppLine() {
     if (AppClerks[my_line]->getState() == 1 || AppClerks[my_line]->getState() == 2) {
       AppClerks[my_line]->addToLine(this);
       std::cout << this->name << " has gotten in regular line for " << AppClerks[my_line]->getName() << std::endl;
+      if (test1) sem.V();
       AppClerks[my_line]->getLineCV()->Wait(AppClerkLineLock);
     } else {
       AppClerks[my_line]->setCurrentCustomer(this);
@@ -1604,7 +1606,6 @@ void ManagerStart() {
 
 void CustomerTest1(int index) {
   Customers[index]->GetApplicationFiled(Customers[index]->FindAppLine());
-  sem.V();
 }
 
 void CustomerTest3(int index) {
@@ -1621,7 +1622,7 @@ void CustomerTest5(int index) {
 void TEST_1() {
   /* Customers always take the shortest line, but no 2 customers 
   ever choose the same shortest line at the same time */
-  NUM_CUSTOMERS = 3;
+  NUM_CUSTOMERS = 2;
   NUM_APP_CLERKS = 2;
   int SSN = 100000000;
 
@@ -1657,6 +1658,10 @@ void TEST_1() {
   AppClerks[0]->addToLine(new Customer("dummy", 0));
   AppClerks[0]->addToLine(new Customer("dummy", 1));
 
+  std::cout << "TEST_1: ApplicationClerk 0 has " << AppClerks[0]->getLineSize() << "Customers" << std::endl;
+  std::cout << "TEST_1: ApplicationClerk 1 has " << AppClerks[1]->getLineSize() << "Customers" << std::endl;
+
+
   AppClerks[1]->Fork((VoidFunctionPtr)AppClerkStart, 1);
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
@@ -1673,7 +1678,7 @@ void TEST_3() {
   The Cashier does not start on another customer until they know that the last 
   Customer has left their area */
 
-  NUM_CUSTOMERS = 2;
+  NUM_CUSTOMERS = 3;
   NUM_CASHIERS = 1;
   int SSN = 100000000;
 
@@ -1689,6 +1694,7 @@ void TEST_3() {
 
   Customers = new Customer*[NUM_CUSTOMERS];
   Cashiers = new Cashier*[NUM_CASHIERS];
+  manager = new Manager("Manager", 0);
 
   CashierLineLock = new Lock("cashier_lineLock");
 
@@ -1704,6 +1710,7 @@ void TEST_3() {
   }
 
   Cashiers[0]->Fork((VoidFunctionPtr)CashierStart, 0);
+  manager->Fork((VoidFunctionPtr)ManagerStart, 0);
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     Customers[i]->Fork((VoidFunctionPtr)CustomerTest3, i);
@@ -1783,6 +1790,7 @@ void TEST_6() {
   PicClerks = new PicClerk*[NUM_PIC_CLERKS];
   PassportClerks = new PassportClerk*[NUM_PASSPORT_CLERKS];
   Cashiers = new Cashier*[NUM_CASHIERS];
+  manager = new Manager("Manager", 0);
   int SSN = 10000000;
 
   std::cout << "Number of Customers = " << NUM_CUSTOMERS << std::endl;
@@ -1844,6 +1852,8 @@ void TEST_6() {
   for(int i = 0; i < NUM_CASHIERS; i++) {
     Cashiers[i]->Fork((VoidFunctionPtr)CashierStart, i);
   }
+
+  manager->Fork((VoidFunctionPtr)ManagerStart, 0);
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
@@ -1958,14 +1968,8 @@ void Problem2() {
       std::cout << "-- Starting Test 1"<<std::endl;
       t = new Thread("ts2_t1");
       t->Fork((VoidFunctionPtr)TEST_1,0);
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < 2; i++) {
         sem.P();
-      }
-      if (AppClerks[0]->getLineSize() == 2 &&
-            AppClerks[1]->getTotalServiced() == 3) {
-        std::cout << "Test 1 PASSED" << std::endl;
-      } else {
-        std::cout << "Test 1 FAILED" << std::endl;
       }
       std::cout << "-- Test 1 Completed" << std::endl;
       test1 = false;
