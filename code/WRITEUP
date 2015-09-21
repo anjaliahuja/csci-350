@@ -17,6 +17,7 @@ II. ASSUMPTIONS:
 	-When a customer gets sent to the "back of the line", they must start over the process of looking for the shortest line.
 	-For PassportClerk & Cashier, there is no official verification of whether they went to the ApplicationClerk or PictureClerk.  Instead, there is a small random chance that the PassportClerk/Cashier tells them to go to the back of the line.  This is because the way our clerks were implemented were that Customers can not move onto the next clerk without a Signal from their current clerk that they can leave.  See https://piazza.com/class/idqhn1k3sfn267?cid=74#
 	-All Clerks and the Cashier have bribe lines.
+	- When a customer shows up to choose a line, it first looks through all lines to see if it can get into one of those lines that has a clerk not on break, if it can't find one of those lines then it looks through all the lines including ones where the clerk is busy to get into one of those lines
 
 III. DESIGN
 	-First implemented acquire and release methods of lock to be used by each type of person in the passport office
@@ -112,6 +113,14 @@ III. DESIGN
 			-After the Cashier is paid, they provide the Customer with their completed passport (takes some time).
 			-The Cashier then waits for the Customer to receive their completed passport.  They inform the Customer that they are free to leave.  They wait for the customer to leave.
 			-The Cashier's lock is released so they may begin to service another Customer.
+
+		Manager
+			- The manager is within a while loop to constantly check for certain things
+			- It loops through all the clerks of each individual type, checking the number of people in their line to see if there's at least 3 people
+			- If there are at least 3 people in that line, then it wakes up all the clerks of that particular type that are on break by signaling that particular clerk's lock to wake up
+			- It will also print out the amount of money that is contained by all the clerks and the total amount of money the office has made, these are stored in global variables that the clerks constantly update
+			- the manager will then yield 100 times as to not keep continuously printing out the money amounts
+
 
 IV. IMPLEMENTATION
 
@@ -226,6 +235,9 @@ IV. IMPLEMENTATION
 	    Customer* currentCustomer;
 	    std::queue<Customer*>* line;
 	    std::queue<Customer*>* bribeLine;
+
+	class Manager:
+		
 
 	// Declaring class global variables.
 	// List of Clerks

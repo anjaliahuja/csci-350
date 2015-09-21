@@ -1263,9 +1263,6 @@ void Manager::ManagerStart() {
       }
     }
 
-    for(int i = 0; i < 100; i++) {
-      currentThread->Yield();
-    }
     //Add code for checking amount of money we have
     // int AppClerkBribeMoney;
     // int PicClerkBribeMoney;
@@ -1278,6 +1275,10 @@ void Manager::ManagerStart() {
     std::cout << "Manager has counted a total of " << PassportClerkBribeMoney << " for Passport Clerks" << std::endl;
     std::cout << "Manager has counted a total of " << CashierMoney << " for Cashiers" << std::endl;
     std::cout << "Manager has counted a total of " << total << " for the Passport Office" << std::endl;
+
+    for(int i = 0; i < 100; i++) {
+      currentThread->Yield();
+    }
 
   }
 }
