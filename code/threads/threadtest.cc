@@ -396,6 +396,7 @@ int NUM_CASHIERS;
 int NUM_CUSTOMERS;
 
 // For tests.  Have to sem.V() for test to finish.
+bool test1;
 bool test6;
 int MONEY;
 
@@ -667,7 +668,6 @@ class PicClerk : public Thread {
       while(true) {
         PicClerkLineLock->Acquire();
 
-        //TODO: check for bribes
         if (getBribeLineSize() != 0) {
           bribeLineCV->Signal(PicClerkLineLock);
           currentCustomer = bribeLine->front();
@@ -1204,6 +1204,8 @@ void Customer::CustomerStart() {
 
 int Customer::FindAppLine() {
   AppClerkLineLock->Acquire();
+  if(test1) 
+    std::cout << "TEST_1: " << name << " has acquired ApplicationClerk's line lock" << std::endl;
   int my_line = -1;
   int line_size = 9999;
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
@@ -1469,7 +1471,7 @@ void Customer::PayCashier(int my_line) {
 
     // Give SSN
     Cashiers[my_line]->getCV()->Signal(Cashiers[my_line]->getLock());
-    std::cout << this->name << " has given SSN " << ssn << " to " << PassportClerks[my_line]->getName() << std::endl;
+    std::cout << this->name << " has given SSN " << ssn << " to " << Cashiers[my_line]->getName() << std::endl;
 
     // Wait to determine whether they go back in line
     Cashiers[my_line]->getCV()->Wait(Cashiers[my_line]->getLock());
@@ -1539,13 +1541,14 @@ void CustomerTest1(int index) {
 
 void CustomerTest3(int index) {
   Customers[index]->PayCashier(Customers[index]->FindCashierLine());
+  std::cout << Customers[index]->getName() << " is leaving the Passport Office" << std::endl;
   sem.V();
 }
 
 void TEST_1() {
   /* Customers always take the shortest line, but no 2 customers 
   ever choose the same shortest line at the same time */
-  NUM_CUSTOMERS = 2;
+  NUM_CUSTOMERS = 3;
   NUM_APP_CLERKS = 2;
   int SSN = 100000000;
 
@@ -1597,14 +1600,6 @@ void TEST_3() {
   The Cashier does not start on another customer until they know that the last 
   Customer has left their area */
 
-  // TODO: Create a queue to push statements onto.. check if they are in the 
-  // correct order.. ex:
-  // Cashier 0 has provided Customer 5 their completed passport
-  // Cashier 0 has recorded that Customer 5 has been given their completed passport
-  // Customer 5 is leaving the Passport Office
-  // Cashier 0 has signalled a Customer to come to their counter
-  // can't think of another way....
-
   NUM_CUSTOMERS = 2;
   NUM_CASHIERS = 1;
   int SSN = 100000000;
@@ -1652,12 +1647,6 @@ void TEST_5() {
 
 void TEST_6() {
   // Total sales never suffers from a race condition
-
-  // TODO: 
-  // basically check if all bribe money + cashier money 
-  // = customer money spent
-  // confused because why would there be a race condition?
-  // not like your money needs a lock?
   MONEY = 0;
   NUM_CUSTOMERS = 7;
   NUM_APP_CLERKS = 2;
@@ -1821,6 +1810,7 @@ void Problem2() {
   PicClerkBribeMoney = 0;
   PassportClerkBribeMoney = 0;
   CashierMoney = 0;
+  test1 = false;
   test6 = false;
 
   std::cout << "Please select which test you would like to run:" << std::endl;
@@ -1839,19 +1829,21 @@ void Problem2() {
     std::cout << "Enter option: ";
     std::cin >> testSelection;
     if(testSelection == 1) {
+      test1 = true;
       std::cout << "-- Starting Test 1"<<std::endl;
       t = new Thread("ts2_t1");
       t->Fork((VoidFunctionPtr)TEST_1,0);
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < 3; i++) {
         sem.P();
       }
       if (AppClerks[0]->getLineSize() == 2 &&
-            AppClerks[1]->getTotalServiced() == 2) {
+            AppClerks[1]->getTotalServiced() == 3) {
         std::cout << "Test 1 PASSED" << std::endl;
       } else {
         std::cout << "Test 1 FAILED" << std::endl;
       }
       std::cout << "-- Test 1 Completed" << std::endl;
+      test1 = false;
     }
     else if(testSelection == 2) {
       std::cout << "-- Starting Test 2" << std::endl;
@@ -1895,6 +1887,7 @@ void Problem2() {
         std::cout << "Test 6 FAILED" << std::endl;
       }
       std::cout << "-- Test 6 Completed" << std::endl;
+      test6 = false;
     }
     else if(testSelection == 7) {
       std::cout << "-- Starting Test 7" << std::endl;
