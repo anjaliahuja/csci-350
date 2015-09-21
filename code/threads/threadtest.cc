@@ -1193,13 +1193,11 @@ class Manager : public Thread{
   public:
     Manager(char* debugName, int id) : Thread(debugName) {
       name = debugName;
-      totalMoney = 0;
     }
 
     void ManagerStart();
   private:
     char* name;
-    int totalMoney;
 
 };
 
@@ -1352,18 +1350,14 @@ void Manager::ManagerStart() {
     }
 
     //Add code for checking amount of money we have
-    // int AppClerkBribeMoney;
-    // int PicClerkBribeMoney;
-    // int PassportClerkBribeMoney;
-    // int CashierMoney;
 
-    /*int total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
+    int total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
     std::cout << "Manager has counted a total of " << AppClerkBribeMoney << " for Application Clerks" << std::endl;
     std::cout << "Manager has counted a total of " << PicClerkBribeMoney << " for Picture Clerks" << std::endl;
     std::cout << "Manager has counted a total of " << PassportClerkBribeMoney << " for Passport Clerks" << std::endl;
     std::cout << "Manager has counted a total of " << CashierMoney << " for Cashiers" << std::endl;
     std::cout << "Manager has counted a total of " << total << " for the Passport Office" << std::endl;
-    */
+    
   }
 }
 
@@ -1877,13 +1871,13 @@ void TEST_3() {
 
 void TEST_4() {
     // Clerks go on break when they have no one waiting in their line
-    // Managers only read one from one Clerk's total money received, at a time
 
-  NUM_CUSTOMERS = 0;
-  NUM_APP_CLERKS = 2;
+  NUM_CUSTOMERS = 1;
+  NUM_APP_CLERKS = 1;
 
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
-
+  Customers = new Customer*[NUM_CUSTOMERS];
+  manager = new Manager("Manager", 0);
   AppClerkLineLock = new Lock("appClerk_lineLock");
 
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
@@ -1892,15 +1886,29 @@ void TEST_4() {
     AppClerks[i] = new AppClerk(debugName, i);
   }
 
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    char* debugName = new char[15];
+    sprintf(debugName, "Customer %d", i);
+    Customers[i] = new Customer(debugName, i);
+  }
+
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
     AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
+  }
+
+
+  manager->Fork((VoidFunctionPtr)ManagerStart, 0);
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    Customers[i]->Fork((VoidFunctionPtr)CustomerTest5, i);
   }
 }
 
 void TEST_5() {
   // Managers get Clerks off their break when lines get too long
 
-  NUM_CUSTOMERS = 4;
+  NUM_CUSTOMERS = 3;
   NUM_APP_CLERKS = 1;
 
   Customers = new Customer*[NUM_CUSTOMERS];
@@ -2158,7 +2166,7 @@ void Problem2() {
       std::cout << "-- Starting Test 5" << std::endl;
       t = new Thread("ts2_t5");
       t->Fork((VoidFunctionPtr)TEST_5, 0);
-      for (int i = 0; i < 4; i++){
+      for (int i = 0; i < 3; i++){
         sem.P();
       }
       std::cout << "-- Test 5 Completed" << std::endl;
