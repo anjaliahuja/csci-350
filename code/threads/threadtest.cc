@@ -536,6 +536,8 @@ class AppClerk : public Thread {
           this->lock->Acquire();
           cv->Wait(this->lock);
           std::cout << name << " has woken up" << std::endl;
+          // Signal manager that i'm awake
+          cv->Signal(this->lock);
           this->lock->Release();
           this->state = 0;
           continue;
@@ -695,6 +697,7 @@ class PicClerk : public Thread {
           this->lock->Acquire();
           cv->Wait(this->lock);
           std::cout << name << " has woken up" << std::endl;
+          cv->Signal(this->lock);
           this->lock->Release();
           this->state = 0;
           continue;
@@ -877,6 +880,7 @@ class PassportClerk : public Thread {
           this->lock->Acquire();
           cv->Wait(this->lock);
           std::cout << name << " has woken up" << std::endl;
+          cv->Signal(this->lock);
           this->lock->Release();
           this->state = 0;
           continue;
@@ -1045,6 +1049,7 @@ class Cashier : public Thread {
           this->lock->Acquire();
           cv->Wait(this->lock);
           std::cout << name << " has woken up" << std::endl;
+          cv->Signal(this->lock);
           this->lock->Release();
           this->state = 0;
           continue;
@@ -1219,8 +1224,13 @@ void Manager::ManagerStart() {
       if(AppClerks[i]->getLineSize() > 2) {
         for(int j = 0; j < NUM_APP_CLERKS; j++) {
           if(AppClerks[i]->getState() == 2) {
-            std::cout << "Manager has woken up " << AppClerks[i]->getName() << std::endl;
+            AppClerks[i]->Acquire();
             AppClerks[i]->getCV()->Signal(AppClerks[i]->getLock());
+            std::cout << "Manager has woken up " << AppClerks[i]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            AppClerks[i]->getCV()->Wait(AppClerks[i]->getLock());
+            AppClerks[i]->Release();
           }
         }
         break;
@@ -1231,8 +1241,13 @@ void Manager::ManagerStart() {
        if(PicClerks[i]->getLineSize() > 2) {
           for(int j = 0; j < NUM_PIC_CLERKS; j++) {
             if(PicClerks[i]->getState() == 2) {
-              std::cout << "Manager has woken up " << PicClerks[i]->getName() << std::endl;
+              PicClerks[i]->Acquire();
               PicClerks[i]->getCV()->Signal(PicClerks[i]->getLock());
+              std::cout << "Manager has woken up " << PicClerks[i]->getName() << std::endl;
+              
+              // Wait for PicClerk to Acknowledge
+              PicClerks[i]->getCV()->Wait(PicClerks[i]->getLock());
+              PicClerks[i]->Release();
             }
           }
           break;
@@ -1243,8 +1258,13 @@ void Manager::ManagerStart() {
       if(PassportClerks[i]->getLineSize() > 2) {
         for(int j = 0; j < NUM_PASSPORT_CLERKS; j++) {
           if(PassportClerks[i]->getState() == 2) {
-            std::cout << "Manager has woken up " << PassportClerks[i]->getName() << std::endl;
+            PassportClerks[i]->Acquire();
             PassportClerks[i]->getCV()->Signal(PassportClerks[i]->getLock());
+            std::cout << "Manager has woken up " << PassportClerks[i]->getName() << std::endl;
+          
+            // Wait for PassportClerk to Acknowledge
+            PassportClerks[i]->getCV()->Wait(PassportClerks[i]->getLock());
+            PassportClerks[i]->Release();
           }
         }
         break;
@@ -1255,15 +1275,20 @@ void Manager::ManagerStart() {
       if(Cashiers[i]->getLineSize() > 2) {
         for(int j = 0; j < NUM_CASHIERS; j++) {
           if(Cashiers[i]->getState() == 2) {
-            std::cout << "Manager has woken up " << Cashiers[i]->getName() << std::endl;
+            Cashiers[i]->Acquire();
             Cashiers[i]->getCV()->Signal(Cashiers[i]->getLock());
+            std::cout << "Manager has woken up " << Cashiers[i]->getName() << std::endl;
+
+            // Wait for Cashier to acknowledge
+            Cashiers[i]->getCV()->Wait(Cashiers[i]->getLock());
+            Cashiers[i]->Release();
           }
         }
         break;
       }
     }
 
-    for(int i = 0; i < 100; i++) {
+    for(int i = 0; i < 1000; i++) {
       currentThread->Yield();
     }
     //Add code for checking amount of money we have
@@ -1272,13 +1297,13 @@ void Manager::ManagerStart() {
     // int PassportClerkBribeMoney;
     // int CashierMoney;
 
-    int total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
+    /*int total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
     std::cout << "Manager has counted a total of " << AppClerkBribeMoney << " for Application Clerks" << std::endl;
     std::cout << "Manager has counted a total of " << PicClerkBribeMoney << " for Picture Clerks" << std::endl;
     std::cout << "Manager has counted a total of " << PassportClerkBribeMoney << " for Passport Clerks" << std::endl;
     std::cout << "Manager has counted a total of " << CashierMoney << " for Cashiers" << std::endl;
     std::cout << "Manager has counted a total of " << total << " for the Passport Office" << std::endl;
-
+*/
   }
 }
 
@@ -2032,7 +2057,7 @@ void Problem2() {
       std::cout << "-- Starting Test 3" << std::endl;
       t = new Thread("ts2_t3");
       t->Fork((VoidFunctionPtr)TEST_3, 0);
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < 3; i++) {
         sem.P();
       }
       std::cout << "-- Test 3 Completed" << std::endl;
