@@ -1330,8 +1330,6 @@ void Customer::CustomerStart() {
   my_line = FindPassportLine();
   GetPassport(my_line);
 
-  std::cout << "DEBUG: " << name << " done with clerks" << std::endl;
-
   my_line = FindCashierLine();
   PayCashier(my_line);
 
@@ -1346,11 +1344,17 @@ int Customer::FindAppLine() {
   int my_line = -1;
   int line_size = 9999;
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
-    if(AppClerks[i]->getLineSize() < line_size) {
+    if(AppClerks[i]->getLineSize() < line_size && AppClerks[i]->getState() != 2) {
       line_size = AppClerks[i]->getLineSize();
       my_line = i;
     }
   }
+
+  if (my_line = -1) {
+    line_size = AppClerks[0]->getLineSize();
+    my_line = 0;
+  }
+
   // Bribe
   // Only go on bribe line if you have enough money and 
   // the clerk is busy (else you'd be spending $500 for no reason)
@@ -1405,10 +1409,15 @@ int Customer::FindPicLine() {
   int my_line = -1;
   int line_size = 9999;
   for(int i = 0; i < NUM_PIC_CLERKS; i++) {
-    if(PicClerks[i]->getLineSize() < line_size) {
+    if(PicClerks[i]->getLineSize() < line_size && PicClerks[i]->getState() != 2) {
       line_size = PicClerks[i]->getLineSize();
       my_line = i;
     }
+  }
+
+  if (my_line == -1) {
+    line_size = PicClerks[0]->getLineSize();
+    my_line = 0;
   }
 
   // Bribe
@@ -1460,7 +1469,13 @@ void Customer::GetPictureTaken(int my_line){
          // Signal clerk that I'm leaving
         PicClerks[my_line]->getCV()->Signal(PicClerks[my_line]->getLock());
         
-        PicClerks[my_line]->Release();
+        // Implemented so that the if the clerk they were at can become available again
+        // Not necessarily punishment
+        PicClerks[my_line]->Release(); // no busy waiting
+        for(int i =100; i<1000; ++i){
+            currentThread->Yield();
+        }
+
         GetPictureTaken(FindPicLine());
         return;
     }
@@ -1485,10 +1500,15 @@ int Customer::FindPassportLine() {
   int my_line = -1;
   int line_size = 9999;
   for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
-    if(PassportClerks[i]->getLineSize() < line_size) {
+    if(PassportClerks[i]->getLineSize() < line_size && PassportClerks[i]->getState() != 2) {
       line_size = PassportClerks[i]->getLineSize();
       my_line = i;
     }
+  } 
+
+  if (my_line == -1) {
+    line_size = PassportClerks[0]->getLineSize();
+    my_line = 0;
   }
 
   // Bribe
@@ -1571,10 +1591,15 @@ int Customer::FindCashierLine() {
   int my_line = -1;
   int line_size = 9999;
   for(int i = 0; i < NUM_CASHIERS; i++) {
-    if(Cashiers[i]->getLineSize() < line_size) {
+    if(Cashiers[i]->getLineSize() < line_size && Cashiers[i]->getState() != 2) {
       line_size = Cashiers[i]->getLineSize();
       my_line = i;
     }
+  }
+
+  if (my_line == -1) {
+    line_size = Cashiers[0]->getLineSize();
+    my_line = 0;
   }
 
   // Bribe
@@ -1825,7 +1850,7 @@ void TEST_5() {
 
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
     char* debugName = new char[15];
-    sprintf(debugName, "appClerk_%d", i);
+    sprintf(debugName, "ApplicationClerk %d", i);
     AppClerks[i] = new AppClerk(debugName, i);
   }
 
@@ -1833,11 +1858,11 @@ void TEST_5() {
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     char* debugName = new char[15];
-    sprintf(debugName, "customer_%d", i);
+    sprintf(debugName, "Customer %d", i);
     Customers[i] = new Customer(debugName, i);
   }
 
-  manager = new Manager("manager", 0);
+  manager = new Manager("Manager", 0);
 
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
     AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
@@ -1853,7 +1878,7 @@ void TEST_5() {
 void TEST_6() {
   // Total sales never suffers from a race condition
   MONEY = 0;
-  NUM_CUSTOMERS = 7;
+  NUM_CUSTOMERS = 12;
   NUM_APP_CLERKS = 2;
   NUM_PIC_CLERKS = 2;
   NUM_PASSPORT_CLERKS = 2;
@@ -2073,7 +2098,9 @@ void Problem2() {
       std::cout << "-- Starting Test 5" << std::endl;
       t = new Thread("ts2_t5");
       t->Fork((VoidFunctionPtr)TEST_5, 0);
-      sem.P();
+      for (int i = 0; i < 4; i++){
+        sem.P();
+      }
       std::cout << "-- Test 5 Completed" << std::endl;
     }
     else if(testSelection == 6) {
@@ -2081,7 +2108,7 @@ void Problem2() {
       test6 = true;
       t = new Thread("ts2_t6");
       t->Fork((VoidFunctionPtr)TEST_6, 0);
-      for (int i = 0; i < 7; i++) {
+      for (int i = 0; i < 12; i++) {
         sem.P();
       }
       if (MONEY == (AppClerkBribeMoney + PicClerkBribeMoney + 

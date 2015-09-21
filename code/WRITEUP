@@ -17,6 +17,7 @@ II. ASSUMPTIONS:
 	-When a customer gets sent to the "back of the line", they must start over the process of looking for the shortest line.
 	-For PassportClerk & Cashier, there is no official verification of whether they went to the ApplicationClerk or PictureClerk.  Instead, there is a small random chance that the PassportClerk/Cashier tells them to go to the back of the line.  This is because the way our clerks were implemented were that Customers can not move onto the next clerk without a Signal from their current clerk that they can leave.  See https://piazza.com/class/idqhn1k3sfn267?cid=74#
 	-All Clerks and the Cashier have bribe lines.
+	-Customers can wait on lines that are on break.
 
 III. DESIGN
 	-First implemented acquire and release methods of lock to be used by each type of person in the passport office
