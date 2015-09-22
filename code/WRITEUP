@@ -387,7 +387,15 @@ V. TESTING
 		Customer 1 has gotten in regular line for ApplicationClerk 1
 
 	TEST_2: Managers only read one from one Clerk's total money received, at a time
-	//
+	Test 2 has 2 customers and 1 of each of the clerks, the customers will go through all the clerks and complete their processes of getting their passport, paying 100$ each to the cashier. Throughout this time the manager will look around and print out the amount of money held by the various clerks. By the end, the manager should print out the correct amount from the cashiers.
+	See:
+		Manager has counted a total of 0 for Application Clerks
+		Manager has counted a total of 0 for Picture Clerks
+		Manager has counted a total of 0 for Passport Clerks
+		Manager has counted a total of 100 for Cashiers
+		Manager has counted a total of 100 for the Passport Office
+
+		The above is a demonstration of what the very last check by the managers should print out
 
 	TEST_3: Customers do not leave until they are given their passport by the Cashier. 
 	The Cashier does not start on another customer until they know that the last 
