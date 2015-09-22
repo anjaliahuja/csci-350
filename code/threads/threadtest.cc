@@ -1577,15 +1577,10 @@ int Customer::FindAppLine() {
   int my_line = -1;
   int line_size = 9999;
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
-    if(AppClerks[i]->getLineSize() < line_size && AppClerks[i]->getState() != 2) {
+    if(AppClerks[i]->getLineSize() < line_size) {
       line_size = AppClerks[i]->getLineSize();
       my_line = i;
     }
-  }
-
-  if (my_line = -1) {
-    line_size = AppClerks[0]->getLineSize();
-    my_line = 0;
   }
 
   // Bribe
@@ -1647,15 +1642,10 @@ int Customer::FindPicLine() {
   int my_line = -1;
   int line_size = 9999;
   for(int i = 0; i < NUM_PIC_CLERKS; i++) {
-    if(PicClerks[i]->getLineSize() < line_size && PicClerks[i]->getState() != 2) {
+    if(PicClerks[i]->getLineSize() < line_size) {
       line_size = PicClerks[i]->getLineSize();
       my_line = i;
     }
-  }
-
-  if (my_line == -1) {
-    line_size = PicClerks[0]->getLineSize();
-    my_line = 0;
   }
 
   // Bribe
@@ -1743,15 +1733,10 @@ int Customer::FindPassportLine() {
   int my_line = -1;
   int line_size = 9999;
   for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
-    if(PassportClerks[i]->getLineSize() < line_size && PassportClerks[i]->getState() != 2) {
+    if(PassportClerks[i]->getLineSize() < line_size) {
       line_size = PassportClerks[i]->getLineSize();
       my_line = i;
     }
-  } 
-
-  if (my_line == -1) {
-    line_size = PassportClerks[0]->getLineSize();
-    my_line = 0;
   }
 
   // Bribe
@@ -1839,15 +1824,10 @@ int Customer::FindCashierLine() {
   int my_line = -1;
   int line_size = 9999;
   for(int i = 0; i < NUM_CASHIERS; i++) {
-    if(Cashiers[i]->getLineSize() < line_size && Cashiers[i]->getState() != 2) {
+    if(Cashiers[i]->getLineSize() < line_size) {
       line_size = Cashiers[i]->getLineSize();
       my_line = i;
     }
-  }
-
-  if (my_line == -1) {
-    line_size = Cashiers[0]->getLineSize();
-    my_line = 0;
   }
 
   // Bribe
