@@ -2028,24 +2028,70 @@ void CustomerTest5(int index) {
 void TEST_1() {
   /* Customers always take the shortest line, but no 2 customers 
   ever choose the same shortest line at the same time */
-  NUM_CUSTOMERS = 2;
-  NUM_APP_CLERKS = 2;
-  int SSN = 100000000;
-
-  std::cout << "Number of Customers = " << NUM_CUSTOMERS << std::endl;
-  std::cout << "Number of ApplicationClerks = " << NUM_APP_CLERKS << std::endl;
-  std::cout << "Number of PictureClerks = 0" << std::endl;
-  std::cout << "Number of PassportClerks = 0" << std::endl;
-  std::cout << "Number of Cashiers = 0" << std::endl;
-  std::cout << std::endl;
-  std::cout << "This test will only run for the ApplicationClerk." << std::endl;
-  std::cout << std::endl;
+  NUM_CUSTOMERS = 5;
+  NUM_APP_CLERKS = 1;
 
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
+  AppClerkLineLock = new Lock("appClerk_lineLock");
+
+
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    char* debugName = new char[15];
+    sprintf(debugName, "ApplicationClerk %d", i);
+    AppClerks[i] = new AppClerk(debugName, i);
+  }
+
+  AppClerks[0] -> setState(2);
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    char* debugName = new char[15];
+    sprintf(debugName, "Customer %d", i);
+    Customers[i] = new Customer(debugName, i);
+  }
+
   manager = new Manager("Manager", 0);
 
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
+  }
+
+  manager->Fork((VoidFunctionPtr)ManagerStart, 0);
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    Customers[i]->Fork((VoidFunctionPtr)CustomerTest5, i);
+  }
+}
+
+void TEST_2() {
+  // Managers only read one from one Clerk's total money received, at a time
+  // Total sales never suffers from a race condition
+  MONEY = 0;
+  NUM_CUSTOMERS = 2;
+  NUM_APP_CLERKS = 1;
+  NUM_PIC_CLERKS = 1;
+  NUM_PASSPORT_CLERKS = 1;
+  NUM_CASHIERS = 1;
+  Customers = new Customer*[NUM_CUSTOMERS];
+  AppClerks = new AppClerk*[NUM_APP_CLERKS];
+  PicClerks = new PicClerk*[NUM_PIC_CLERKS];
+  PassportClerks = new PassportClerk*[NUM_PASSPORT_CLERKS];
+  Cashiers = new Cashier*[NUM_CASHIERS];
+  manager = new Manager("Manager", 0);
+  int SSN = 10000000;
+
+  std::cout << "Number of Customers = " << NUM_CUSTOMERS << std::endl;
+  std::cout << "Number of ApplicationClerks = " << NUM_APP_CLERKS << std::endl;
+  std::cout << "Number of PictureClerks = " << NUM_PIC_CLERKS << std::endl;
+  std::cout << "Number of PassportClerks = " << NUM_PASSPORT_CLERKS << std::endl;
+  std::cout << "Number of Cashiers = " << NUM_CASHIERS << std::endl;
+  std::cout << "Number of Senators = 0" << std::endl;
+  std::cout << std::endl;
+
   AppClerkLineLock = new Lock("appClerk_lineLock");
+  PicClerkLineLock = new Lock("picClerk_lineLock");
+  PassportClerkLineLock = new Lock("passportClerk_lineLock");
+  CashierLineLock = new Lock("cashier_lineLock");
 
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
     char* debugName = new char[20];
@@ -2053,25 +2099,52 @@ void TEST_1() {
     AppClerks[i] = new AppClerk(debugName, i);
   }
 
-  for(int i = 0; i < NUM_CUSTOMERS; i++){
+  for(int i = 0; i < NUM_PIC_CLERKS; i++) {
     char* debugName = new char[20];
+    sprintf(debugName, "PictureClerk %d", i);
+    PicClerks[i] = new PicClerk(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "PassportClerk %d", i);
+    PassportClerks[i] = new PassportClerk(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_CASHIERS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "Cashier %d", i);
+    Cashiers[i] = new Cashier(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    char* debugName = new char[15];
     SSN += rand()%(90000000/NUM_CUSTOMERS);
     sprintf(debugName, "Customer %d", i);
     Customers[i] = new Customer(debugName, SSN);
   }
 
-  AppClerks[0]->Fork((VoidFunctionPtr)AppClerkStart, 0);
-  AppClerks[1]->Fork((VoidFunctionPtr)AppClerkStart, 1);
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
+  }
+
+  for(int i = 0; i < NUM_PIC_CLERKS; i++) {
+    PicClerks[i]->Fork((VoidFunctionPtr)PicClerkStart, i);
+  }
+
+  for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
+    PassportClerks[i]->Fork((VoidFunctionPtr)PassportClerkStart, i);
+  }
+
+  for(int i = 0; i < NUM_CASHIERS; i++) {
+    Cashiers[i]->Fork((VoidFunctionPtr)CashierStart, i);
+  }
 
   manager->Fork((VoidFunctionPtr)ManagerStart, 0);
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
-    Customers[i]->Fork((VoidFunctionPtr)CustomerTest1, i);
+    Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
   }
-}
-
-void TEST_2() {
-  // Managers only read one from one Clerk's total money received, at a time
 }
 
 void TEST_3() {
@@ -2278,7 +2351,84 @@ void TEST_6() {
 void TEST_7() {
   /* The behavior of Customers is proper when Senators arrive. This is
   before, during, and after. */
+  NUM_CUSTOMERS = 4;
+  NUM_APP_CLERKS = 1;
+  NUM_PIC_CLERKS = 1;
+  NUM_PASSPORT_CLERKS = 1;
+  NUM_CASHIERS = 1;
+
+  std::cout << "Number of Customers = " << NUM_CUSTOMERS << std::endl;
+  std::cout << "Number of ApplicationClerks = " << NUM_APP_CLERKS << std::endl;
+  std::cout << "Number of PictureClerks = " << NUM_PIC_CLERKS << std::endl;
+  std::cout << "Number of PassportClerks = " << NUM_PASSPORT_CLERKS << std::endl;
+  std::cout << "Number of Cashiers = " << NUM_CASHIERS << std::endl;
+  std::cout << "Number of Senators = 0" << std::endl;
+  std::cout << std::endl;
+
+  Customers = new Customer*[NUM_CUSTOMERS];
+  AppClerks = new AppClerk*[NUM_APP_CLERKS];
+  PicClerks = new PicClerk*[NUM_PIC_CLERKS];
+  PassportClerks = new PassportClerk*[NUM_PASSPORT_CLERKS];
+  Cashiers = new Cashier*[NUM_CASHIERS];
+  int SSN = 10000000;
+
+  AppClerkLineLock = new Lock("appClerk_lineLock");
+  PicClerkLineLock = new Lock("picClerk_lineLock");
+  PassportClerkLineLock = new Lock("passportClerk_lineLock");
+  CashierLineLock = new Lock("cashier_lineLock");
+
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "ApplicationClerk %d", i);
+    AppClerks[i] = new AppClerk(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_PIC_CLERKS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "PictureClerk %d", i);
+    PicClerks[i] = new PicClerk(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "PassportClerk %d", i);
+    PassportClerks[i] = new PassportClerk(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_CASHIERS; i++) {
+    char* debugName = new char[20];
+    sprintf(debugName, "Cashier %d", i);
+    Cashiers[i] = new Cashier(debugName, i);
+  }
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    char* debugName = new char[15];
+    SSN += rand()%(90000000/NUM_CUSTOMERS);
+    sprintf(debugName, "Customer %d", i);
+    Customers[i] = new Customer(debugName, SSN);
+  }
+
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
+  }
+
+  for(int i = 0; i < NUM_PIC_CLERKS; i++) {
+    PicClerks[i]->Fork((VoidFunctionPtr)PicClerkStart, i);
+  }
+
+  for(int i = 0; i < NUM_PASSPORT_CLERKS; i++) {
+    PassportClerks[i]->Fork((VoidFunctionPtr)PassportClerkStart, i);
+  }
+
+  for(int i = 0; i < NUM_CASHIERS; i++) {
+    Cashiers[i]->Fork((VoidFunctionPtr)CashierStart, i);
+  }
+
+  for(int i = 0; i < NUM_CUSTOMERS; i++){
+    Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
+  }
 }
+
 
 void FULL_SIMULATION() {
   std::cout << "Number of Customers = " << NUM_CUSTOMERS << std::endl;
@@ -2387,7 +2537,7 @@ void Problem2() {
       std::cout << "-- Starting Test 1"<<std::endl;
       t = new Thread("ts2_t1");
       t->Fork((VoidFunctionPtr)TEST_1,0);
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < 5; i++) {
         sem.P();
       }
       std::cout << "-- Test 1 Completed" << std::endl;
@@ -2452,7 +2602,9 @@ void Problem2() {
       std::cout << "-- Starting Test 7" << std::endl;
       test7 = true;
       t = new Thread("ts2_t7");
-      //t->Fork((VoidFunctionPtr)TEST_7, 0);
+      t->Fork((VoidFunctionPtr)TEST_7, 0);
+      for(int i = 0; i < 4; i++)
+        sem.P();
       test7 = false;
       std::cout << "-- Test 7 Completed" << std::endl;
     }
