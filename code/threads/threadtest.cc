@@ -2039,11 +2039,11 @@ void TEST_1() {
   std::cout << "Number of Cashiers = 0" << std::endl;
   std::cout << std::endl;
   std::cout << "This test will only run for the ApplicationClerk." << std::endl;
-  std::cout << "ApplicationClerk 0 will start with 2 customers, simulating a 'longer' line" << std::endl;
   std::cout << std::endl;
 
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
+  manager = new Manager("Manager", 0);
 
   AppClerkLineLock = new Lock("appClerk_lineLock");
 
@@ -2060,14 +2060,10 @@ void TEST_1() {
     Customers[i] = new Customer(debugName, SSN);
   }
 
-  AppClerks[0]->addToLine(new Customer("dummy", 0));
-  AppClerks[0]->addToLine(new Customer("dummy", 1));
-
-  std::cout << "TEST_1: ApplicationClerk 0 has " << AppClerks[0]->getLineSize() << "Customers" << std::endl;
-  std::cout << "TEST_1: ApplicationClerk 1 has " << AppClerks[1]->getLineSize() << "Customers" << std::endl;
-
-
+  AppClerks[0]->Fork((VoidFunctionPtr)AppClerkStart, 0);
   AppClerks[1]->Fork((VoidFunctionPtr)AppClerkStart, 1);
+
+  manager->Fork((VoidFunctionPtr)ManagerStart, 0);
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     Customers[i]->Fork((VoidFunctionPtr)CustomerTest1, i);
@@ -2440,8 +2436,15 @@ void Problem2() {
         PassportClerkBribeMoney + CashierMoney)) { 
         std::cout << "Test 6 PASSED" << std::endl;
       } else {
+        std::cout << MONEY << " " << AppClerkBribeMoney + PicClerkBribeMoney + 
+        PassportClerkBribeMoney + CashierMoney << std::endl;
         std::cout << "Test 6 FAILED" << std::endl;
       }
+      MONEY = 0; 
+      AppClerkBribeMoney = 0;
+      PicClerkBribeMoney = 0;
+      PassportClerkBribeMoney = 0;
+      CashierMoney = 0;
       std::cout << "-- Test 6 Completed" << std::endl;
       test6 = false;
     }
@@ -2450,6 +2453,7 @@ void Problem2() {
       test7 = true;
       t = new Thread("ts2_t7");
       //t->Fork((VoidFunctionPtr)TEST_7, 0);
+      test7 = false;
       std::cout << "-- Test 7 Completed" << std::endl;
     }
     else if(testSelection == 8) {
