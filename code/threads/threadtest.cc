@@ -1388,6 +1388,7 @@ Manager* manager;
 Customer** Customers;
 
 void Manager::ManagerStart() {
+  std::cout << "manager waking up" << std::endl;
   while(true) {
     for(int i = 0; i < NUM_APP_CLERKS; i++) {
     
@@ -1521,14 +1522,14 @@ void Manager::ManagerStart() {
     }
 
     //Add code for checking amount of money we have
-/*
+
     int total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
     std::cout << "Manager has counted a total of " << AppClerkBribeMoney << " for Application Clerks" << std::endl;
     std::cout << "Manager has counted a total of " << PicClerkBribeMoney << " for Picture Clerks" << std::endl;
     std::cout << "Manager has counted a total of " << PassportClerkBribeMoney << " for Passport Clerks" << std::endl;
     std::cout << "Manager has counted a total of " << CashierMoney << " for Cashiers" << std::endl;
     std::cout << "Manager has counted a total of " << total << " for the Passport Office" << std::endl;
-*/
+
   }
 }
 
@@ -2028,6 +2029,7 @@ void CustomerTest5(int index) {
 void TEST_1() {
   /* Customers always take the shortest line, but no 2 customers 
   ever choose the same shortest line at the same time */
+
   NUM_CUSTOMERS = 5;
   NUM_APP_CLERKS = 1;
 
@@ -2041,8 +2043,6 @@ void TEST_1() {
     sprintf(debugName, "ApplicationClerk %d", i);
     AppClerks[i] = new AppClerk(debugName, i);
   }
-
-  AppClerks[0] -> setState(2);
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     char* debugName = new char[15];
@@ -2537,7 +2537,7 @@ void Problem2() {
       std::cout << "-- Starting Test 1"<<std::endl;
       t = new Thread("ts2_t1");
       t->Fork((VoidFunctionPtr)TEST_1,0);
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < 10; i++) {
         sem.P();
       }
       std::cout << "-- Test 1 Completed" << std::endl;
@@ -2546,7 +2546,10 @@ void Problem2() {
     else if(testSelection == 2) {
       std::cout << "-- Starting Test 2" << std::endl;
       t = new Thread("ts2_t2");
-      //t->Fork((VoidFunctionPtr)TEST_2, 0);
+      t->Fork((VoidFunctionPtr)TEST_2, 0);
+      for (int i = 0; i  < 2; i++) {
+        sem.P();
+      }
       std::cout << "-- Test 2 Completed" << std::endl;
     }
     else if(testSelection == 3) {
