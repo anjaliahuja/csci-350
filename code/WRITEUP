@@ -126,6 +126,20 @@ III. DESIGN
 			- It will also print out the amount of money that is contained by all the clerks and the total amount of money the office has made, these are stored in global variables that the clerks constantly update
 			- the manager will then yield 100 times as to not keep continuously printing out the money amounts
 
+		Senator
+			-The Senator is a special kind of Customer.  It is randomly determined whether a Customer is a Senator at creation.  Customers that are Senators will have their isSenator bool set to true.
+			-Senators go through the same motions as Customers except that:
+				-The Senator will wait till a clerk/cashier is ready to address them.
+				-The Senator will signal each clerk/cashier that they have arrived
+				-The Senator waits for the clerk/cashier to inform them that everyone has left in their line.
+				-After each type of clerk/cashier has made sure every Customer has left, the Senator will then go through the ApplicationClerk, PictureClerk, PassportClerk, and Cashier normally.
+
+			Clerks/Cashier actions for Senator
+				-The clerk/cashier will check if a Senator has arrived.
+				-If so, they signal that they are ready and then wait for the Senator to inform them they have arrived.
+				-They will then inform their customers to leave the office for the senator.
+				-After the customers have left, they signal the Senator.  Then work continues as normal.
+
 
 IV. IMPLEMENTATION
 
@@ -413,13 +427,16 @@ VI. DISCUSSION:
 
 	-Up to 50 customers, 5 clerks of each type, 10 senators and a manager can be fully synchronized and run in proper sequence for a full simulation
 	-Locks are properly acquired and released for the correct interations between customers and clerks and cashiers to take place
+	-All tests and full simulation work correctly
 	
 
 	ii. Experiment result
-
+	-Tests 1-6 work. Senator is partially functioning, runs into a bug after customer goes through first few clerks but does not reach the end. 
 
 	iii. Explanation (Explain how your project proves what its supposed to prove)
+	-Customers, clerks, cashier and manager all interact correctly and are synchronized to allow customers to go through passport office in any order and receive their passport. 
 
 	
 
 VII. MISCELLANEOUS 
+	
