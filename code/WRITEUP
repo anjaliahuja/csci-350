@@ -23,6 +23,9 @@ II. ASSUMPTIONS:
 III. DESIGN
 	-First implemented acquire and release methods of lock to be used by each type of person in the passport office
 	-Wrote condition wait and signal to implement the sleep and wake of threads
+	-Using locks and condition variables prevents race conditions from occurring by only allowing one thread to access shared data in a critical section at a time. Lock keeps track of current thread owner and wait queue for other threads trying to acquire the lock. If the lock is currently in use and a thread tries to acquire it, it is added to the locks wait queue. Once the thread is no longer using the lock, it releases it and the next thread in the wait queue can acquire the lock.
+	-Wait and signal allows us to put threads to sleep or wake them up depending on what is needed by the customers in the bank. 
+	
 	-Designed classes for the customer, each type of clerk, cashier, and manager that contained the condition variables, line locks, monitor variables for line count
 	-Global variables and arrays are stored as monitor variables 
 
