@@ -403,7 +403,7 @@ Lock* SenatorLock;
 // For tests.  Have to sem.V() for test to finish.
 bool test1;
 bool test6;
-bool test7 = false;
+bool test7;
 int MONEY;
 
 
@@ -445,42 +445,6 @@ class Customer : public Thread{
     int FindCashierLine();
     void PayCashier(int my_line);
 
-    bool is_app_completed() {
-      return app_clerk && pic_clerk && passport_clerk;
-    }
-    int get_money() {
-      return money;
-    }
-
-    int get_ssn() {
-      return ssn;
-    }
-
-    void set_app_clerk() {
-      app_clerk = true;
-    }
-    void set_pic_clerk() {
-      pic_clerk = true;
-    }
-    void set_passport_clerk() {
-      passport_clerk = true;
-    }
-    void set_cashier() {
-      cashier = true;
-    }
-    bool get_app_clerk() {
-      return app_clerk;
-    }
-    bool get_pic_clerk() {
-      return pic_clerk;
-    }
-    bool get_passport_clerk() {
-      return passport_clerk;
-    }
-    bool get_cashier() {
-      return cashier;
-    }
-
     int getSSN() {
       return ssn;
     }
@@ -517,7 +481,6 @@ class AppClerk : public Thread {
       name = debugName;
       this->id = id;
       state = 0; //0 is available, 1 is busy, 2 is on break 
-      totalServiced = 0;
       lock = new Lock(debugName);
       cv = new Condition(debugName);
       lineCV = new Condition(debugName);
@@ -609,7 +572,6 @@ class AppClerk : public Thread {
         cv->Signal(this->lock);
         std::cout << name << " has recorded a completed application for ";
         std::cout << currentCustomer->getName() << std::endl;
-        this->totalServiced++;
 
         // Wait for customer to leave
         cv->Wait(this->lock);
@@ -647,10 +609,6 @@ class AppClerk : public Thread {
 
     int getBribeLineSize() {
       return bribeLine->size();
-    }
-
-    int getTotalServiced() {
-        return totalServiced;
     }
 
     Lock* getLock() {
@@ -693,7 +651,6 @@ class AppClerk : public Thread {
     char* name;
     int id;
     int state;
-    int totalServiced;
     Lock* lock;
     Condition* cv;
     Condition* lineCV;
@@ -712,7 +669,6 @@ class PicClerk : public Thread {
       name = debugName;
       this->id = id;
       state = 0; //0 is available, 1 is busy, 2 is on break
-      totalServiced = 0;
       lock = new Lock(debugName);
       cv = new Condition(debugName);
       lineCV = new Condition(debugName);
@@ -820,7 +776,6 @@ class PicClerk : public Thread {
 
           //picture filed
           cv->Signal(this->lock);
-          totalServiced++;
         }
 
         // Wait for customer to leave
@@ -860,10 +815,6 @@ class PicClerk : public Thread {
 
     int getBribeLineSize() {
       return bribeLine->size();
-    }
-
-    int getTotalServiced() {
-        return totalServiced;
     }
 
     Lock* getLock() {
@@ -910,7 +861,6 @@ class PicClerk : public Thread {
     char* name;
     int id;
     int state;
-    int totalServiced;
     bool likePicture;
     Lock* lock;
     Condition* cv;
@@ -933,7 +883,6 @@ class PassportClerk : public Thread {
       state = 0; //0 is available, 1 is busy, 2 is on break
       lineSize = 0;
       bribeLineSize = 0;
-      totalServiced = 0;
       lock = new Lock(debugName);
       cv = new Condition(debugName);
       lineCV = new Condition(debugName);
@@ -1039,7 +988,6 @@ class PassportClerk : public Thread {
           // customer recorded
           cv->Signal(this->lock);
           std::cout << name << " has recorded " << currentCustomer->getName() << " passport documentation" << std::endl;
-          totalServiced++;
         }
 
         // Wait for customer to leave
@@ -1078,10 +1026,6 @@ class PassportClerk : public Thread {
 
     int getBribeLineSize() {
       return bribeLine->size();
-    }
-
-    int getTotalServiced() {
-        return totalServiced;
     }
 
     Lock* getLock() {
@@ -1127,7 +1071,6 @@ class PassportClerk : public Thread {
     int state;
     int lineSize;
     int bribeLineSize;
-    int totalServiced;
     Lock* lock;
     Condition* cv;
     Condition* lineCV;
@@ -1149,7 +1092,6 @@ class Cashier : public Thread {
       state = 0; //0 is available, 1 is busy, 2 is on break
       lineSize = 0;
       bribeLineSize = 0;
-      totalServiced = 0;
       lock = new Lock(debugName);
       cv = new Condition(debugName);
       lineCV = new Condition(debugName);
@@ -1261,7 +1203,6 @@ class Cashier : public Thread {
           std::cout << " has been given their completed passport" << std::endl;
       
           cv->Signal(this->lock);
-          totalServiced++;
         }
 
         // Wait for customer to leave
@@ -1300,10 +1241,6 @@ class Cashier : public Thread {
 
     int getBribeLineSize() {
       return bribeLine->size();
-    }
-
-    int getTotalServiced() {
-        return totalServiced;
     }
 
     Lock* getLock() {
@@ -1348,7 +1285,6 @@ class Cashier : public Thread {
     int state;
     int lineSize;
     int bribeLineSize;
-    int totalServiced;
     Lock* lock;
     Condition* cv;
     Condition* lineCV;
@@ -1388,7 +1324,6 @@ Manager* manager;
 Customer** Customers;
 
 void Manager::ManagerStart() {
-  std::cout << "manager waking up" << std::endl;
   while(true) {
     for(int i = 0; i < NUM_APP_CLERKS; i++) {
     
@@ -1522,7 +1457,11 @@ void Manager::ManagerStart() {
     }
 
     //Add code for checking amount of money we have
-
+    if (SenatorArrived) {
+      sem.V();
+      continue;
+    }
+    if (test1) continue;
     int total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
     std::cout << "Manager has counted a total of " << AppClerkBribeMoney << " for Application Clerks" << std::endl;
     std::cout << "Manager has counted a total of " << PicClerkBribeMoney << " for Picture Clerks" << std::endl;
@@ -2030,8 +1969,8 @@ void TEST_1() {
   /* Customers always take the shortest line, but no 2 customers 
   ever choose the same shortest line at the same time */
 
-  NUM_CUSTOMERS = 5;
-  NUM_APP_CLERKS = 1;
+  NUM_CUSTOMERS = 7;
+  NUM_APP_CLERKS = 2;
 
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
@@ -2051,14 +1990,18 @@ void TEST_1() {
   }
 
   manager = new Manager("Manager", 0);
+  AppClerks[0]->addToLine(new Customer("Dummy 0", 0));
+  AppClerks[0]->addToLine(new Customer("Dummy 1", 1));
+  AppClerks[0]->addToLine(new Customer("Dummy 2", 2));
 
-  for(int i = 0; i < NUM_APP_CLERKS; i++) {
-    AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
-  }
+  //for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    AppClerks[1]->Fork((VoidFunctionPtr)AppClerkStart, 1);
+  //}
 
   manager->Fork((VoidFunctionPtr)ManagerStart, 0);
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
+    AppClerks[1]->setState(0);
     Customers[i]->Fork((VoidFunctionPtr)CustomerTest5, i);
   }
 }
@@ -2357,12 +2300,14 @@ void TEST_7() {
   NUM_PASSPORT_CLERKS = 1;
   NUM_CASHIERS = 1;
 
+  SenatorLock = new Lock("senator_lock");
+
   std::cout << "Number of Customers = " << NUM_CUSTOMERS << std::endl;
   std::cout << "Number of ApplicationClerks = " << NUM_APP_CLERKS << std::endl;
   std::cout << "Number of PictureClerks = " << NUM_PIC_CLERKS << std::endl;
   std::cout << "Number of PassportClerks = " << NUM_PASSPORT_CLERKS << std::endl;
   std::cout << "Number of Cashiers = " << NUM_CASHIERS << std::endl;
-  std::cout << "Number of Senators = 0" << std::endl;
+  std::cout << "Number of Senators = 1" << std::endl;
   std::cout << std::endl;
 
   Customers = new Customer*[NUM_CUSTOMERS];
@@ -2370,6 +2315,7 @@ void TEST_7() {
   PicClerks = new PicClerk*[NUM_PIC_CLERKS];
   PassportClerks = new PassportClerk*[NUM_PASSPORT_CLERKS];
   Cashiers = new Cashier*[NUM_CASHIERS];
+  manager = new Manager("Manager", 0);
   int SSN = 10000000;
 
   AppClerkLineLock = new Lock("appClerk_lineLock");
@@ -2424,6 +2370,8 @@ void TEST_7() {
     Cashiers[i]->Fork((VoidFunctionPtr)CashierStart, i);
   }
 
+  manager->Fork((VoidFunctionPtr)ManagerStart, 0);
+
   for(int i = 0; i < NUM_CUSTOMERS; i++){
     Customers[i]->Fork((VoidFunctionPtr)CustomerStart, i);
   }
@@ -2451,7 +2399,6 @@ void FULL_SIMULATION() {
   PicClerkLineLock = new Lock("picClerk_lineLock");
   PassportClerkLineLock = new Lock("passportClerk_lineLock");
   CashierLineLock = new Lock("cashier_lineLock");
-  SenatorLock = new Lock("senator_lock");
 
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
     char* debugName = new char[20];
@@ -2537,7 +2484,7 @@ void Problem2() {
       std::cout << "-- Starting Test 1"<<std::endl;
       t = new Thread("ts2_t1");
       t->Fork((VoidFunctionPtr)TEST_1,0);
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 20; i++) {
         sem.P();
       }
       std::cout << "-- Test 1 Completed" << std::endl;

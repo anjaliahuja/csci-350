@@ -126,6 +126,7 @@ III. DESIGN
 			- It will also print out the amount of money that is contained by all the clerks and the total amount of money the office has made, these are stored in global variables that the clerks constantly update
 			- the manager will then yield 100 times as to not keep continuously printing out the money amounts
 
+		// Implemented but does not run 
 		Senator
 			-The Senator is a special kind of Customer.  It is randomly determined whether a Customer is a Senator at creation.  Customers that are Senators will have their isSenator bool set to true.
 			-Senators go through the same motions as Customers except that:
@@ -155,7 +156,18 @@ IV. IMPLEMENTATION
 	WRITEUP
 
 	iii. Data Structures added, file they were added to
+	In ../code/threads/synch.cc ....
+
 	In threadtest.cc....
+	class Lock
+		char* name;
+		char* state;
+		Thread* lockOwnerThread;
+		List *lockWaitQueue;
+	class Condition
+		char* name;
+		Lock* waitingLock;
+		List* waitConditionQueue;
 
 	//Application Clerk Line
 	Lock* AppClerkLineLock;
@@ -182,6 +194,14 @@ IV. IMPLEMENTATION
 	int NUM_CASHIERS;
 	int NUM_CUSTOMERS;
 
+	bool SenatorArrived;
+	Lock* SenatorLock;
+
+	bool test1;
+	bool test6;
+	bool test7;
+	int MONEY;
+
 	//classes
 	class Customer:
 		char* name;
@@ -192,16 +212,17 @@ IV. IMPLEMENTATION
 	    bool cashier;
 	    bool sendToBackOfLine;
 	    int money;
+	    bool isSenator;
 
 	class AppClerk:
 		char* name;
 	    int id;
 	    int state;
-	    int totalServiced;
 	    Lock* lock;
 	    Condition* cv;
 	    Condition* lineCV;
 	    Condition* bribeLineCV;
+	    Condition* senatorCV;
 
 	    Customer* currentCustomer;
 	    std::queue<Customer*>* line;
@@ -212,12 +233,13 @@ IV. IMPLEMENTATION
 		char* name;
 	    int id;
 	    int state;
-	    int totalServiced;
 	    bool likePicture;
 	    Lock* lock;
 	    Condition* cv;
 	    Condition* lineCV;
 	    Condition* bribeLineCV;
+	    Condition* senatorCV;
+	    bool setUpSenator;
 
 	    Customer* currentCustomer;
 	    std::queue<Customer*>* line;
@@ -229,7 +251,6 @@ IV. IMPLEMENTATION
 	    int state;
 	    int lineSize;
 	    int bribeLineSize;
-	    int totalServiced;
 	    Lock* lock;
 	    Condition* cv;
 	    Condition* lineCV;
@@ -245,11 +266,13 @@ IV. IMPLEMENTATION
 	    int state;
 	    int lineSize;
 	    int bribeLineSize;
-	    int totalServiced;
 	    Lock* lock;
 	    Condition* cv;
 	    Condition* lineCV;
 	    Condition* bribeLineCV;
+	    Condition* senatorCV;
+
+	    bool setUpSenator;
 
 	    Customer* currentCustomer;
 	    std::queue<Customer*>* line;
@@ -266,6 +289,7 @@ IV. IMPLEMENTATION
 	PicClerk** PicClerks;
 	PassportClerk** PassportClerks;
 	Cashier** Cashiers;
+	Manager* manager;
 
 	//List of Customers
 	Customer** Customers;
@@ -304,17 +328,6 @@ IV. IMPLEMENTATION
     void GetPassport(int my_line);
     int FindCashierLine();
     void PayCashier(int my_line);
-    bool is_app_completed();
-    int get_money();
-    int get_ssn();
-    void set_app_clerk();
-    void set_pic_clerk();
-    void set_passport_clerk();
-    void set_cashier();
-    bool get_app_clerk();
-    bool get_pic_clerk();
-    bool get_passport_clerk();
-    bool get_cashier();
     int getSSN()
     void setSendToBackOfLine() 
 
@@ -325,11 +338,11 @@ IV. IMPLEMENTATION
     void setState(int s);
     int getLineSize();
     int getBribeLineSize();
-    int getTotalServiced();
     Lock* getLock();
     Condition* getCV();
     Condition* getLineCV();
     Condition* getBribeLineCV();
+    Condition* getSenatorCV();
     char* getName();
     void addToLine(Customer* customer);
     void addToBribeLine(Customer* customer);
@@ -341,8 +354,6 @@ IV. IMPLEMENTATION
    	void CashierStart();
 
    	void ManagerStart();
-
-
 
 
 	vi. Functions modified and in which file.
