@@ -1969,7 +1969,7 @@ void TEST_1() {
   /* Customers always take the shortest line, but no 2 customers 
   ever choose the same shortest line at the same time */
 
-  NUM_CUSTOMERS = 7;
+  NUM_CUSTOMERS = 5;
   NUM_APP_CLERKS = 2;
 
   Customers = new Customer*[NUM_CUSTOMERS];
@@ -1990,18 +1990,14 @@ void TEST_1() {
   }
 
   manager = new Manager("Manager", 0);
-  AppClerks[0]->addToLine(new Customer("Dummy 0", 0));
-  AppClerks[0]->addToLine(new Customer("Dummy 1", 1));
-  AppClerks[0]->addToLine(new Customer("Dummy 2", 2));
 
-  //for(int i = 0; i < NUM_APP_CLERKS; i++) {
-    AppClerks[1]->Fork((VoidFunctionPtr)AppClerkStart, 1);
-  //}
+  for(int i = 0; i < NUM_APP_CLERKS; i++) {
+    AppClerks[i]->Fork((VoidFunctionPtr)AppClerkStart, i);
+  }
 
   manager->Fork((VoidFunctionPtr)ManagerStart, 0);
 
   for(int i = 0; i < NUM_CUSTOMERS; i++){
-    AppClerks[1]->setState(0);
     Customers[i]->Fork((VoidFunctionPtr)CustomerTest5, i);
   }
 }
@@ -2463,6 +2459,7 @@ void Problem2() {
   CashierMoney = 0;
   test1 = false;
   test6 = false;
+  test7 = false;
 
   std::cout << "Please select which test you would like to run:" << std::endl;
   std::cout << " 1. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time" << std::endl;
@@ -2484,7 +2481,7 @@ void Problem2() {
       std::cout << "-- Starting Test 1"<<std::endl;
       t = new Thread("ts2_t1");
       t->Fork((VoidFunctionPtr)TEST_1,0);
-      for (int i = 0; i < 20; i++) {
+      for (int i = 0; i < 10; i++) {
         sem.P();
       }
       std::cout << "-- Test 1 Completed" << std::endl;
@@ -2540,11 +2537,6 @@ void Problem2() {
         PassportClerkBribeMoney + CashierMoney << std::endl;
         std::cout << "Test 6 FAILED" << std::endl;
       }
-      MONEY = 0; 
-      AppClerkBribeMoney = 0;
-      PicClerkBribeMoney = 0;
-      PassportClerkBribeMoney = 0;
-      CashierMoney = 0;
       std::cout << "-- Test 6 Completed" << std::endl;
       test6 = false;
     }
@@ -2586,5 +2578,11 @@ void Problem2() {
     else {
       printf("-- not a valid choice, please try again --");
     }
+
+      MONEY = 0; 
+      AppClerkBribeMoney = 0;
+      PicClerkBribeMoney = 0;
+      PassportClerkBribeMoney = 0;
+      CashierMoney = 0;
   }
 }
