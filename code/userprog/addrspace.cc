@@ -157,9 +157,20 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
 					// pages to be read-only
     }
     
+
+    for(i=0; i<numPages; i++){
+        DEBUG('a', "Initializing code segment, at 0x%x, size %d\n",    
+            pageTable[i].physicalPage*PageSize, PageSize);
+
+        executable->ReadAt(
+            &(machine->mainMemory[pageTable[i].physicalPage * PageSize]),
+            PageSize, noffH.code.inFileAddr + i*PageSize);
+            
+        }
+    /*
 // zero out the entire address space, to zero the unitialized data segment 
 // and the stack segment
-    bzero(machine->mainMemory, size);
+    //bzero(machine->mainMemory, size);
 
 // then, copy in the code and data segments into memory
     if (noffH.code.size > 0) {
@@ -172,9 +183,11 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
         DEBUG('a', "Initializing data segment, at 0x%x, size %d\n", 
 			noffH.initData.virtualAddr, noffH.initData.size);
         executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),
-			noffH.initData.size, noffH.initData.inFileAddr);
+		
+        	noffH.initData.size, noffH.initData.inFileAddr);
     }
-
+    
+    */
 }
 
 //----------------------------------------------------------------------
@@ -244,4 +257,41 @@ void AddrSpace::RestoreState()
 {
     machine->pageTable = pageTable;
     machine->pageTableSize = numPages;
+}
+
+void AllocateStack(){
+    availMem->Acquire();
+        TranslationEntry* oldPageTable = pageTable; //make copy of old page table 
+        pageTable = new TranslationEntry[numPages + 8]; // make a new page table with 8 more pages
+        for(int i = 0; i<numPages; i++){
+            pageTable[i].virtualPage = oldPageTable[i].virtualPage;   // for now, virtual page # = phys page #
+            pageTable[i].physicalPage = oldPageTable[i].physicalPage;
+            pageTable[i].valid = oldPageTable[i].valid;
+            pageTable[i].use = oldPageTable[i].use;
+            pageTable[i].dirty = oldPageTable[i].dirty;
+            pageTable[i].readOnly = oldPageTable[i].readOnly; 
+        }//copy all values of old page table to new page table
+
+        numPages += 8; //add 8 new pages
+
+        for(i; i<numPages; i++){
+            pageTable[i].virtualPage = i;
+            pageTable[i].physicalPage = bitMap->Find();
+            pageTable[i].valid = TRUE;
+            pageTable[i].use = FALSE;
+            pageTable[i].dirty = FALSE;
+            pageTable[i].readOnly = FALSE;
+        }
+
+        machine->pageTable = pageTable;
+
+        delete oldPageTable;
+
+        int* stackRegister = new int[];
+        stackRegister[0] = numPages * PageSize - 16;
+        stackRegister[1] = numPages - 1;
+
+    availMem->Release();
+    return stackRegister;
+
 }

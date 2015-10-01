@@ -19,6 +19,8 @@ Statistics *stats;			// performance metrics
 Timer *timer;				// the hardware timer device,
 					// for invoking context switches
 
+
+
 #ifdef FILESYS_NEEDED
 FileSystem  *fileSystem;
 #endif
@@ -29,6 +31,13 @@ SynchDisk   *synchDisk;
 
 #ifdef USER_PROGRAM	// requires either FILESYS or FILESYS_STUB
 Machine *machine;	// user program memory and registers
+BitMap* bitMap;
+Lock* availMem; //physical memory available
+Table* CVTable;
+Lock* CVTableLock;
+Table* processTable;
+Lock* processTableLock;
+
 #endif
 
 #ifdef NETWORK

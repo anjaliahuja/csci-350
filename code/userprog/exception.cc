@@ -231,6 +231,49 @@ void Close_Syscall(int fd) {
     }
 }
 
+
+
+void Fork_Syscall(int pc, unsigned int vaddr, int len){
+  char* buf;
+  if(!(buf = new char[len])){
+    printf("Error allocating kernel buffer for Fork \n");
+    return;
+  }
+  else {
+    if(copyin(vaddr, len, buf)==-1){
+      printf("Bad pointer passed to fork call, thread not forked \n");
+      delete[] buf;
+      return;
+    }
+  }
+
+  if(pc == 0){
+    printf("Null pointer passed in to Fork. Can't fork\n");
+  }
+
+  //Fork new thread
+  Thread* t = new Thread(buf);
+  //Allocate stack
+  int* stackRegister = currentThread->space->AllocateStack();
+  t->stackreg = stackRegister[0];
+  t->stackVP = stackRegister[1];
+  delete[] stackRegister;
+  t->space = currentThread->space;
+  t->Fork((VoidFunctionPtr)internal_fork, pc);
+}
+
+void internal_fork(int pc){
+  currentThread->space->InitRegisters();
+  machine->WriteRegister(PCReg, pc);
+  machine->WriteRegister(NextPCReg, pc+4);
+  machine->WriteRegister(StackReg, currentThread->stackreg);
+  currentThread->space->RestoreState();
+
+  machine->Run();
+
+}
+
+
 void ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2); // Which syscall?
     int rv=0; 	// the return value from a syscall
