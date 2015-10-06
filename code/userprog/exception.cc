@@ -358,6 +358,22 @@ void Exit_Syscall(){
 
 }
 
+void CreateLock_Syscall() {
+  lockTableLock->Acquire();
+}
+
+void Acquire_Syscall() {
+  lockTableLock->Acquire();
+}
+
+void Release_Syscall() {
+  lockTableLock->Acquire();
+}
+
+void DestroyLock_Syscall() {
+  lockTableLock->Acquire();
+}
+
 
 void ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2); // Which syscall?
