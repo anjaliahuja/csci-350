@@ -353,8 +353,75 @@ void Exec_Syscall(unsigned int vaddr, int len){
 void Yield_Syscall(unsigned int vaddr){
 
 } 
-void Exit_Syscall(){
+void Exit_Syscall(int status){
+  processLock->Acquire();
 
+  bool lastProcess = false;
+  if(processTable->NumUsed() == 1){ // only one process in table, its the last process
+    lastProcess = true;
+  }
+
+  //Find current process
+
+  int processID = -1;
+  kernelProcess* process;
+  for(int i =0; i<NumProcesses; i++){
+    process = (kernelProcess*) processTable->Get(i);
+    if(process = NULL){
+      continue; 
+    }
+    if(process->addressSpace == currentThread->space){
+      processID = i;
+      break;
+    }
+  }
+  if(processID == -1){
+    printf("Invalid process identifier");
+    processLock->Release();
+    return;
+  }
+
+  //3 Cases
+  //Case 1: Check if thread has called exit in a process but its not the last thread
+  //Reclaim 8 pages 
+
+  if(process->numThreads > 1){
+    availMem->Acquire();
+    int pageNum = currentThread->stackVP;
+    for(int i = 0; i < 8; i++){
+      bitMap->Clear(currentThread->space->pageTable[pageNum].physicalPage);
+      currentThread->space->pageTable[pageNum].valid = FALSE;
+      pageNum--;
+    }
+    availMem->Release(); 
+    process->numThreads--;
+    DEBUG('b', "Exit thread case 1\n");
+  }
+
+  //Case 2: last executing thread in last process (ready queue is empty)
+  else if(lastProcess && process->numThreads == 1){
+    availMem->Acquire();
+    for(unsigned int i =0; i<currentThread->space->numPages; i++){
+      bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
+      currentThread->space->pageTable[i].valid = FALSE;
+    }
+    availMem->Release();
+    processLock->Release();
+    interrupt->Halt();
+  }
+
+  //Case 3: Last thread in process but not last process, need to reclaim all locks, cvs, stack memory
+  else if(!lastProcess && process->numThreads == 1){
+
+  }
+
+  else{
+    printf("Invalid case");
+  }
+
+
+  processLock->Release();
+  currentThread->Finish();
 
 }
 
