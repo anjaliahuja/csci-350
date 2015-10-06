@@ -78,6 +78,9 @@ void *Table::Remove(int i) {
     return f;
 }
 
+int Table::NumUsed() {
+    return (size - map.NumClear() );
+}
 //----------------------------------------------------------------------
 // SwapHeader
 // 	Do little endian to big endian conversion on the bytes in the 
