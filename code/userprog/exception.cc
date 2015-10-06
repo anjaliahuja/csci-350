@@ -231,7 +231,16 @@ void Close_Syscall(int fd) {
     }
 }
 
+void internal_fork(int pc){
+  currentThread->space->InitRegisters();
+  machine->WriteRegister(PCReg, pc);
+  machine->WriteRegister(NextPCReg, pc+4);
+  machine->WriteRegister(StackReg, currentThread->stackreg);
+  currentThread->space->RestoreState();
 
+  machine->Run();
+
+}
 
 void Fork_Syscall(int pc, unsigned int vaddr, int len){
   char* buf;
@@ -262,16 +271,6 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
   t->Fork((VoidFunctionPtr)internal_fork, pc);
 }
 
-void internal_fork(int pc){
-  currentThread->space->InitRegisters();
-  machine->WriteRegister(PCReg, pc);
-  machine->WriteRegister(NextPCReg, pc+4);
-  machine->WriteRegister(StackReg, currentThread->stackreg);
-  currentThread->space->RestoreState();
-
-  machine->Run();
-
-}
 
 
 void ExceptionHandler(ExceptionType which) {

@@ -33,10 +33,17 @@ SynchDisk   *synchDisk;
 Machine *machine;	// user program memory and registers
 BitMap* bitMap;
 Lock* availMem; //physical memory available
-Table* CVTable;
-Lock* CVTableLock;
+
 Table* processTable;
 Lock* processTableLock;
+
+Table* lockTable;
+Lock* lockTableLock;
+
+Table* CVTable;
+Lock* CVTableLock;
+
+
 
 #endif
 
@@ -158,6 +165,18 @@ Initialize(int argc, char **argv)
     
 #ifdef USER_PROGRAM
     machine = new Machine(debugUserProg);	// this must come first
+    availMem = new Lock("MemoryLock");
+    bitMap = new BitMap(NumPhysPages);
+
+    lockTable = new Table(NumLocks);
+    lockTableLock = new Lock("LockTableLock");
+
+    CVTable = new Table(NumCVs);
+    CVTableLock = new Lock("CVTableLock");
+
+   // processTable = new Table(NumProcesses);
+   // processLock = new Lock("ProcessLock");
+
 #endif
 
 #ifdef FILESYS

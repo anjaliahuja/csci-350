@@ -126,6 +126,9 @@ class Thread {
     void SaveUserState();		// save user-level register state
     void RestoreUserState();		// restore user-level register state
 
+    int stackVP; //last virtual page allocated to thread
+    int stackreg; //first new page that is allocated
+    int index; //thread index
     AddrSpace *space;			// User code this thread is running.
 #endif
 };

@@ -41,6 +41,13 @@ class AddrSpace {
 					// for now!
     unsigned int numPages;		// Number of pages in the virtual 
 					// address space
+
+    void StartProcess(char* filename);
+    void Fork_Syscall(int pc, unsigned int vaddr, int size);
+    void Exec_Syscall(unsigned int vaddr, int size);
+    void Exit_Syscall(int status);
+public:
+    int* AllocateStack(); 
 };
 
 #endif // ADDRSPACE_H

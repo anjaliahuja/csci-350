@@ -259,11 +259,12 @@ void AddrSpace::RestoreState()
     machine->pageTableSize = numPages;
 }
 
-void AllocateStack(){
+int* AddrSpace::AllocateStack(){
     availMem->Acquire();
         TranslationEntry* oldPageTable = pageTable; //make copy of old page table 
         pageTable = new TranslationEntry[numPages + 8]; // make a new page table with 8 more pages
-        for(int i = 0; i<numPages; i++){
+        unsigned int i;
+        for(i = 0; i<numPages; i++){
             pageTable[i].virtualPage = oldPageTable[i].virtualPage;   // for now, virtual page # = phys page #
             pageTable[i].physicalPage = oldPageTable[i].physicalPage;
             pageTable[i].valid = oldPageTable[i].valid;
@@ -287,7 +288,7 @@ void AllocateStack(){
 
         delete oldPageTable;
 
-        int* stackRegister = new int[];
+        int* stackRegister = new int[2];
         stackRegister[0] = numPages * PageSize - 16;
         stackRegister[1] = numPages - 1;
 
