@@ -256,9 +256,33 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
     }
   }
 
-  if(pc == 0){
+
+  processLock->Acquire();
+  int processID = -1;
+  kernelProcess* process;
+  for(int i = 0; i<NumProcesses; i++){
+    process =(kernelProcess*) processTable ->Get(i);
+    if(process==NULL){
+      continue;
+    }
+    if(process->addressSpace == currentThread->space){
+      processID = i;
+      break;
+    }
+  }
+  if(processID = -1){
+    printf("Invalid process identified");
+    processLock->Release();
+    return;
+  }
+
+  processLock->Release();
+
+    if(pc == 0){
     printf("Null pointer passed in to Fork. Can't fork\n");
   }
+
+
 
   //Fork new thread
   Thread* t = new Thread(buf);
@@ -304,17 +328,17 @@ void Exec_Syscall(unsigned int vaddr, int len){
   Thread* t = new Thread(file);
   availMem->Acquire();
     addressSpace = new AddrSpace(exec);
-    t->StackVP = addressSpace->numPages-1;
+    t->stackVP = addressSpace->numPages-1;
   availMem->Release();
   t->space = addressSpace; 
 
 
   //Add process to process table
   kernelProcess* process = new kernelProcess();
-  processLock->acquire();
+  processLock->Acquire();
   process->addressSpace = addressSpace;
   process->numThreads++;
-  processLock->release();
+  processLock->Release();
   int index = processTable->Put((void*)process);
   if(index == -1){
     printf("Invalid, no space left in process table to fork");
@@ -327,7 +351,7 @@ void Exec_Syscall(unsigned int vaddr, int len){
 
 
 void Yield_Syscall(unsigned int vaddr){
-  
+
 } 
 void Exit_Syscall(){
 
