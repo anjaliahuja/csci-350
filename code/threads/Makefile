@@ -242,27 +242,20 @@ threadtest.o: ../threads/threadtest.cc ../threads/copyright.h \
   ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
   ../threads/list.h ../machine/stats.h ../machine/timer.h \
   ../threads/utility.h ../threads/synch.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/vector \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/functexcept.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/exception_defines.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_algobase.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/iostream \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/sparc-sun-solaris2.10/bits/c++config.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/sparc-sun-solaris2.10/bits/os_defines.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/cstring \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/cstddef \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/include/stddef.h \
-  /usr/include/iso/stddef_iso.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/climits \
-  /usr/include/limits.h /usr/include/iso/limits_iso.h \
-  /usr/include/sys/int_limits.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/cstdlib \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/new \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/exception \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/ostream \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/ios \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/iosfwd \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/sparc-sun-solaris2.10/bits/c++locale.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/clocale \
   /usr/include/locale.h /usr/include/iso/locale_iso.h \
   /usr/include/libintl.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/cstring \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/cstddef \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/include/stddef.h \
+  /usr/include/iso/stddef_iso.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/cstdio \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/sparc-sun-solaris2.10/bits/c++io.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/sparc-sun-solaris2.10/bits/gthr.h \
@@ -278,7 +271,16 @@ threadtest.o: ../threads/threadtest.cc ../threads/copyright.h \
   /usr/include/wchar.h /usr/include/iso/wchar_iso.h \
   /usr/include/wchar_impl.h /usr/include/iso/wchar_c99.h \
   /usr/include/stdint.h /usr/include/sys/stdint.h \
-  /usr/include/sys/int_const.h \
+  /usr/include/sys/int_limits.h /usr/include/sys/int_const.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/functexcept.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/exception_defines.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/exception \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/char_traits.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_algobase.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/climits \
+  /usr/include/limits.h /usr/include/iso/limits_iso.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/cstdlib \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/new \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_pair.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/type_traits.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_iterator_base_types.h \
@@ -288,18 +290,6 @@ threadtest.o: ../threads/threadtest.cc ../threads/copyright.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/debug/debug.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/cassert \
   /usr/include/assert.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/allocator.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/sparc-sun-solaris2.10/bits/c++allocator.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/ext/new_allocator.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_construct.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_uninitialized.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_vector.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_bvector.h \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/vector.tcc \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/iostream \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/ostream \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/ios \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/char_traits.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/localefwd.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/ios_base.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/atomicity.h \
@@ -307,6 +297,11 @@ threadtest.o: ../threads/threadtest.cc ../threads/copyright.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/locale_classes.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/string \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/memory \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/allocator.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/sparc-sun-solaris2.10/bits/c++allocator.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/ext/new_allocator.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_construct.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_uninitialized.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_raw_storage_iter.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/limits \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_function.h \
@@ -336,7 +331,10 @@ threadtest.o: ../threads/threadtest.cc ../threads/copyright.h \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/locale_facets.tcc \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/typeinfo \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/istream \
-  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/istream.tcc
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/istream.tcc \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/deque \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/stl_deque.h \
+  /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/../../../../include/c++/3.4.3/bits/deque.tcc
 interrupt.o: ../machine/interrupt.cc \
   /usr/sfw/lib/gcc/sparc-sun-solaris2.10/3.4.3/include/stdio.h \
   /usr/include/stdarg.h /usr/include/iso/stdarg_iso.h \

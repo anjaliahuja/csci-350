@@ -231,6 +231,134 @@ void Close_Syscall(int fd) {
     }
 }
 
+void internal_fork(int pc){
+  currentThread->space->InitRegisters();
+  machine->WriteRegister(PCReg, pc);
+  machine->WriteRegister(NextPCReg, pc+4);
+  machine->WriteRegister(StackReg, currentThread->stackreg);
+  currentThread->space->RestoreState();
+
+  machine->Run();
+
+}
+
+void Fork_Syscall(int pc, unsigned int vaddr, int len){
+  char* buf;
+  if(!(buf = new char[len])){
+    printf("Error allocating kernel buffer for Fork \n");
+    return;
+  }
+  else {
+    if(copyin(vaddr, len, buf)==-1){
+      printf("Bad pointer passed to fork call, thread not forked \n");
+      delete[] buf;
+      return;
+    }
+  }
+
+
+  processLock->Acquire();
+  int processID = -1;
+  kernelProcess* process;
+  for(int i = 0; i<NumProcesses; i++){
+    process =(kernelProcess*) processTable ->Get(i);
+    if(process==NULL){
+      continue;
+    }
+    if(process->addressSpace == currentThread->space){
+      processID = i;
+      break;
+    }
+  }
+  if(processID = -1){
+    printf("Invalid process identified");
+    processLock->Release();
+    return;
+  }
+
+  processLock->Release();
+
+    if(pc == 0){
+    printf("Null pointer passed in to Fork. Can't fork\n");
+  }
+
+
+
+  //Fork new thread
+  Thread* t = new Thread(buf);
+  //Allocate stack
+  int* stackRegister = currentThread->space->AllocateStack();
+  t->stackreg = stackRegister[0];
+  t->stackVP = stackRegister[1];
+  delete[] stackRegister;
+  t->space = currentThread->space;
+  t->Fork((VoidFunctionPtr)internal_fork, pc);
+}
+
+void internal_exec(int pc){
+  currentThread->space->InitRegisters();
+  currentThread->space->RestoreState();
+  machine->Run();
+}
+
+void Exec_Syscall(unsigned int vaddr, int len){
+  char* file;
+  if(!(file = new char[len])){
+    printf("Can't allocate kernel buffer for exec system call");
+    return;
+  }
+  else {
+    if(copyin(vaddr, len, file) == -1){
+      printf("Bad pointer passed to write");
+      delete [] file;
+      return;
+    }
+  }
+
+  OpenFile* exec = fileSystem->Open(file);
+  AddrSpace* addressSpace;
+
+  if (exec == NULL){
+    printf("file is null");
+    return;
+  }
+
+
+  //Allocate address space and fork a new thread
+  Thread* t = new Thread(file);
+  availMem->Acquire();
+    addressSpace = new AddrSpace(exec);
+    t->stackVP = addressSpace->numPages-1;
+  availMem->Release();
+  t->space = addressSpace; 
+
+
+  //Add process to process table
+  kernelProcess* process = new kernelProcess();
+  processLock->Acquire();
+  process->addressSpace = addressSpace;
+  process->numThreads++;
+  processLock->Release();
+  int index = processTable->Put((void*)process);
+  if(index == -1){
+    printf("Invalid, no space left in process table to fork");
+    return;
+  }
+  t->Fork((VoidFunctionPtr)internal_exec,0);  
+
+
+}
+
+
+void Yield_Syscall(unsigned int vaddr){
+
+} 
+void Exit_Syscall(){
+
+
+}
+
+
 void ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2); // Which syscall?
     int rv=0; 	// the return value from a syscall
