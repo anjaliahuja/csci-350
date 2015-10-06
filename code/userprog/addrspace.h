@@ -36,7 +36,6 @@ class AddrSpace {
     void RestoreState();		// info on a context switch
     Table fileTable;			// Table of openfiles
 
- private:
     TranslationEntry *pageTable;	// Assume linear page table translation
 					// for now!
 					// address space
@@ -45,7 +44,7 @@ class AddrSpace {
     void Fork_Syscall(int pc, unsigned int vaddr, int size);
     void Exec_Syscall(unsigned int vaddr, int size);
     void Exit_Syscall(int status);
-public:
+
     int* AllocateStack(); 
     unsigned int numPages;      // Number of pages in the virtual 
 
