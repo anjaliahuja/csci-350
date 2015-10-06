@@ -32,15 +32,32 @@ StartProcess(char *filename)
 	printf("Unable to open file %s\n", filename);
 	return;
     }
+
+    availMem->Acquire();
    
-    space = new AddrSpace(executable);
+        space = new AddrSpace(executable);
 
-    currentThread->space = space;
+        currentThread->stackVP = space->numPages -1;
 
+    availMem->Release(); 
+
+    currentThread->space space;
+
+    space->InitRegisters();     // set the initial register values
+    space->RestoreState();      // load page table register
+    
+    kernelProcess* process = new KernelProcess();
+    processLock->Acquire();
+    process->addressSpace = space;
+    process->numThreads++; 
+    processLock->Release();
+
+    int index = processTable->Put((void*)process);
+    if(index == -1){
+        printf("No more room in process table");
+        return;
+    }
     delete executable;			// close file
-
-    space->InitRegisters();		// set the initial register values
-    space->RestoreState();		// load page table register
 
     machine->Run();			// jump to the user progam
     ASSERT(FALSE);			// machine->Run never returns;
