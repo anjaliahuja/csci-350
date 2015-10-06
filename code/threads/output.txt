@@ -1,0 +1,2058 @@
+Please select which test you would like to run:
+ 1. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
+ 2. Managers only read one from one Clerk's total money received, at a time.
+ 3. Customers do not leave until they are given their passport by the Cashier. The Cashier does not start on another customer until they know that the last Customer has left their area
+ 4. Clerks go on break when they have no one waiting in their line
+ 5. Managers get Clerks off their break when lines get too long
+ 6. Total sales never suffers from a race condition
+ 7. The behavior of Customers is proper when Senators arrive. This is before, during, and after.
+ 8. Full simulation
+ 9. Quit
+Enter option: -- Starting Full Simulation
+How many customers? How many application clerks? How many picture clerks? How many passport clerks? How many cashiers? Number of Customers = 50
+Number of ApplicationClerks = 5
+Number of PictureClerks = 5
+Number of PassportClerks = 5
+Number of Cashiers = 5
+Number of Senators = 0
+
+ApplicationClerk 0 is going on break
+ApplicationClerk 1 is going on break
+ApplicationClerk 2 is going on break
+ApplicationClerk 3 is going on break
+ApplicationClerk 4 is going on break
+PictureClerk 0 is going on break
+PictureClerk 1 is going on break
+PictureClerk 2 is going on break
+PictureClerk 3 is going on break
+PictureClerk 4 is going on break
+PassportClerk 0 is going on break
+PassportClerk 1 is going on break
+PassportClerk 2 is going on break
+PassportClerk 3 is going on break
+PassportClerk 4 is going on break
+Cashier 0 is going on break
+Cashier 1 is going on break
+Cashier 2 is going on break
+Cashier 3 is going on break
+Cashier 4 is going on break
+Customer 0 has gotten in regular line for ApplicationClerk 0
+Customer 1 has gotten in regular line for ApplicationClerk 1
+Customer 2 has gotten in regular line for ApplicationClerk 2
+Customer 3 has gotten in regular line for ApplicationClerk 3
+Customer 4 has gotten in regular line for ApplicationClerk 4
+Customer 5 has gotten in regular line for ApplicationClerk 0
+Customer 6 has gotten in regular line for ApplicationClerk 1
+Customer 7 has gotten in regular line for ApplicationClerk 2
+Customer 8 has gotten in regular line for ApplicationClerk 3
+Customer 9 has gotten in regular line for ApplicationClerk 4
+Customer 10 has gotten in regular line for ApplicationClerk 0
+Customer 11 has gotten in regular line for ApplicationClerk 1
+Customer 12 has gotten in regular line for ApplicationClerk 2
+Customer 13 has gotten in regular line for ApplicationClerk 3
+Customer 14 has gotten in regular line for ApplicationClerk 4
+Customer 15 has gotten in regular line for ApplicationClerk 0
+Customer 16 has gotten in regular line for ApplicationClerk 1
+Customer 17 has gotten in regular line for ApplicationClerk 2
+Customer 18 has gotten in regular line for ApplicationClerk 3
+Customer 19 has gotten in regular line for ApplicationClerk 4
+Customer 20 has gotten in regular line for ApplicationClerk 0
+Customer 21 has gotten in regular line for ApplicationClerk 1
+Customer 22 has gotten in regular line for ApplicationClerk 2
+Customer 23 has gotten in regular line for ApplicationClerk 3
+Customer 24 has gotten in regular line for ApplicationClerk 4
+Customer 25 has gotten in regular line for ApplicationClerk 0
+Customer 26 has gotten in regular line for ApplicationClerk 1
+Customer 27 has gotten in regular line for ApplicationClerk 2
+Customer 28 has gotten in regular line for ApplicationClerk 3
+Customer 29 has gotten in regular line for ApplicationClerk 4
+Customer 30 has gotten in regular line for ApplicationClerk 0
+Customer 31 has gotten in regular line for ApplicationClerk 1
+Customer 32 has gotten in regular line for ApplicationClerk 2
+Customer 33 has gotten in regular line for ApplicationClerk 3
+Customer 34 has gotten in regular line for ApplicationClerk 4
+Customer 35 has gotten in regular line for ApplicationClerk 0
+Customer 36 has gotten in regular line for ApplicationClerk 1
+Customer 37 has gotten in regular line for ApplicationClerk 2
+Customer 38 has gotten in regular line for ApplicationClerk 3
+Customer 39 has gotten in regular line for ApplicationClerk 4
+Customer 40 has gotten in regular line for ApplicationClerk 0
+Customer 41 has gotten in regular line for ApplicationClerk 1
+Customer 42 has gotten in regular line for ApplicationClerk 2
+Customer 43 has gotten in regular line for ApplicationClerk 3
+Customer 44 has gotten in regular line for ApplicationClerk 4
+Customer 45 has gotten in regular line for ApplicationClerk 0
+Customer 46 has gotten in regular line for ApplicationClerk 1
+Customer 47 has gotten in regular line for ApplicationClerk 2
+Customer 48 has gotten in regular line for ApplicationClerk 3
+Customer 49 has gotten in regular line for ApplicationClerk 4
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 0 for Picture Clerks
+Manager has counted a total of 0 for Passport Clerks
+Manager has counted a total of 0 for Cashiers
+Manager has counted a total of 0 for the Passport Office
+Manager has woken up ApplicationClerk 0
+ApplicationClerk 0 is coming off break
+ApplicationClerk 0 has signalled a Customer to come to their counter
+Manager has woken up ApplicationClerk 1
+Customer 0 has given SSN 10127590 to ApplicationClerk 0
+ApplicationClerk 1 is coming off break
+ApplicationClerk 1 has signalled a Customer to come to their counter
+ApplicationClerk 0 has received SSN 10127590 from Customer 0
+Manager has woken up ApplicationClerk 2
+Customer 1 has given SSN 10551674 to ApplicationClerk 1
+ApplicationClerk 2 is coming off break
+ApplicationClerk 2 has signalled a Customer to come to their counter
+ApplicationClerk 1 has received SSN 10551674 from Customer 1
+Manager has woken up ApplicationClerk 3
+Customer 2 has given SSN 11567148 to ApplicationClerk 2
+ApplicationClerk 3 is coming off break
+ApplicationClerk 3 has signalled a Customer to come to their counter
+ApplicationClerk 2 has received SSN 11567148 from Customer 2
+Manager has woken up ApplicationClerk 4
+Customer 3 has given SSN 12997100 to ApplicationClerk 3
+ApplicationClerk 4 is coming off break
+ApplicationClerk 4 has signalled a Customer to come to their counter
+ApplicationClerk 3 has received SSN 12997100 from Customer 3
+Customer 4 has given SSN 13514986 to ApplicationClerk 4
+ApplicationClerk 4 has received SSN 13514986 from Customer 4
+ApplicationClerk 0 has recorded a completed application for Customer 0
+Customer 0 has gotten in regular line for PictureClerk 0
+ApplicationClerk 1 has recorded a completed application for Customer 1
+ApplicationClerk 0 has signalled a Customer to come to their counter
+Customer 1 has gotten in regular line for PictureClerk 1
+Customer 5 has given SSN 13686294 to ApplicationClerk 0
+ApplicationClerk 2 has recorded a completed application for Customer 2
+ApplicationClerk 1 has signalled a Customer to come to their counter
+ApplicationClerk 0 has received SSN 13686294 from Customer 5
+Customer 2 has gotten in regular line for PictureClerk 2
+Customer 6 has given SSN 15024160 to ApplicationClerk 1
+ApplicationClerk 3 has recorded a completed application for Customer 3
+ApplicationClerk 2 has signalled a Customer to come to their counter
+ApplicationClerk 1 has received SSN 15024160 from Customer 6
+Customer 3 has gotten in regular line for PictureClerk 3
+Customer 7 has given SSN 15539448 to ApplicationClerk 2
+ApplicationClerk 4 has recorded a completed application for Customer 4
+ApplicationClerk 3 has signalled a Customer to come to their counter
+ApplicationClerk 2 has received SSN 15539448 from Customer 7
+Customer 4 has gotten in regular line for PictureClerk 4
+Customer 8 has given SSN 16428814 to ApplicationClerk 3
+ApplicationClerk 4 has signalled a Customer to come to their counter
+ApplicationClerk 3 has received SSN 16428814 from Customer 8
+Customer 9 has given SSN 16846866 to ApplicationClerk 4
+ApplicationClerk 4 has received SSN 16846866 from Customer 9
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 0 for Picture Clerks
+Manager has counted a total of 0 for Passport Clerks
+Manager has counted a total of 0 for Cashiers
+Manager has counted a total of 0 for the Passport Office
+Manager has woken up PictureClerk 0
+PictureClerk 0 is coming off break
+PictureClerk 0 has signalled a Customer to come to their counter
+Manager has woken up PictureClerk 1
+Customer 0 has given SSN 10127590 to PictureClerk 0
+PictureClerk 1 is coming off break
+PictureClerk 1 has signalled a Customer to come to their counter
+PictureClerk 0 has received SSN 10127590 from Customer 0
+PictureClerk 0 has taken a picture of Customer 0
+Manager has woken up PictureClerk 2
+Customer 1 has given SSN 10551674 to PictureClerk 1
+Customer 0 does not like their picture from PictureClerk 0
+PictureClerk 2 is coming off break
+PictureClerk 2 has signalled a Customer to come to their counter
+PictureClerk 1 has received SSN 10551674 from Customer 1
+PictureClerk 1 has taken a picture of Customer 1
+PictureClerk 0 has been told that Customer 0 does not like their picture
+Manager has woken up PictureClerk 3
+Customer 2 has given SSN 11567148 to PictureClerk 2
+Customer 1 does like their picture from PictureClerk 1
+PictureClerk 3 is coming off break
+PictureClerk 3 has signalled a Customer to come to their counter
+PictureClerk 2 has received SSN 11567148 from Customer 2
+PictureClerk 2 has taken a picture of Customer 2
+PictureClerk 1 has been told that Customer 1 does like their picture
+PictureClerk 0 is going on break
+Manager has woken up PictureClerk 4
+Customer 3 has given SSN 12997100 to PictureClerk 3
+Customer 2 does like their picture from PictureClerk 2
+PictureClerk 4 is coming off break
+PictureClerk 4 has signalled a Customer to come to their counter
+PictureClerk 3 has received SSN 12997100 from Customer 3
+PictureClerk 3 has taken a picture of Customer 3
+PictureClerk 2 has been told that Customer 2 does like their picture
+Customer 4 has given SSN 13514986 to PictureClerk 4
+Customer 3 does not like their picture from PictureClerk 3
+PictureClerk 4 has received SSN 13514986 from Customer 4
+PictureClerk 4 has taken a picture of Customer 4
+PictureClerk 3 has been told that Customer 3 does not like their picture
+Customer 4 does like their picture from PictureClerk 4
+PictureClerk 4 has been told that Customer 4 does like their picture
+PictureClerk 3 is going on break
+ApplicationClerk 0 has recorded a completed application for Customer 5
+Customer 5 has gotten in regular line for PictureClerk 0
+ApplicationClerk 1 has recorded a completed application for Customer 6
+ApplicationClerk 0 has signalled a Customer to come to their counter
+Customer 6 has gotten in regular line for PictureClerk 1
+Customer 10 has given SSN 18321588 to ApplicationClerk 0
+ApplicationClerk 2 has recorded a completed application for Customer 7
+ApplicationClerk 1 has signalled a Customer to come to their counter
+ApplicationClerk 0 has received SSN 18321588 from Customer 10
+Customer 7 has gotten in regular line for PictureClerk 2
+Customer 11 has given SSN 18722660 to ApplicationClerk 1
+ApplicationClerk 3 has recorded a completed application for Customer 8
+ApplicationClerk 2 has signalled a Customer to come to their counter
+ApplicationClerk 1 has received SSN 18722660 from Customer 11
+Customer 8 has gotten in regular line for PictureClerk 3
+Customer 12 has given SSN 20287058 to ApplicationClerk 2
+ApplicationClerk 4 has recorded a completed application for Customer 9
+ApplicationClerk 3 has signalled a Customer to come to their counter
+ApplicationClerk 2 has received SSN 20287058 from Customer 12
+Customer 9 has gotten in regular line for PictureClerk 4
+Customer 13 has given SSN 20463022 to ApplicationClerk 3
+ApplicationClerk 4 has signalled a Customer to come to their counter
+ApplicationClerk 3 has received SSN 20463022 from Customer 13
+Customer 14 has given SSN 22066728 to ApplicationClerk 4
+ApplicationClerk 4 has received SSN 22066728 from Customer 14
+Customer 1 has gotten in regular line for PassportClerk 0
+PictureClerk 1 has signalled a Customer to come to their counter
+Customer 2 has gotten in regular line for PassportClerk 1
+Customer 6 has given SSN 15024160 to PictureClerk 1
+PictureClerk 2 has signalled a Customer to come to their counter
+PictureClerk 1 has received SSN 15024160 from Customer 6
+PictureClerk 1 has taken a picture of Customer 6
+Customer 7 has given SSN 15539448 to PictureClerk 2
+Customer 6 does not like their picture from PictureClerk 1
+PictureClerk 2 has received SSN 15539448 from Customer 7
+PictureClerk 2 has taken a picture of Customer 7
+PictureClerk 1 has been told that Customer 6 does not like their picture
+Customer 4 has gotten in regular line for PassportClerk 2
+Customer 7 does not like their picture from PictureClerk 2
+PictureClerk 4 has signalled a Customer to come to their counter
+PictureClerk 2 has been told that Customer 7 does not like their picture
+PictureClerk 1 is going on break
+Customer 9 has given SSN 16846866 to PictureClerk 4
+PictureClerk 4 has received SSN 16846866 from Customer 9
+PictureClerk 4 has taken a picture of Customer 9
+PictureClerk 2 is going on break
+Customer 9 does like their picture from PictureClerk 4
+PictureClerk 4 has been told that Customer 9 does like their picture
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 0 for Picture Clerks
+Manager has counted a total of 0 for Passport Clerks
+Manager has counted a total of 0 for Cashiers
+Manager has counted a total of 0 for the Passport Office
+Manager has woken up PictureClerk 0
+PictureClerk 0 is coming off break
+PictureClerk 0 has signalled a Customer to come to their counter
+Manager has woken up PictureClerk 3
+Customer 5 has given SSN 13686294 to PictureClerk 0
+PictureClerk 3 is coming off break
+PictureClerk 3 has signalled a Customer to come to their counter
+PictureClerk 0 has received SSN 13686294 from Customer 5
+PictureClerk 0 has taken a picture of Customer 5
+Manager has woken up PassportClerk 0
+Customer 8 has given SSN 16428814 to PictureClerk 3
+Customer 5 does like their picture from PictureClerk 0
+PassportClerk 0 is coming off break
+PassportClerk 0 has signalled a Customer to come to their counter
+PictureClerk 3 has received SSN 16428814 from Customer 8
+PictureClerk 3 has taken a picture of Customer 8
+PictureClerk 0 has been told that Customer 5 does like their picture
+Manager has woken up PassportClerk 1
+Customer 1 has given SSN 10551674 to PassportClerk 0
+Customer 8 does like their picture from PictureClerk 3
+PassportClerk 1 is coming off break
+PassportClerk 1 has signalled a Customer to come to their counter
+PassportClerk 0 has received SSN 10551674 from Customer 1
+PassportClerk 0 has determined that Customer 1 has both their application and picture completed
+PictureClerk 3 has been told that Customer 8 does like their picture
+Manager has woken up PassportClerk 2
+Customer 2 has given SSN 11567148 to PassportClerk 1
+PassportClerk 2 is coming off break
+PassportClerk 2 has signalled a Customer to come to their counter
+PassportClerk 1 has received SSN 11567148 from Customer 2
+PassportClerk 1 has determined that Customer 2 has both their application and picture completed
+Customer 4 has given SSN 13514986 to PassportClerk 2
+PassportClerk 2 has received SSN 13514986 from Customer 4
+PassportClerk 2 has determined that Customer 4 has both their application and picture completed
+ApplicationClerk 0 has recorded a completed application for Customer 10
+Customer 10 has gotten in regular line for PictureClerk 0
+ApplicationClerk 1 has recorded a completed application for Customer 11
+ApplicationClerk 0 has signalled a Customer to come to their counter
+Customer 11 has gotten in regular line for PictureClerk 1
+Customer 15 has given SSN 22696880 to ApplicationClerk 0
+ApplicationClerk 2 has recorded a completed application for Customer 12
+ApplicationClerk 1 has signalled a Customer to come to their counter
+ApplicationClerk 0 has received SSN 22696880 from Customer 15
+Customer 12 has gotten in regular line for PictureClerk 2
+Customer 16 has given SSN 24144502 to ApplicationClerk 1
+ApplicationClerk 3 has recorded a completed application for Customer 13
+ApplicationClerk 2 has signalled a Customer to come to their counter
+ApplicationClerk 1 has received SSN 24144502 from Customer 16
+Customer 13 has gotten in bribe line for PictureClerk 3
+Customer 17 has given SSN 25595242 to ApplicationClerk 2
+ApplicationClerk 4 has recorded a completed application for Customer 14
+ApplicationClerk 3 has signalled a Customer to come to their counter
+ApplicationClerk 2 has received SSN 25595242 from Customer 17
+Customer 14 has gotten in regular line for PictureClerk 3
+Customer 18 has given SSN 26298364 to ApplicationClerk 3
+ApplicationClerk 4 has signalled a Customer to come to their counter
+ApplicationClerk 3 has received SSN 26298364 from Customer 18
+Customer 19 has given SSN 27893468 to ApplicationClerk 4
+ApplicationClerk 4 has received SSN 27893468 from Customer 19
+Customer 9 has gotten in regular line for PassportClerk 0
+PictureClerk 4 is going on break
+Customer 5 has gotten in bribe line for PassportClerk 1
+PassportClerk 0 has recorded Customer 1 passport documentation
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 1 has gotten in regular line for Cashier 0
+Customer 8 has gotten in regular line for PassportClerk 1
+Customer 10 has given SSN 18321588 to PictureClerk 0
+PassportClerk 1 has recorded Customer 2 passport documentation
+PassportClerk 0 has signalled a Customer to come to their counter
+PictureClerk 0 has received SSN 18321588 from Customer 10
+PictureClerk 0 has taken a picture of Customer 10
+Customer 2 has gotten in regular line for Cashier 1
+Customer 9 has given SSN 16846866 to PassportClerk 0
+Customer 13 has given SSN 20463022 to PictureClerk 3
+Customer 10 does like their picture from PictureClerk 0
+PassportClerk 2 has recorded Customer 4 passport documentation
+PassportClerk 0 has received SSN 16846866 from Customer 9
+PassportClerk 0 has determined that Customer 9 has both their application and picture completed
+PictureClerk 3 has received SSN 20463022 from Customer 13
+PictureClerk 3 has taken a picture of Customer 13
+PictureClerk 0 has been told that Customer 10 does like their picture
+Customer 4 has gotten in regular line for Cashier 2
+Customer 5 has given SSN 13686294 to PassportClerk 1
+Customer 13 does not like their picture from PictureClerk 3
+PassportClerk 2 is going on break
+PassportClerk 1 has received SSN 13686294 from Customer 5
+PassportClerk 1 has determined that Customer 5 has both their application and picture completed
+PictureClerk 3 has been told that Customer 13 does not like their picture
+PictureClerk 3 has signalled a Customer to come to their counter
+Customer 14 has given SSN 22066728 to PictureClerk 3
+PictureClerk 3 has received SSN 22066728 from Customer 14
+PictureClerk 3 has taken a picture of Customer 14
+Customer 14 does not like their picture from PictureClerk 3
+PictureClerk 3 has been told that Customer 14 does not like their picture
+PictureClerk 3 is going on break
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 500 for Picture Clerks
+Manager has counted a total of 500 for Passport Clerks
+Manager has counted a total of 0 for Cashiers
+Manager has counted a total of 1000 for the Passport Office
+Manager has woken up PictureClerk 1
+PictureClerk 1 is coming off break
+PictureClerk 1 has signalled a Customer to come to their counter
+Manager has woken up PictureClerk 2
+Customer 11 has given SSN 18722660 to PictureClerk 1
+PictureClerk 2 is coming off break
+PictureClerk 2 has signalled a Customer to come to their counter
+PictureClerk 1 has received SSN 18722660 from Customer 11
+PictureClerk 1 has taken a picture of Customer 11
+Manager has woken up Cashier 0
+Customer 12 has given SSN 20287058 to PictureClerk 2
+Customer 11 does like their picture from PictureClerk 1
+Cashier 0 is coming off break
+Cashier 0 has signalled a Customer to come to their counter
+PictureClerk 2 has received SSN 20287058 from Customer 12
+PictureClerk 2 has taken a picture of Customer 12
+PictureClerk 1 has been told that Customer 11 does like their picture
+ApplicationClerk 0 has recorded a completed application for Customer 15
+Manager has woken up Cashier 1
+Customer 1 has given SSN 10551674 to Cashier 0
+Customer 12 does like their picture from PictureClerk 2
+Customer 15 has gotten in bribe line for PictureClerk 0
+Cashier 1 is coming off break
+Cashier 1 has signalled a Customer to come to their counter
+Cashier 0 has received SSN 10551674 from Customer 1
+Cashier 0 has verified that Customer 1 has been certified by a PassportClerk
+PictureClerk 2 has been told that Customer 12 does like their picture
+ApplicationClerk 1 has recorded a completed application for Customer 16
+ApplicationClerk 0 has signalled a Customer to come to their counter
+Manager has woken up Cashier 2
+Customer 2 has given SSN 11567148 to Cashier 1
+Customer 1 has given Cashier 0 $100
+Customer 16 has gotten in bribe line for PictureClerk 0
+Customer 20 has given SSN 28239034 to ApplicationClerk 0
+Cashier 2 is coming off break
+Cashier 2 has signalled a Customer to come to their counter
+Cashier 1 has received SSN 11567148 from Customer 2
+Cashier 1 has verified that Customer 2 has been certified by a PassportClerk
+Cashier 0 has received the $100 from Customer 1 after certification
+ApplicationClerk 2 has recorded a completed application for Customer 17
+ApplicationClerk 1 has signalled a Customer to come to their counter
+ApplicationClerk 0 has received SSN 28239034 from Customer 20
+Customer 4 has given SSN 13514986 to Cashier 2
+Customer 2 has given Cashier 1 $100
+Customer 17 has gotten in regular line for PictureClerk 0
+Customer 21 has given SSN 28575558 to ApplicationClerk 1
+Cashier 2 has received SSN 13514986 from Customer 4
+Cashier 2 has verified that Customer 4 has been certified by a PassportClerk
+Cashier 1 has received the $100 from Customer 2 after certification
+ApplicationClerk 3 has recorded a completed application for Customer 18
+ApplicationClerk 2 has signalled a Customer to come to their counter
+ApplicationClerk 1 has received SSN 28575558 from Customer 21
+Customer 4 has given Cashier 2 $100
+Customer 18 has gotten in regular line for PictureClerk 1
+Customer 22 has given SSN 29809392 to ApplicationClerk 2
+Cashier 2 has received the $100 from Customer 4 after certification
+ApplicationClerk 4 has recorded a completed application for Customer 19
+ApplicationClerk 3 has signalled a Customer to come to their counter
+ApplicationClerk 2 has received SSN 29809392 from Customer 22
+Customer 19 has gotten in regular line for PictureClerk 2
+Customer 23 has given SSN 31298984 to ApplicationClerk 3
+ApplicationClerk 4 has signalled a Customer to come to their counter
+ApplicationClerk 3 has received SSN 31298984 from Customer 23
+Customer 24 has given SSN 32579038 to ApplicationClerk 4
+ApplicationClerk 4 has received SSN 32579038 from Customer 24
+PassportClerk 0 has recorded Customer 9 passport documentation
+Customer 9 has gotten in bribe line for Cashier 0
+Customer 10 has gotten in regular line for PassportClerk 0
+PassportClerk 1 has recorded Customer 5 passport documentation
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 5 has gotten in regular line for Cashier 0
+Customer 10 has given SSN 18321588 to PassportClerk 0
+Customer 15 has given SSN 22696880 to PictureClerk 0
+PassportClerk 1 has signalled a Customer to come to their counter
+PassportClerk 0 has received SSN 18321588 from Customer 10
+PassportClerk 0 has determined that Customer 10 has both their application and picture completed
+PictureClerk 0 has received SSN 22696880 from Customer 15
+PictureClerk 0 has taken a picture of Customer 15
+Customer 8 has given SSN 16428814 to PassportClerk 1
+Customer 15 does not like their picture from PictureClerk 0
+PassportClerk 1 has received SSN 16428814 from Customer 8
+PassportClerk 1 has determined that Customer 8 has both their application and picture completed
+PictureClerk 0 has been told that Customer 15 does not like their picture
+Customer 16 has given SSN 24144502 to PictureClerk 0
+PictureClerk 0 has received SSN 24144502 from Customer 16
+PictureClerk 0 has taken a picture of Customer 16
+Customer 16 does like their picture from PictureClerk 0
+PictureClerk 0 has been told that Customer 16 does like their picture
+Customer 11 has gotten in regular line for PassportClerk 0
+PictureClerk 1 has signalled a Customer to come to their counter
+Customer 12 has gotten in bribe line for PassportClerk 1
+Customer 18 has given SSN 26298364 to PictureClerk 1
+Cashier 0 has provided Customer 1 their completed passport
+PictureClerk 2 has signalled a Customer to come to their counter
+PictureClerk 1 has received SSN 26298364 from Customer 18
+PictureClerk 1 has taken a picture of Customer 18
+ApplicationClerk 0 has recorded a completed application for Customer 20
+Customer 19 has given SSN 27893468 to PictureClerk 2
+Customer 18 does not like their picture from PictureClerk 1
+Customer 20 has gotten in bribe line for PictureClerk 1
+Cashier 1 has provided Customer 2 their completed passport
+Cashier 0 has recorded that Customer 1 has been given their completed passport
+PictureClerk 2 has received SSN 27893468 from Customer 19
+PictureClerk 2 has taken a picture of Customer 19
+PictureClerk 1 has been told that Customer 18 does not like their picture
+ApplicationClerk 1 has recorded a completed application for Customer 21
+ApplicationClerk 0 has signalled a Customer to come to their counter
+Customer 1 is leaving the Passport Office
+Customer 19 does not like their picture from PictureClerk 2
+Customer 21 has gotten in regular line for PictureClerk 1
+Customer 25 has given SSN 33581250 to ApplicationClerk 0
+Cashier 2 has provided Customer 4 their completed passport
+Cashier 1 has recorded that Customer 2 has been given their completed passport
+PictureClerk 2 has been told that Customer 19 does not like their picture
+ApplicationClerk 2 has recorded a completed application for Customer 22
+ApplicationClerk 1 has signalled a Customer to come to their counter
+ApplicationClerk 0 has received SSN 33581250 from Customer 25
+Customer 2 is leaving the Passport Office
+Customer 9 has given SSN 16846866 to Cashier 0
+Customer 20 has given SSN 28239034 to PictureClerk 1
+Customer 22 has gotten in regular line for PictureClerk 2
+Customer 26 has given SSN 34043396 to ApplicationClerk 1
+Cashier 2 has recorded that Customer 4 has been given their completed passport
+Cashier 1 is going on break
+Cashier 0 has received SSN 16846866 from Customer 9
+Cashier 0 has verified that Customer 9 has been certified by a PassportClerk
+PictureClerk 2 has signalled a Customer to come to their counter
+PictureClerk 1 has received SSN 28239034 from Customer 20
+PictureClerk 1 has taken a picture of Customer 20
+ApplicationClerk 3 has recorded a completed application for Customer 23
+ApplicationClerk 2 has signalled a Customer to come to their counter
+ApplicationClerk 1 has received SSN 34043396 from Customer 26
+Customer 4 is leaving the Passport Office
+Customer 9 has given Cashier 0 $100
+Customer 22 has given SSN 29809392 to PictureClerk 2
+Customer 20 does like their picture from PictureClerk 1
+Customer 23 has gotten in regular line for PictureClerk 2
+Customer 27 has given SSN 35671124 to ApplicationClerk 2
+Cashier 2 is going on break
+Cashier 0 has received the $100 from Customer 9 after certification
+PictureClerk 2 has received SSN 29809392 from Customer 22
+PictureClerk 2 has taken a picture of Customer 22
+PictureClerk 1 has been told that Customer 20 does like their picture
+ApplicationClerk 4 has recorded a completed application for Customer 24
+ApplicationClerk 3 has signalled a Customer to come to their counter
+ApplicationClerk 2 has received SSN 35671124 from Customer 27
+Customer 22 does not like their picture from PictureClerk 2
+Customer 24 has gotten in regular line for PictureClerk 3
+Customer 28 has given SSN 37124386 to ApplicationClerk 3
+PictureClerk 2 has been told that Customer 22 does not like their picture
+ApplicationClerk 4 has signalled a Customer to come to their counter
+ApplicationClerk 3 has received SSN 37124386 from Customer 28
+Customer 29 has given SSN 38457566 to ApplicationClerk 4
+PictureClerk 2 has signalled a Customer to come to their counter
+ApplicationClerk 4 has received SSN 38457566 from Customer 29
+Customer 23 has given SSN 31298984 to PictureClerk 2
+PictureClerk 2 has received SSN 31298984 from Customer 23
+PictureClerk 2 has taken a picture of Customer 23
+Customer 23 does not like their picture from PictureClerk 2
+PictureClerk 2 has been told that Customer 23 does not like their picture
+PictureClerk 2 is going on break
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 2000 for Picture Clerks
+Manager has counted a total of 500 for Passport Clerks
+Manager has counted a total of 900 for Cashiers
+Manager has counted a total of 3400 for the Passport Office
+Manager has woken up PictureClerk 3
+PictureClerk 3 is coming off break
+PictureClerk 3 has signalled a Customer to come to their counter
+Customer 24 has given SSN 32579038 to PictureClerk 3
+PictureClerk 3 has received SSN 32579038 from Customer 24
+PictureClerk 3 has taken a picture of Customer 24
+Customer 24 does like their picture from PictureClerk 3
+PictureClerk 3 has been told that Customer 24 does like their picture
+PassportClerk 0 has recorded Customer 10 passport documentation
+Customer 10 has gotten in regular line for Cashier 1
+PassportClerk 1 has recorded Customer 8 passport documentation
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 8 has gotten in regular line for Cashier 2
+Customer 11 has given SSN 18722660 to PassportClerk 0
+PassportClerk 0 has received SSN 18722660 from Customer 11
+PassportClerk 0 has determined that Customer 11 has both their application and picture completed
+Customer 12 has given SSN 20287058 to PassportClerk 1
+PassportClerk 1 has received SSN 20287058 from Customer 12
+PassportClerk 1 has determined that Customer 12 has both their application and picture completed
+Customer 16 has gotten in bribe line for PassportClerk 0
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 17 has given SSN 25595242 to PictureClerk 0
+PictureClerk 0 has received SSN 25595242 from Customer 17
+PictureClerk 0 has taken a picture of Customer 17
+Customer 17 does like their picture from PictureClerk 0
+PictureClerk 0 has been told that Customer 17 does like their picture
+ApplicationClerk 0 has recorded a completed application for Customer 25
+Customer 25 has gotten in regular line for PictureClerk 0
+ApplicationClerk 1 has recorded a completed application for Customer 26
+ApplicationClerk 0 has signalled a Customer to come to their counter
+Customer 26 has gotten in regular line for PictureClerk 2
+Customer 30 has given SSN 38779320 to ApplicationClerk 0
+Cashier 0 has provided Customer 9 their completed passport
+ApplicationClerk 2 has recorded a completed application for Customer 27
+ApplicationClerk 1 has signalled a Customer to come to their counter
+ApplicationClerk 0 has received SSN 38779320 from Customer 30
+Customer 20 has gotten in regular line for PassportClerk 0
+Customer 27 has gotten in bribe line for PictureClerk 3
+Customer 31 has given SSN 40071136 to ApplicationClerk 1
+Cashier 0 has recorded that Customer 9 has been given their completed passport
+PictureClerk 1 has signalled a Customer to come to their counter
+ApplicationClerk 3 has recorded a completed application for Customer 28
+ApplicationClerk 2 has signalled a Customer to come to their counter
+ApplicationClerk 1 has received SSN 40071136 from Customer 31
+Customer 9 is leaving the Passport Office
+Customer 21 has given SSN 28575558 to PictureClerk 1
+Customer 28 has gotten in regular line for PictureClerk 1
+Customer 32 has given SSN 41444998 to ApplicationClerk 2
+Cashier 0 has signalled a Customer to come to their counter
+PictureClerk 1 has received SSN 28575558 from Customer 21
+PictureClerk 1 has taken a picture of Customer 21
+ApplicationClerk 4 has recorded a completed application for Customer 29
+ApplicationClerk 3 has signalled a Customer to come to their counter
+ApplicationClerk 2 has received SSN 41444998 from Customer 32
+Customer 5 has given SSN 13686294 to Cashier 0
+Customer 21 does like their picture from PictureClerk 1
+Customer 29 has gotten in regular line for PictureClerk 3
+Customer 33 has given SSN 42491674 to ApplicationClerk 3
+Cashier 0 has received SSN 13686294 from Customer 5
+Cashier 0 has verified that Customer 5 has been certified by a PassportClerk
+PictureClerk 1 has been told that Customer 21 does like their picture
+ApplicationClerk 4 has signalled a Customer to come to their counter
+ApplicationClerk 3 has received SSN 42491674 from Customer 33
+Customer 5 has given Cashier 0 $100
+Customer 34 has given SSN 42557388 to ApplicationClerk 4
+Cashier 0 has received the $100 from Customer 5 after certification
+ApplicationClerk 4 has received SSN 42557388 from Customer 34
+Customer 24 has gotten in regular line for PassportClerk 1
+Customer 27 has given SSN 35671124 to PictureClerk 3
+PictureClerk 3 has received SSN 35671124 from Customer 27
+PictureClerk 3 has taken a picture of Customer 27
+Customer 27 does like their picture from PictureClerk 3
+PictureClerk 3 has been told that Customer 27 does like their picture
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 2500 for Picture Clerks
+Manager has counted a total of 1000 for Passport Clerks
+Manager has counted a total of 1000 for Cashiers
+Manager has counted a total of 4500 for the Passport Office
+Manager has woken up PictureClerk 2
+PictureClerk 2 is coming off break
+PictureClerk 2 has signalled a Customer to come to their counter
+Manager has woken up Cashier 1
+Customer 26 has given SSN 34043396 to PictureClerk 2
+Cashier 1 is coming off break
+Cashier 1 has signalled a Customer to come to their counter
+PictureClerk 2 has received SSN 34043396 from Customer 26
+PictureClerk 2 has taken a picture of Customer 26
+Manager has woken up Cashier 2
+Customer 10 has given SSN 18321588 to Cashier 1
+Customer 26 does like their picture from PictureClerk 2
+Cashier 2 is coming off break
+Cashier 2 has signalled a Customer to come to their counter
+Cashier 1 has received SSN 18321588 from Customer 10
+Cashier 1 has verified that Customer 10 has been certified by a PassportClerk
+PictureClerk 2 has been told that Customer 26 does like their picture
+Customer 8 has given SSN 16428814 to Cashier 2
+Customer 10 has given Cashier 1 $100
+Cashier 2 has received SSN 16428814 from Customer 8
+Cashier 2 has verified that Customer 8 has been certified by a PassportClerk
+Cashier 1 has received the $100 from Customer 10 after certification
+Customer 8 has given Cashier 2 $100
+Cashier 2 has received the $100 from Customer 8 after certification
+PassportClerk 0 has recorded Customer 11 passport documentation
+Customer 11 has gotten in regular line for Cashier 0
+PassportClerk 1 has recorded Customer 12 passport documentation
+Customer 12 has gotten in regular line for Cashier 1
+Customer 16 has given SSN 24144502 to PassportClerk 0
+PassportClerk 1 has signalled a Customer to come to their counter
+PassportClerk 0 has received SSN 24144502 from Customer 16
+PassportClerk 0 has determined that Customer 16 has both their application and picture completed
+Customer 24 has given SSN 32579038 to PassportClerk 1
+PassportClerk 1 has received SSN 32579038 from Customer 24
+PassportClerk 1 has determined that Customer 24 has both their application and picture completed
+Customer 17 has gotten in regular line for PassportClerk 1
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 25 has given SSN 33581250 to PictureClerk 0
+PictureClerk 0 has received SSN 33581250 from Customer 25
+PictureClerk 0 has taken a picture of Customer 25
+Customer 25 does not like their picture from PictureClerk 0
+PictureClerk 0 has been told that Customer 25 does not like their picture
+PictureClerk 0 is going on break
+ApplicationClerk 0 has recorded a completed application for Customer 30
+Customer 30 has gotten in regular line for PictureClerk 0
+ApplicationClerk 1 has recorded a completed application for Customer 31
+ApplicationClerk 0 has signalled a Customer to come to their counter
+Customer 31 has gotten in bribe line for PictureClerk 2
+Customer 35 has given SSN 43505484 to ApplicationClerk 0
+ApplicationClerk 2 has recorded a completed application for Customer 32
+ApplicationClerk 1 has signalled a Customer to come to their counter
+ApplicationClerk 0 has received SSN 43505484 from Customer 35
+Customer 32 has gotten in regular line for PictureClerk 2
+Customer 36 has given SSN 44173002 to ApplicationClerk 1
+ApplicationClerk 3 has recorded a completed application for Customer 33
+ApplicationClerk 2 has signalled a Customer to come to their counter
+ApplicationClerk 1 has received SSN 44173002 from Customer 36
+Customer 21 has gotten in regular line for PassportClerk 2
+Customer 33 has gotten in regular line for PictureClerk 4
+Customer 37 has given SSN 45101046 to ApplicationClerk 2
+Cashier 0 has provided Customer 5 their completed passport
+PictureClerk 1 has signalled a Customer to come to their counter
+ApplicationClerk 4 has recorded a completed application for Customer 34
+ApplicationClerk 3 has signalled a Customer to come to their counter
+ApplicationClerk 2 has received SSN 45101046 from Customer 37
+Customer 28 has given SSN 37124386 to PictureClerk 1
+Customer 34 has gotten in regular line for PictureClerk 1
+Customer 38 has given SSN 45442176 to ApplicationClerk 3
+Cashier 0 has recorded that Customer 5 has been given their completed passport
+PictureClerk 1 has received SSN 37124386 from Customer 28
+PictureClerk 1 has taken a picture of Customer 28
+ApplicationClerk 4 has signalled a Customer to come to their counter
+ApplicationClerk 3 has received SSN 45442176 from Customer 38
+Customer 5 is leaving the Passport Office
+Customer 28 does like their picture from PictureClerk 1
+Customer 39 has given SSN 46963864 to ApplicationClerk 4
+Cashier 0 has signalled a Customer to come to their counter
+PictureClerk 1 has been told that Customer 28 does like their picture
+ApplicationClerk 4 has received SSN 46963864 from Customer 39
+Customer 11 has given SSN 18722660 to Cashier 0
+Cashier 0 has received SSN 18722660 from Customer 11
+Cashier 0 has verified that Customer 11 has been certified by a PassportClerk
+Customer 11 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 11 after certification
+Customer 27 has gotten in regular line for PassportClerk 3
+PictureClerk 3 has signalled a Customer to come to their counter
+Customer 29 has given SSN 38457566 to PictureClerk 3
+PictureClerk 3 has received SSN 38457566 from Customer 29
+PictureClerk 3 has taken a picture of Customer 29
+Customer 29 does like their picture from PictureClerk 3
+PictureClerk 3 has been told that Customer 29 does like their picture
+Customer 26 has gotten in regular line for PassportClerk 4
+Cashier 1 has provided Customer 10 their completed passport
+Customer 31 has given SSN 40071136 to PictureClerk 2
+Cashier 2 has provided Customer 8 their completed passport
+Cashier 1 has recorded that Customer 10 has been given their completed passport
+PictureClerk 2 has received SSN 40071136 from Customer 31
+PictureClerk 2 has taken a picture of Customer 31
+Customer 10 is leaving the Passport Office
+Customer 31 does not like their picture from PictureClerk 2
+Cashier 2 has recorded that Customer 8 has been given their completed passport
+Cashier 1 has signalled a Customer to come to their counter
+PictureClerk 2 has been told that Customer 31 does not like their picture
+Customer 8 is leaving the Passport Office
+Customer 12 has given SSN 20287058 to Cashier 1
+Cashier 2 is going on break
+Cashier 1 has received SSN 20287058 from Customer 12
+Cashier 1 has verified that Customer 12 has been certified by a PassportClerk
+PictureClerk 2 has signalled a Customer to come to their counter
+Customer 12 has given Cashier 1 $100
+Customer 32 has given SSN 41444998 to PictureClerk 2
+Cashier 1 has received the $100 from Customer 12 after certification
+PictureClerk 2 has received SSN 41444998 from Customer 32
+PictureClerk 2 has taken a picture of Customer 32
+Customer 32 does like their picture from PictureClerk 2
+PictureClerk 2 has been told that Customer 32 does like their picture
+PassportClerk 0 has recorded Customer 16 passport documentation
+Customer 16 has gotten in bribe line for Cashier 0
+PassportClerk 1 has recorded Customer 24 passport documentation
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 24 has gotten in regular line for Cashier 0
+Customer 20 has given SSN 28239034 to PassportClerk 0
+PassportClerk 1 has signalled a Customer to come to their counter
+PassportClerk 0 has received SSN 28239034 from Customer 20
+PassportClerk 0 has determined that Customer 20 has both their application and picture completed
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 3000 for Picture Clerks
+Manager has counted a total of 1500 for Passport Clerks
+Manager has counted a total of 1400 for Cashiers
+Manager has counted a total of 5900 for the Passport Office
+Manager has woken up PictureClerk 0
+Customer 17 has given SSN 25595242 to PassportClerk 1
+PictureClerk 0 is coming off break
+PictureClerk 0 has signalled a Customer to come to their counter
+PassportClerk 1 has received SSN 25595242 from Customer 17
+PassportClerk 1 has determined that Customer 17 has both their application and picture completed
+Manager has woken up PictureClerk 4
+Customer 30 has given SSN 38779320 to PictureClerk 0
+PictureClerk 4 is coming off break
+PictureClerk 4 has signalled a Customer to come to their counter
+PictureClerk 0 has received SSN 38779320 from Customer 30
+PictureClerk 0 has taken a picture of Customer 30
+Manager has woken up PassportClerk 2
+Customer 33 has given SSN 42491674 to PictureClerk 4
+Customer 30 does not like their picture from PictureClerk 0
+PassportClerk 2 is coming off break
+PassportClerk 2 has signalled a Customer to come to their counter
+PictureClerk 4 has received SSN 42491674 from Customer 33
+PictureClerk 4 has taken a picture of Customer 33
+PictureClerk 0 has been told that Customer 30 does not like their picture
+Manager has woken up PassportClerk 3
+Customer 21 has given SSN 28575558 to PassportClerk 2
+Customer 33 does like their picture from PictureClerk 4
+PassportClerk 3 is coming off break
+PassportClerk 3 has signalled a Customer to come to their counter
+PassportClerk 2 has received SSN 28575558 from Customer 21
+PassportClerk 2 has determined that Customer 21 has both their application and picture completed
+PictureClerk 4 has been told that Customer 33 does like their picture
+PictureClerk 0 is going on break
+Manager has woken up PassportClerk 4
+Customer 27 has given SSN 35671124 to PassportClerk 3
+PassportClerk 4 is coming off break
+PassportClerk 4 has signalled a Customer to come to their counter
+PassportClerk 3 has received SSN 35671124 from Customer 27
+PassportClerk 3 has determined that Customer 27 has both their application and picture completed
+Customer 26 has given SSN 34043396 to PassportClerk 4
+PassportClerk 4 has received SSN 34043396 from Customer 26
+PassportClerk 4 has determined that Customer 26 has both their application and picture completed
+ApplicationClerk 0 has recorded a completed application for Customer 35
+Customer 35 has gotten in regular line for PictureClerk 0
+ApplicationClerk 1 has recorded a completed application for Customer 36
+ApplicationClerk 0 has signalled a Customer to come to their counter
+Customer 36 has gotten in bribe line for PictureClerk 2
+Customer 40 has given SSN 48295982 to ApplicationClerk 0
+ApplicationClerk 2 has recorded a completed application for Customer 37
+ApplicationClerk 1 has signalled a Customer to come to their counter
+ApplicationClerk 0 has received SSN 48295982 from Customer 40
+Customer 37 has gotten in regular line for PictureClerk 2
+Customer 41 has given SSN 48305778 to ApplicationClerk 1
+ApplicationClerk 3 has recorded a completed application for Customer 38
+ApplicationClerk 2 has signalled a Customer to come to their counter
+ApplicationClerk 1 has received SSN 48305778 from Customer 41
+Customer 38 has gotten in regular line for PictureClerk 3
+Customer 42 has given SSN 48992340 to ApplicationClerk 2
+ApplicationClerk 4 has recorded a completed application for Customer 39
+ApplicationClerk 3 has signalled a Customer to come to their counter
+ApplicationClerk 2 has received SSN 48992340 from Customer 42
+Customer 28 has gotten in bribe line for PassportClerk 0
+Customer 39 has gotten in bribe line for PictureClerk 4
+Customer 43 has given SSN 49853892 to ApplicationClerk 3
+PictureClerk 1 has signalled a Customer to come to their counter
+ApplicationClerk 4 has signalled a Customer to come to their counter
+ApplicationClerk 3 has received SSN 49853892 from Customer 43
+Customer 34 has given SSN 42557388 to PictureClerk 1
+Customer 44 has given SSN 51382194 to ApplicationClerk 4
+Cashier 0 has provided Customer 11 their completed passport
+PictureClerk 1 has received SSN 42557388 from Customer 34
+PictureClerk 1 has taken a picture of Customer 34
+ApplicationClerk 4 has received SSN 51382194 from Customer 44
+Customer 34 does not like their picture from PictureClerk 1
+Cashier 0 has recorded that Customer 11 has been given their completed passport
+PictureClerk 1 has been told that Customer 34 does not like their picture
+Customer 11 is leaving the Passport Office
+PictureClerk 1 is going on break
+Customer 16 has given SSN 24144502 to Cashier 0
+Cashier 0 has received SSN 24144502 from Customer 16
+Cashier 0 has verified that Customer 16 has been certified by a PassportClerk
+Customer 16 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 16 after certification
+Customer 29 has gotten in regular line for PassportClerk 0
+PictureClerk 3 has signalled a Customer to come to their counter
+Customer 38 has given SSN 45442176 to PictureClerk 3
+PictureClerk 3 has received SSN 45442176 from Customer 38
+PictureClerk 3 has taken a picture of Customer 38
+Customer 38 does like their picture from PictureClerk 3
+PictureClerk 3 has been told that Customer 38 does like their picture
+Cashier 1 has provided Customer 12 their completed passport
+Cashier 1 has recorded that Customer 12 has been given their completed passport
+Customer 12 is leaving the Passport Office
+Customer 32 has gotten in bribe line for PassportClerk 1
+Cashier 1 is going on break
+Customer 36 has given SSN 44173002 to PictureClerk 2
+PictureClerk 2 has received SSN 44173002 from Customer 36
+PictureClerk 2 has taken a picture of Customer 36
+Customer 36 does not like their picture from PictureClerk 2
+PictureClerk 2 has been told that Customer 36 does not like their picture
+PictureClerk 2 has signalled a Customer to come to their counter
+PassportClerk 0 has recorded Customer 20 passport documentation
+Customer 37 has given SSN 45101046 to PictureClerk 2
+Customer 20 has gotten in regular line for Cashier 1
+PictureClerk 2 has received SSN 45101046 from Customer 37
+PictureClerk 2 has taken a picture of Customer 37
+PassportClerk 1 has recorded Customer 17 passport documentation
+Customer 37 does like their picture from PictureClerk 2
+Customer 17 has gotten in regular line for Cashier 2
+Customer 28 has given SSN 37124386 to PassportClerk 0
+PictureClerk 2 has been told that Customer 37 does like their picture
+PassportClerk 0 has received SSN 37124386 from Customer 28
+PassportClerk 0 has determined that Customer 28 has both their application and picture completed
+Customer 32 has given SSN 41444998 to PassportClerk 1
+PassportClerk 1 has received SSN 41444998 from Customer 32
+PassportClerk 1 has determined that Customer 32 has both their application and picture completed
+PassportClerk 2 has recorded Customer 21 passport documentation
+Customer 21 has gotten in regular line for Cashier 3
+Customer 33 has gotten in regular line for PassportClerk 1
+PassportClerk 3 has recorded Customer 27 passport documentation
+PassportClerk 2 is going on break
+Customer 27 has gotten in regular line for Cashier 4
+Customer 39 has given SSN 46963864 to PictureClerk 4
+PassportClerk 4 has recorded Customer 26 passport documentation
+PassportClerk 3 is going on break
+PictureClerk 4 has received SSN 46963864 from Customer 39
+PictureClerk 4 has taken a picture of Customer 39
+Customer 26 has gotten in regular line for Cashier 0
+Customer 39 does like their picture from PictureClerk 4
+PassportClerk 4 is going on break
+PictureClerk 4 has been told that Customer 39 does like their picture
+ApplicationClerk 0 has recorded a completed application for Customer 40
+Customer 40 has gotten in regular line for PictureClerk 1
+ApplicationClerk 1 has recorded a completed application for Customer 41
+ApplicationClerk 0 has signalled a Customer to come to their counter
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 4000 for Picture Clerks
+Manager has counted a total of 2500 for Passport Clerks
+Manager has counted a total of 2000 for Cashiers
+Manager has counted a total of 8500 for the Passport Office
+Manager has woken up PictureClerk 0
+Customer 41 has gotten in regular line for PictureClerk 2
+Customer 45 has given SSN 52919118 to ApplicationClerk 0
+PictureClerk 0 is coming off break
+PictureClerk 0 has signalled a Customer to come to their counter
+ApplicationClerk 2 has recorded a completed application for Customer 42
+ApplicationClerk 1 has signalled a Customer to come to their counter
+ApplicationClerk 0 has received SSN 52919118 from Customer 45
+Manager has woken up PictureClerk 1
+Customer 35 has given SSN 43505484 to PictureClerk 0
+Customer 42 has gotten in regular line for PictureClerk 0
+Customer 46 has given SSN 54422216 to ApplicationClerk 1
+PictureClerk 1 is coming off break
+PictureClerk 1 has signalled a Customer to come to their counter
+PictureClerk 0 has received SSN 43505484 from Customer 35
+PictureClerk 0 has taken a picture of Customer 35
+ApplicationClerk 3 has recorded a completed application for Customer 43
+ApplicationClerk 2 has signalled a Customer to come to their counter
+ApplicationClerk 1 has received SSN 54422216 from Customer 46
+Manager has woken up Cashier 1
+Customer 40 has given SSN 48295982 to PictureClerk 1
+Customer 35 does like their picture from PictureClerk 0
+Customer 43 has gotten in bribe line for PictureClerk 1
+Customer 47 has given SSN 55046608 to ApplicationClerk 2
+Cashier 1 is coming off break
+Cashier 1 has signalled a Customer to come to their counter
+PictureClerk 1 has received SSN 48295982 from Customer 40
+PictureClerk 1 has taken a picture of Customer 40
+PictureClerk 0 has been told that Customer 35 does like their picture
+ApplicationClerk 4 has recorded a completed application for Customer 44
+ApplicationClerk 3 has signalled a Customer to come to their counter
+ApplicationClerk 2 has received SSN 55046608 from Customer 47
+Manager has woken up Cashier 2
+Customer 20 has given SSN 28239034 to Cashier 1
+Customer 40 does like their picture from PictureClerk 1
+Customer 44 has gotten in regular line for PictureClerk 1
+Customer 48 has given SSN 56759446 to ApplicationClerk 3
+Cashier 2 is coming off break
+Cashier 2 has signalled a Customer to come to their counter
+Cashier 1 has received SSN 28239034 from Customer 20
+Cashier 1 has verified that Customer 20 has been certified by a PassportClerk
+PictureClerk 1 has been told that Customer 40 does like their picture
+ApplicationClerk 4 has signalled a Customer to come to their counter
+ApplicationClerk 3 has received SSN 56759446 from Customer 48
+Manager has woken up Cashier 3
+Customer 17 has given SSN 25595242 to Cashier 2
+Customer 20 has given Cashier 1 $100
+Customer 49 has given SSN 57183562 to ApplicationClerk 4
+Cashier 3 is coming off break
+Cashier 3 has signalled a Customer to come to their counter
+Cashier 2 has received SSN 25595242 from Customer 17
+Cashier 2 has verified that Customer 17 has been certified by a PassportClerk
+Cashier 1 has received the $100 from Customer 20 after certification
+ApplicationClerk 4 has received SSN 57183562 from Customer 49
+Manager has woken up Cashier 4
+Customer 21 has given SSN 28575558 to Cashier 3
+Customer 17 has given Cashier 2 $100
+Cashier 4 is coming off break
+Cashier 4 has signalled a Customer to come to their counter
+Cashier 3 has received SSN 28575558 from Customer 21
+Cashier 3 has verified that Customer 21 has been certified by a PassportClerk
+Cashier 2 has received the $100 from Customer 17 after certification
+Customer 27 has given SSN 35671124 to Cashier 4
+Customer 21 has given Cashier 3 $100
+Cashier 4 has received SSN 35671124 from Customer 27
+Cashier 4 has verified that Customer 27 has been certified by a PassportClerk
+Cashier 3 has received the $100 from Customer 21 after certification
+Cashier 0 has provided Customer 16 their completed passport
+Customer 27 has given Cashier 4 $100
+Cashier 4 has received the $100 from Customer 27 after certification
+Cashier 0 has recorded that Customer 16 has been given their completed passport
+Customer 16 is leaving the Passport Office
+Cashier 0 has signalled a Customer to come to their counter
+Customer 24 has given SSN 32579038 to Cashier 0
+Cashier 0 has received SSN 32579038 from Customer 24
+Cashier 0 has verified that Customer 24 has been certified by a PassportClerk
+Customer 24 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 24 after certification
+Customer 38 has gotten in regular line for PassportClerk 2
+PictureClerk 3 is going on break
+PassportClerk 0 has recorded Customer 28 passport documentation
+Customer 37 has gotten in regular line for PassportClerk 3
+Customer 28 has gotten in regular line for Cashier 1
+PictureClerk 2 has signalled a Customer to come to their counter
+PassportClerk 1 has recorded Customer 32 passport documentation
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 41 has given SSN 48305778 to PictureClerk 2
+Customer 32 has gotten in regular line for Cashier 2
+Customer 29 has given SSN 38457566 to PassportClerk 0
+PictureClerk 2 has received SSN 48305778 from Customer 41
+PictureClerk 2 has taken a picture of Customer 41
+PassportClerk 1 has signalled a Customer to come to their counter
+PassportClerk 0 has received SSN 38457566 from Customer 29
+PassportClerk 0 has determined that Customer 29 has both their application and picture completed
+Customer 41 does not like their picture from PictureClerk 2
+Customer 33 has given SSN 42491674 to PassportClerk 1
+PictureClerk 2 has been told that Customer 41 does not like their picture
+PassportClerk 1 has received SSN 42491674 from Customer 33
+PassportClerk 1 has determined that Customer 33 has both their application and picture completed
+PictureClerk 2 is going on break
+Customer 39 has gotten in regular line for PassportClerk 0
+PictureClerk 4 is going on break
+ApplicationClerk 0 has recorded a completed application for Customer 45
+Customer 45 has gotten in regular line for PictureClerk 2
+ApplicationClerk 1 has recorded a completed application for Customer 46
+ApplicationClerk 0 is going on break
+Customer 46 has gotten in regular line for PictureClerk 3
+ApplicationClerk 2 has recorded a completed application for Customer 47
+ApplicationClerk 1 is going on break
+Customer 35 has gotten in regular line for PassportClerk 1
+Customer 47 has gotten in regular line for PictureClerk 4
+PictureClerk 0 has signalled a Customer to come to their counter
+ApplicationClerk 3 has recorded a completed application for Customer 48
+ApplicationClerk 2 is going on break
+Customer 40 has gotten in regular line for PassportClerk 4
+Customer 42 has given SSN 48992340 to PictureClerk 0
+Customer 48 has gotten in regular line for PictureClerk 0
+Cashier 1 has provided Customer 20 their completed passport
+PictureClerk 0 has received SSN 48992340 from Customer 42
+PictureClerk 0 has taken a picture of Customer 42
+ApplicationClerk 4 has recorded a completed application for Customer 49
+ApplicationClerk 3 is going on break
+Customer 43 has given SSN 49853892 to PictureClerk 1
+Customer 42 does like their picture from PictureClerk 0
+Customer 49 has gotten in bribe line for PictureClerk 0
+Cashier 2 has provided Customer 17 their completed passport
+Cashier 1 has recorded that Customer 20 has been given their completed passport
+PictureClerk 1 has received SSN 49853892 from Customer 43
+PictureClerk 1 has taken a picture of Customer 43
+PictureClerk 0 has been told that Customer 42 does like their picture
+ApplicationClerk 4 is going on break
+Customer 20 is leaving the Passport Office
+Customer 43 does like their picture from PictureClerk 1
+Cashier 3 has provided Customer 21 their completed passport
+Cashier 2 has recorded that Customer 17 has been given their completed passport
+Cashier 1 has signalled a Customer to come to their counter
+PictureClerk 1 has been told that Customer 43 does like their picture
+Customer 17 is leaving the Passport Office
+Customer 28 has given SSN 37124386 to Cashier 1
+Cashier 4 has provided Customer 27 their completed passport
+Cashier 3 has recorded that Customer 21 has been given their completed passport
+Cashier 2 has signalled a Customer to come to their counter
+Cashier 1 has received SSN 37124386 from Customer 28
+Cashier 1 has verified that Customer 28 has been certified by a PassportClerk
+Customer 21 is leaving the Passport Office
+Customer 32 has given SSN 41444998 to Cashier 2
+Customer 28 has given Cashier 1 $100
+Cashier 4 has recorded that Customer 27 has been given their completed passport
+Cashier 3 is going on break
+Cashier 2 has received SSN 41444998 from Customer 32
+Cashier 2 has verified that Customer 32 has been certified by a PassportClerk
+Cashier 1 has received the $100 from Customer 28 after certification
+Customer 27 is leaving the Passport Office
+Customer 32 has given Cashier 2 $100
+Cashier 4 is going on break
+Cashier 2 has received the $100 from Customer 32 after certification
+Cashier 0 has provided Customer 24 their completed passport
+Cashier 0 has recorded that Customer 24 has been given their completed passport
+Customer 24 is leaving the Passport Office
+Cashier 0 has signalled a Customer to come to their counter
+Customer 26 has given SSN 34043396 to Cashier 0
+Cashier 0 has received SSN 34043396 from Customer 26
+Cashier 0 has received the $100 from Customer 26 before certification. They are to go to the back of the line
+Customer 26 has gone to Cashier 0 too soon. They are going to the back of the line.
+Cashier 0 is going on break
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 4500 for Picture Clerks
+Manager has counted a total of 2500 for Passport Clerks
+Manager has counted a total of 2700 for Cashiers
+Manager has counted a total of 9700 for the Passport Office
+Manager has woken up PictureClerk 2
+PictureClerk 2 is coming off break
+PictureClerk 2 has signalled a Customer to come to their counter
+Manager has woken up PictureClerk 3
+Customer 45 has given SSN 52919118 to PictureClerk 2
+PictureClerk 3 is coming off break
+PictureClerk 3 has signalled a Customer to come to their counter
+PictureClerk 2 has received SSN 52919118 from Customer 45
+PictureClerk 2 has taken a picture of Customer 45
+Manager has woken up PictureClerk 4
+Customer 46 has given SSN 54422216 to PictureClerk 3
+Customer 45 does like their picture from PictureClerk 2
+PictureClerk 4 is coming off break
+PictureClerk 4 has signalled a Customer to come to their counter
+PictureClerk 3 has received SSN 54422216 from Customer 46
+PictureClerk 3 has taken a picture of Customer 46
+PictureClerk 2 has been told that Customer 45 does like their picture
+Manager has woken up PassportClerk 2
+Customer 47 has given SSN 55046608 to PictureClerk 4
+Customer 46 does not like their picture from PictureClerk 3
+PassportClerk 2 is coming off break
+PassportClerk 2 has signalled a Customer to come to their counter
+PictureClerk 4 has received SSN 55046608 from Customer 47
+PictureClerk 4 has taken a picture of Customer 47
+PictureClerk 3 has been told that Customer 46 does not like their picture
+Manager has woken up PassportClerk 3
+Customer 38 has given SSN 45442176 to PassportClerk 2
+Customer 47 does not like their picture from PictureClerk 4
+PassportClerk 3 is coming off break
+PassportClerk 3 has signalled a Customer to come to their counter
+PassportClerk 2 has received SSN 45442176 from Customer 38
+PassportClerk 2 has determined that Customer 38 does not have both their application and picture completed
+PictureClerk 4 has been told that Customer 47 does not like their picture
+PictureClerk 3 is going on break
+Manager has woken up PassportClerk 4
+Customer 37 has given SSN 45101046 to PassportClerk 3
+Customer 38 has gone to PassportClerk 2 too soon. They are going to the back of the line.
+PassportClerk 4 is coming off break
+PassportClerk 4 has signalled a Customer to come to their counter
+PassportClerk 3 has received SSN 45101046 from Customer 37
+PassportClerk 3 has determined that Customer 37 has both their application and picture completed
+PassportClerk 2 is going on break
+PictureClerk 4 is going on break
+Customer 40 has given SSN 48295982 to PassportClerk 4
+PassportClerk 4 has received SSN 48295982 from Customer 40
+PassportClerk 4 has determined that Customer 40 has both their application and picture completed
+PassportClerk 0 has recorded Customer 29 passport documentation
+Customer 29 has gotten in regular line for Cashier 0
+PassportClerk 1 has recorded Customer 33 passport documentation
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 33 has gotten in bribe line for Cashier 1
+Customer 39 has given SSN 46963864 to PassportClerk 0
+PassportClerk 1 has signalled a Customer to come to their counter
+PassportClerk 0 has received SSN 46963864 from Customer 39
+PassportClerk 0 has determined that Customer 39 has both their application and picture completed
+Customer 35 has given SSN 43505484 to PassportClerk 1
+PassportClerk 1 has received SSN 43505484 from Customer 35
+PassportClerk 1 has determined that Customer 35 has both their application and picture completed
+Customer 42 has gotten in bribe line for PassportClerk 0
+Customer 43 has gotten in regular line for PassportClerk 0
+Customer 49 has given SSN 57183562 to PictureClerk 0
+PictureClerk 1 has signalled a Customer to come to their counter
+PictureClerk 0 has received SSN 57183562 from Customer 49
+PictureClerk 0 has taken a picture of Customer 49
+Customer 44 has given SSN 51382194 to PictureClerk 1
+Customer 49 does like their picture from PictureClerk 0
+Cashier 1 has provided Customer 28 their completed passport
+PictureClerk 1 has received SSN 51382194 from Customer 44
+PictureClerk 1 has taken a picture of Customer 44
+PictureClerk 0 has been told that Customer 49 does like their picture
+Customer 44 does like their picture from PictureClerk 1
+Cashier 2 has provided Customer 32 their completed passport
+Cashier 1 has recorded that Customer 28 has been given their completed passport
+PictureClerk 1 has been told that Customer 44 does like their picture
+Customer 28 is leaving the Passport Office
+Cashier 2 has recorded that Customer 32 has been given their completed passport
+Customer 32 is leaving the Passport Office
+Customer 33 has given SSN 42491674 to Cashier 1
+Cashier 2 is going on break
+Cashier 1 has received SSN 42491674 from Customer 33
+Cashier 1 has verified that Customer 33 has been certified by a PassportClerk
+Customer 33 has given Cashier 1 $100
+Cashier 1 has received the $100 from Customer 33 after certification
+Customer 45 has gotten in regular line for PassportClerk 1
+PictureClerk 2 is going on break
+PassportClerk 3 has recorded Customer 37 passport documentation
+Customer 37 has gotten in bribe line for Cashier 1
+PassportClerk 4 has recorded Customer 40 passport documentation
+PassportClerk 3 is going on break
+Customer 40 has gotten in regular line for Cashier 1
+PassportClerk 4 is going on break
+PassportClerk 0 has recorded Customer 39 passport documentation
+Customer 39 has gotten in regular line for Cashier 2
+PassportClerk 1 has recorded Customer 35 passport documentation
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 5000 for Picture Clerks
+Manager has counted a total of 3000 for Passport Clerks
+Manager has counted a total of 3300 for Cashiers
+Manager has counted a total of 11300 for the Passport Office
+Manager has woken up Cashier 0
+Customer 35 has gotten in regular line for Cashier 3
+Customer 42 has given SSN 48992340 to PassportClerk 0
+Cashier 0 is coming off break
+Cashier 0 has signalled a Customer to come to their counter
+PassportClerk 1 has signalled a Customer to come to their counter
+PassportClerk 0 has received SSN 48992340 from Customer 42
+PassportClerk 0 has determined that Customer 42 has both their application and picture completed
+Manager has woken up Cashier 2
+Customer 29 has given SSN 38457566 to Cashier 0
+Customer 45 has given SSN 52919118 to PassportClerk 1
+Cashier 2 is coming off break
+Cashier 2 has signalled a Customer to come to their counter
+Cashier 0 has received SSN 38457566 from Customer 29
+Cashier 0 has verified that Customer 29 has been certified by a PassportClerk
+PassportClerk 1 has received SSN 52919118 from Customer 45
+PassportClerk 1 has determined that Customer 45 has both their application and picture completed
+Manager has woken up Cashier 3
+Customer 39 has given SSN 46963864 to Cashier 2
+Customer 29 has given Cashier 0 $100
+Cashier 3 is coming off break
+Cashier 3 has signalled a Customer to come to their counter
+Cashier 2 has received SSN 46963864 from Customer 39
+Cashier 2 has verified that Customer 39 has been certified by a PassportClerk
+Cashier 0 has received the $100 from Customer 29 after certification
+Customer 35 has given SSN 43505484 to Cashier 3
+Customer 39 has given Cashier 2 $100
+Cashier 3 has received SSN 43505484 from Customer 35
+Cashier 3 has verified that Customer 35 has been certified by a PassportClerk
+Cashier 2 has received the $100 from Customer 39 after certification
+Customer 35 has given Cashier 3 $100
+Cashier 3 has received the $100 from Customer 35 after certification
+Customer 49 has gotten in regular line for PassportClerk 1
+Customer 0 has gotten in regular line for PictureClerk 1
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 44 has gotten in regular line for PassportClerk 2
+Customer 48 has given SSN 56759446 to PictureClerk 0
+PictureClerk 1 has signalled a Customer to come to their counter
+PictureClerk 0 has received SSN 56759446 from Customer 48
+PictureClerk 0 has taken a picture of Customer 48
+Customer 0 has given SSN 10127590 to PictureClerk 1
+Customer 48 does like their picture from PictureClerk 0
+PictureClerk 1 has received SSN 10127590 from Customer 0
+PictureClerk 1 has taken a picture of Customer 0
+PictureClerk 0 has been told that Customer 48 does like their picture
+Customer 0 does not like their picture from PictureClerk 1
+Customer 3 has gotten in regular line for PictureClerk 0
+Cashier 1 has provided Customer 33 their completed passport
+PictureClerk 1 has been told that Customer 0 does not like their picture
+Cashier 1 has recorded that Customer 33 has been given their completed passport
+PictureClerk 1 is going on break
+Customer 33 is leaving the Passport Office
+Customer 37 has given SSN 45101046 to Cashier 1
+Cashier 1 has received SSN 45101046 from Customer 37
+Cashier 1 has verified that Customer 37 has been certified by a PassportClerk
+Customer 37 has given Cashier 1 $100
+Cashier 1 has received the $100 from Customer 37 after certification
+PassportClerk 0 has recorded Customer 42 passport documentation
+Customer 42 has gotten in regular line for Cashier 0
+PassportClerk 1 has recorded Customer 45 passport documentation
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 45 has gotten in bribe line for Cashier 2
+Customer 43 has given SSN 49853892 to PassportClerk 0
+Cashier 0 has provided Customer 29 their completed passport
+PassportClerk 1 has signalled a Customer to come to their counter
+PassportClerk 0 has received SSN 49853892 from Customer 43
+PassportClerk 0 has determined that Customer 43 has both their application and picture completed
+Customer 49 has given SSN 57183562 to PassportClerk 1
+Cashier 2 has provided Customer 39 their completed passport
+Cashier 0 has recorded that Customer 29 has been given their completed passport
+PassportClerk 1 has received SSN 57183562 from Customer 49
+PassportClerk 1 has determined that Customer 49 has both their application and picture completed
+Customer 29 is leaving the Passport Office
+Cashier 3 has provided Customer 35 their completed passport
+Cashier 2 has recorded that Customer 39 has been given their completed passport
+Cashier 0 has signalled a Customer to come to their counter
+Customer 39 is leaving the Passport Office
+Customer 42 has given SSN 48992340 to Cashier 0
+Cashier 3 has recorded that Customer 35 has been given their completed passport
+Cashier 0 has received SSN 48992340 from Customer 42
+Cashier 0 has verified that Customer 42 has been certified by a PassportClerk
+Customer 35 is leaving the Passport Office
+Customer 45 has given SSN 52919118 to Cashier 2
+Customer 42 has given Cashier 0 $100
+Cashier 3 is going on break
+Cashier 2 has received SSN 52919118 from Customer 45
+Cashier 2 has verified that Customer 45 has been certified by a PassportClerk
+Cashier 0 has received the $100 from Customer 42 after certification
+Customer 45 has given Cashier 2 $100
+Cashier 2 has received the $100 from Customer 45 after certification
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 5000 for Picture Clerks
+Manager has counted a total of 3000 for Passport Clerks
+Manager has counted a total of 4900 for Cashiers
+Manager has counted a total of 12900 for the Passport Office
+Manager has woken up PassportClerk 2
+PassportClerk 2 is coming off break
+PassportClerk 2 has signalled a Customer to come to their counter
+Customer 44 has given SSN 51382194 to PassportClerk 2
+PassportClerk 2 has received SSN 51382194 from Customer 44
+PassportClerk 2 has determined that Customer 44 has both their application and picture completed
+Customer 48 has gotten in regular line for PassportClerk 0
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 3 has given SSN 12997100 to PictureClerk 0
+Customer 6 has gotten in bribe line for PictureClerk 0
+PictureClerk 0 has received SSN 12997100 from Customer 3
+PictureClerk 0 has taken a picture of Customer 3
+Customer 3 does like their picture from PictureClerk 0
+Customer 7 has gotten in regular line for PictureClerk 0
+PictureClerk 0 has been told that Customer 3 does like their picture
+Cashier 1 has provided Customer 37 their completed passport
+Cashier 1 has recorded that Customer 37 has been given their completed passport
+Customer 37 is leaving the Passport Office
+Cashier 1 has signalled a Customer to come to their counter
+Customer 40 has given SSN 48295982 to Cashier 1
+Cashier 1 has received SSN 48295982 from Customer 40
+Cashier 1 has verified that Customer 40 has been certified by a PassportClerk
+Customer 40 has given Cashier 1 $100
+Cashier 1 has received the $100 from Customer 40 after certification
+PassportClerk 0 has recorded Customer 43 passport documentation
+Customer 43 has gotten in regular line for Cashier 0
+PassportClerk 1 has recorded Customer 49 passport documentation
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 49 has gotten in regular line for Cashier 1
+Customer 48 has given SSN 56759446 to PassportClerk 0
+PassportClerk 1 is going on break
+PassportClerk 0 has received SSN 56759446 from Customer 48
+PassportClerk 0 has determined that Customer 48 has both their application and picture completed
+Cashier 0 has provided Customer 42 their completed passport
+Cashier 2 has provided Customer 45 their completed passport
+Cashier 0 has recorded that Customer 42 has been given their completed passport
+Customer 42 is leaving the Passport Office
+Cashier 2 has recorded that Customer 45 has been given their completed passport
+Cashier 0 has signalled a Customer to come to their counter
+Customer 45 is leaving the Passport Office
+Customer 43 has given SSN 49853892 to Cashier 0
+Cashier 2 is going on break
+Cashier 0 has received SSN 49853892 from Customer 43
+Cashier 0 has verified that Customer 43 has been certified by a PassportClerk
+Customer 43 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 43 after certification
+PassportClerk 2 has recorded Customer 44 passport documentation
+Customer 44 has gotten in regular line for Cashier 0
+PassportClerk 2 is going on break
+Customer 3 has gotten in regular line for PassportClerk 0
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 5500 for Picture Clerks
+Manager has counted a total of 3000 for Passport Clerks
+Manager has counted a total of 5100 for Cashiers
+Manager has counted a total of 13600 for the Passport Office
+Customer 6 has given SSN 15024160 to PictureClerk 0
+PictureClerk 0 has received SSN 15024160 from Customer 6
+PictureClerk 0 has taken a picture of Customer 6
+Customer 6 does like their picture from PictureClerk 0
+PictureClerk 0 has been told that Customer 6 does like their picture
+Cashier 1 has provided Customer 40 their completed passport
+Cashier 1 has recorded that Customer 40 has been given their completed passport
+Customer 40 is leaving the Passport Office
+Cashier 1 has signalled a Customer to come to their counter
+Customer 49 has given SSN 57183562 to Cashier 1
+Cashier 1 has received SSN 57183562 from Customer 49
+Cashier 1 has verified that Customer 49 has been certified by a PassportClerk
+Customer 49 has given Cashier 1 $100
+Cashier 1 has received the $100 from Customer 49 after certification
+Customer 13 has gotten in regular line for PictureClerk 1
+Customer 14 has gotten in regular line for PictureClerk 2
+PassportClerk 0 has recorded Customer 48 passport documentation
+Customer 48 has gotten in regular line for Cashier 1
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 3 has given SSN 12997100 to PassportClerk 0
+PassportClerk 0 has received SSN 12997100 from Customer 3
+PassportClerk 0 has determined that Customer 3 does not have both their application and picture completed
+Customer 3 has gone to PassportClerk 0 too soon. They are going to the back of the line.
+PassportClerk 0 is going on break
+Cashier 0 has provided Customer 43 their completed passport
+Cashier 0 has recorded that Customer 43 has been given their completed passport
+Customer 43 is leaving the Passport Office
+Cashier 0 has signalled a Customer to come to their counter
+Customer 44 has given SSN 51382194 to Cashier 0
+Cashier 0 has received SSN 51382194 from Customer 44
+Cashier 0 has verified that Customer 44 has been certified by a PassportClerk
+Customer 44 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 44 after certification
+Customer 6 has gotten in regular line for PassportClerk 0
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 7 has given SSN 15539448 to PictureClerk 0
+PictureClerk 0 has received SSN 15539448 from Customer 7
+PictureClerk 0 has taken a picture of Customer 7
+Customer 7 does not like their picture from PictureClerk 0
+PictureClerk 0 has been told that Customer 7 does not like their picture
+PictureClerk 0 is going on break
+Cashier 1 has provided Customer 49 their completed passport
+Cashier 1 has recorded that Customer 49 has been given their completed passport
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 5500 for Picture Clerks
+Manager has counted a total of 3000 for Passport Clerks
+Manager has counted a total of 5300 for Cashiers
+Manager has counted a total of 13800 for the Passport Office
+Manager has woken up PictureClerk 1
+Customer 49 is leaving the Passport Office
+PictureClerk 1 is coming off break
+PictureClerk 1 has signalled a Customer to come to their counter
+Cashier 1 has signalled a Customer to come to their counter
+Manager has woken up PictureClerk 2
+Customer 13 has given SSN 20463022 to PictureClerk 1
+Customer 48 has given SSN 56759446 to Cashier 1
+PictureClerk 2 is coming off break
+PictureClerk 2 has signalled a Customer to come to their counter
+PictureClerk 1 has received SSN 20463022 from Customer 13
+PictureClerk 1 has taken a picture of Customer 13
+Cashier 1 has received SSN 56759446 from Customer 48
+Cashier 1 has received the $100 from Customer 48 before certification. They are to go to the back of the line
+Manager has woken up PassportClerk 0
+Customer 14 has given SSN 22066728 to PictureClerk 2
+Customer 13 does like their picture from PictureClerk 1
+Customer 48 has gone to Cashier 1 too soon. They are going to the back of the line.
+PassportClerk 0 is coming off break
+PassportClerk 0 has signalled a Customer to come to their counter
+PictureClerk 2 has received SSN 22066728 from Customer 14
+PictureClerk 2 has taken a picture of Customer 14
+PictureClerk 1 has been told that Customer 13 does like their picture
+Cashier 1 is going on break
+Customer 6 has given SSN 15024160 to PassportClerk 0
+Customer 14 does like their picture from PictureClerk 2
+PassportClerk 0 has received SSN 15024160 from Customer 6
+PassportClerk 0 has determined that Customer 6 has both their application and picture completed
+PictureClerk 2 has been told that Customer 14 does like their picture
+Customer 15 has gotten in regular line for PictureClerk 0
+Customer 18 has gotten in bribe line for PictureClerk 1
+Customer 19 has gotten in regular line for PictureClerk 1
+Customer 22 has gotten in bribe line for PictureClerk 2
+Cashier 0 has provided Customer 44 their completed passport
+Cashier 0 has recorded that Customer 44 has been given their completed passport
+Customer 44 is leaving the Passport Office
+Cashier 0 is going on break
+Customer 23 has gotten in regular line for PictureClerk 2
+Customer 13 has gotten in regular line for PassportClerk 0
+PassportClerk 0 has recorded Customer 6 passport documentation
+Customer 6 has gotten in regular line for Cashier 0
+Customer 14 has gotten in regular line for PassportClerk 1
+Customer 18 has given SSN 26298364 to PictureClerk 1
+PassportClerk 0 has signalled a Customer to come to their counter
+PictureClerk 1 has received SSN 26298364 from Customer 18
+PictureClerk 1 has taken a picture of Customer 18
+Customer 13 has given SSN 20463022 to PassportClerk 0
+Customer 22 has given SSN 29809392 to PictureClerk 2
+Customer 18 does like their picture from PictureClerk 1
+PassportClerk 0 has received SSN 20463022 from Customer 13
+PassportClerk 0 has determined that Customer 13 has both their application and picture completed
+PictureClerk 2 has received SSN 29809392 from Customer 22
+PictureClerk 2 has taken a picture of Customer 22
+PictureClerk 1 has been told that Customer 18 does like their picture
+Customer 22 does like their picture from PictureClerk 2
+PictureClerk 2 has been told that Customer 22 does like their picture
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 3000 for Passport Clerks
+Manager has counted a total of 5300 for Cashiers
+Manager has counted a total of 14800 for the Passport Office
+Manager has woken up PictureClerk 0
+PictureClerk 0 is coming off break
+PictureClerk 0 has signalled a Customer to come to their counter
+Manager has woken up PassportClerk 1
+Customer 15 has given SSN 22696880 to PictureClerk 0
+PassportClerk 1 is coming off break
+PassportClerk 1 has signalled a Customer to come to their counter
+PictureClerk 0 has received SSN 22696880 from Customer 15
+PictureClerk 0 has taken a picture of Customer 15
+Manager has woken up Cashier 0
+Customer 14 has given SSN 22066728 to PassportClerk 1
+Customer 15 does not like their picture from PictureClerk 0
+Cashier 0 is coming off break
+Cashier 0 has signalled a Customer to come to their counter
+PassportClerk 1 has received SSN 22066728 from Customer 14
+PassportClerk 1 has determined that Customer 14 has both their application and picture completed
+PictureClerk 0 has been told that Customer 15 does not like their picture
+Customer 6 has given SSN 15024160 to Cashier 0
+Cashier 0 has received SSN 15024160 from Customer 6
+Cashier 0 has verified that Customer 6 has been certified by a PassportClerk
+PictureClerk 0 is going on break
+Customer 6 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 6 after certification
+PassportClerk 0 has recorded Customer 13 passport documentation
+Customer 13 has gotten in regular line for Cashier 0
+Customer 18 has gotten in regular line for PassportClerk 0
+PassportClerk 0 has signalled a Customer to come to their counter
+PictureClerk 1 has signalled a Customer to come to their counter
+Customer 18 has given SSN 26298364 to PassportClerk 0
+Customer 22 has gotten in regular line for PassportClerk 0
+Customer 19 has given SSN 27893468 to PictureClerk 1
+PassportClerk 0 has received SSN 26298364 from Customer 18
+PassportClerk 0 has determined that Customer 18 has both their application and picture completed
+PictureClerk 2 has signalled a Customer to come to their counter
+PictureClerk 1 has received SSN 27893468 from Customer 19
+PictureClerk 1 has taken a picture of Customer 19
+Customer 23 has given SSN 31298984 to PictureClerk 2
+Customer 19 does not like their picture from PictureClerk 1
+PictureClerk 2 has received SSN 31298984 from Customer 23
+PictureClerk 2 has taken a picture of Customer 23
+PictureClerk 1 has been told that Customer 19 does not like their picture
+Customer 23 does not like their picture from PictureClerk 2
+PictureClerk 2 has been told that Customer 23 does not like their picture
+PictureClerk 1 is going on break
+PictureClerk 2 is going on break
+Customer 25 has gotten in regular line for PictureClerk 0
+PassportClerk 1 has recorded Customer 14 passport documentation
+Customer 14 has gotten in regular line for Cashier 1
+PassportClerk 1 is going on break
+Cashier 0 has provided Customer 6 their completed passport
+Cashier 0 has recorded that Customer 6 has been given their completed passport
+Customer 6 is leaving the Passport Office
+Cashier 0 has signalled a Customer to come to their counter
+Customer 13 has given SSN 20463022 to Cashier 0
+Cashier 0 has received SSN 20463022 from Customer 13
+Cashier 0 has verified that Customer 13 has been certified by a PassportClerk
+Customer 13 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 13 after certification
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 3000 for Passport Clerks
+Manager has counted a total of 5500 for Cashiers
+Manager has counted a total of 15000 for the Passport Office
+Manager has woken up PictureClerk 0
+PictureClerk 0 is coming off break
+PictureClerk 0 has signalled a Customer to come to their counter
+Manager has woken up Cashier 1
+Customer 25 has given SSN 33581250 to PictureClerk 0
+Cashier 1 is coming off break
+Cashier 1 has signalled a Customer to come to their counter
+PictureClerk 0 has received SSN 33581250 from Customer 25
+PictureClerk 0 has taken a picture of Customer 25
+Customer 14 has given SSN 22066728 to Cashier 1
+Customer 25 does like their picture from PictureClerk 0
+Cashier 1 has received SSN 22066728 from Customer 14
+Cashier 1 has verified that Customer 14 has been certified by a PassportClerk
+PictureClerk 0 has been told that Customer 25 does like their picture
+Customer 14 has given Cashier 1 $100
+Cashier 1 has received the $100 from Customer 14 after certification
+Customer 31 has gotten in regular line for PictureClerk 0
+PassportClerk 0 has recorded Customer 18 passport documentation
+Customer 18 has gotten in regular line for Cashier 0
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 22 has given SSN 29809392 to PassportClerk 0
+PassportClerk 0 has received SSN 29809392 from Customer 22
+PassportClerk 0 has determined that Customer 22 has both their application and picture completed
+Customer 30 has gotten in regular line for PictureClerk 1
+Cashier 0 has provided Customer 13 their completed passport
+Cashier 0 has recorded that Customer 13 has been given their completed passport
+Customer 13 is leaving the Passport Office
+Cashier 0 has signalled a Customer to come to their counter
+Customer 18 has given SSN 26298364 to Cashier 0
+Cashier 0 has received SSN 26298364 from Customer 18
+Cashier 0 has verified that Customer 18 has been certified by a PassportClerk
+Customer 18 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 18 after certification
+Customer 34 has gotten in regular line for PictureClerk 2
+Customer 25 has gotten in bribe line for PassportClerk 0
+Cashier 1 has provided Customer 14 their completed passport
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 31 has given SSN 40071136 to PictureClerk 0
+Cashier 1 has recorded that Customer 14 has been given their completed passport
+PictureClerk 0 has received SSN 40071136 from Customer 31
+PictureClerk 0 has taken a picture of Customer 31
+Customer 14 is leaving the Passport Office
+Customer 31 does not like their picture from PictureClerk 0
+Cashier 1 is going on break
+PictureClerk 0 has been told that Customer 31 does not like their picture
+PictureClerk 0 is going on break
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 3000 for Passport Clerks
+Manager has counted a total of 5700 for Cashiers
+Manager has counted a total of 15200 for the Passport Office
+Manager has woken up PictureClerk 1
+PictureClerk 1 is coming off break
+PictureClerk 1 has signalled a Customer to come to their counter
+Manager has woken up PictureClerk 2
+Customer 30 has given SSN 38779320 to PictureClerk 1
+PictureClerk 2 is coming off break
+PictureClerk 2 has signalled a Customer to come to their counter
+PictureClerk 1 has received SSN 38779320 from Customer 30
+PictureClerk 1 has taken a picture of Customer 30
+Customer 34 has given SSN 42557388 to PictureClerk 2
+Customer 30 does like their picture from PictureClerk 1
+PictureClerk 2 has received SSN 42557388 from Customer 34
+PictureClerk 2 has taken a picture of Customer 34
+PictureClerk 1 has been told that Customer 30 does like their picture
+Customer 34 does like their picture from PictureClerk 2
+PictureClerk 2 has been told that Customer 34 does like their picture
+Customer 36 has gotten in regular line for PictureClerk 0
+PassportClerk 0 has recorded Customer 22 passport documentation
+Customer 22 has gotten in regular line for Cashier 0
+Customer 25 has given SSN 33581250 to PassportClerk 0
+PassportClerk 0 has received SSN 33581250 from Customer 25
+PassportClerk 0 has determined that Customer 25 has both their application and picture completed
+Cashier 0 has provided Customer 18 their completed passport
+Cashier 0 has recorded that Customer 18 has been given their completed passport
+Customer 18 is leaving the Passport Office
+Cashier 0 has signalled a Customer to come to their counter
+Customer 22 has given SSN 29809392 to Cashier 0
+Cashier 0 has received SSN 29809392 from Customer 22
+Cashier 0 has verified that Customer 22 has been certified by a PassportClerk
+Customer 22 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 22 after certification
+Customer 30 has gotten in bribe line for PassportClerk 0
+PictureClerk 1 is going on break
+Customer 34 has gotten in bribe line for PassportClerk 0
+PictureClerk 2 is going on break
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 3500 for Passport Clerks
+Manager has counted a total of 5800 for Cashiers
+Manager has counted a total of 15800 for the Passport Office
+Manager has woken up PictureClerk 0
+PictureClerk 0 is coming off break
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 36 has given SSN 44173002 to PictureClerk 0
+PictureClerk 0 has received SSN 44173002 from Customer 36
+PictureClerk 0 has taken a picture of Customer 36
+PassportClerk 0 has recorded Customer 25 passport documentation
+Customer 36 does like their picture from PictureClerk 0
+Customer 25 has gotten in regular line for Cashier 0
+PictureClerk 0 has been told that Customer 36 does like their picture
+Customer 30 has given SSN 38779320 to PassportClerk 0
+PassportClerk 0 has received SSN 38779320 from Customer 30
+PassportClerk 0 has determined that Customer 30 has both their application and picture completed
+Customer 41 has gotten in regular line for PictureClerk 0
+Cashier 0 has provided Customer 22 their completed passport
+Cashier 0 has recorded that Customer 22 has been given their completed passport
+Customer 22 is leaving the Passport Office
+Cashier 0 has signalled a Customer to come to their counter
+Customer 25 has given SSN 33581250 to Cashier 0
+Cashier 0 has received SSN 33581250 from Customer 25
+Cashier 0 has verified that Customer 25 has been certified by a PassportClerk
+Customer 25 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 25 after certification
+Customer 26 has gotten in bribe line for Cashier 0
+Customer 46 has gotten in regular line for PictureClerk 1
+Customer 38 has gotten in regular line for PassportClerk 0
+Customer 47 has gotten in regular line for PictureClerk 2
+Customer 36 has gotten in regular line for PassportClerk 1
+PictureClerk 0 has signalled a Customer to come to their counter
+PassportClerk 0 has recorded Customer 30 passport documentation
+Customer 41 has given SSN 48305778 to PictureClerk 0
+Customer 30 has gotten in regular line for Cashier 0
+PictureClerk 0 has received SSN 48305778 from Customer 41
+PictureClerk 0 has taken a picture of Customer 41
+Customer 41 does like their picture from PictureClerk 0
+Customer 34 has given SSN 42557388 to PassportClerk 0
+PictureClerk 0 has been told that Customer 41 does like their picture
+PassportClerk 0 has received SSN 42557388 from Customer 34
+PassportClerk 0 has determined that Customer 34 has both their application and picture completed
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 4500 for Passport Clerks
+Manager has counted a total of 5900 for Cashiers
+Manager has counted a total of 16900 for the Passport Office
+Manager has woken up PictureClerk 1
+PictureClerk 1 is coming off break
+PictureClerk 1 has signalled a Customer to come to their counter
+Manager has woken up PictureClerk 2
+Customer 46 has given SSN 54422216 to PictureClerk 1
+PictureClerk 2 is coming off break
+PictureClerk 2 has signalled a Customer to come to their counter
+PictureClerk 1 has received SSN 54422216 from Customer 46
+PictureClerk 1 has taken a picture of Customer 46
+Manager has woken up PassportClerk 1
+Customer 47 has given SSN 55046608 to PictureClerk 2
+Customer 46 does not like their picture from PictureClerk 1
+PassportClerk 1 is coming off break
+PassportClerk 1 has signalled a Customer to come to their counter
+PictureClerk 2 has received SSN 55046608 from Customer 47
+PictureClerk 2 has taken a picture of Customer 47
+PictureClerk 1 has been told that Customer 46 does not like their picture
+Customer 36 has given SSN 44173002 to PassportClerk 1
+Customer 47 does like their picture from PictureClerk 2
+PassportClerk 1 has received SSN 44173002 from Customer 36
+PassportClerk 1 has determined that Customer 36 has both their application and picture completed
+PictureClerk 2 has been told that Customer 47 does like their picture
+PictureClerk 1 is going on break
+Cashier 0 has provided Customer 25 their completed passport
+Cashier 0 has recorded that Customer 25 has been given their completed passport
+Customer 25 is leaving the Passport Office
+Customer 26 has given SSN 34043396 to Cashier 0
+Cashier 0 has received SSN 34043396 from Customer 26
+Cashier 0 has verified that Customer 26 has been certified by a PassportClerk
+Customer 26 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 26 after certification
+PassportClerk 0 has recorded Customer 34 passport documentation
+Customer 41 has gotten in regular line for PassportClerk 1
+Customer 34 has gotten in regular line for Cashier 1
+PictureClerk 0 is going on break
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 38 has given SSN 45442176 to PassportClerk 0
+PassportClerk 0 has received SSN 45442176 from Customer 38
+PassportClerk 0 has determined that Customer 38 has both their application and picture completed
+PassportClerk 1 has recorded Customer 36 passport documentation
+Customer 36 has gotten in regular line for Cashier 2
+Customer 47 has gotten in bribe line for PassportClerk 0
+PassportClerk 1 has signalled a Customer to come to their counter
+PictureClerk 2 is going on break
+Customer 41 has given SSN 48305778 to PassportClerk 1
+PassportClerk 1 has received SSN 48305778 from Customer 41
+PassportClerk 1 has determined that Customer 41 has both their application and picture completed
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 4500 for Passport Clerks
+Manager has counted a total of 6500 for Cashiers
+Manager has counted a total of 17500 for the Passport Office
+Manager has woken up Cashier 1
+Cashier 1 is coming off break
+Cashier 1 has signalled a Customer to come to their counter
+Manager has woken up Cashier 2
+Customer 34 has given SSN 42557388 to Cashier 1
+Cashier 2 is coming off break
+Cashier 2 has signalled a Customer to come to their counter
+Cashier 1 has received SSN 42557388 from Customer 34
+Cashier 1 has verified that Customer 34 has been certified by a PassportClerk
+Customer 36 has given SSN 44173002 to Cashier 2
+Customer 34 has given Cashier 1 $100
+Cashier 2 has received SSN 44173002 from Customer 36
+Cashier 2 has verified that Customer 36 has been certified by a PassportClerk
+Cashier 1 has received the $100 from Customer 34 after certification
+Customer 36 has given Cashier 2 $100
+Customer 0 has gotten in regular line for PictureClerk 0
+Cashier 2 has received the $100 from Customer 36 after certification
+Cashier 0 has provided Customer 26 their completed passport
+Cashier 0 has recorded that Customer 26 has been given their completed passport
+Customer 26 is leaving the Passport Office
+Cashier 0 has signalled a Customer to come to their counter
+Customer 30 has given SSN 38779320 to Cashier 0
+Cashier 0 has received SSN 38779320 from Customer 30
+Cashier 0 has verified that Customer 30 has been certified by a PassportClerk
+Customer 30 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 30 after certification
+PassportClerk 0 has recorded Customer 38 passport documentation
+Customer 38 has gotten in bribe line for Cashier 0
+Customer 47 has given SSN 55046608 to PassportClerk 0
+PassportClerk 0 has received SSN 55046608 from Customer 47
+PassportClerk 0 has determined that Customer 47 has both their application and picture completed
+PassportClerk 1 has recorded Customer 41 passport documentation
+Customer 41 has gotten in regular line for Cashier 0
+PassportClerk 1 is going on break
+Cashier 1 has provided Customer 34 their completed passport
+Cashier 2 has provided Customer 36 their completed passport
+Cashier 1 has recorded that Customer 34 has been given their completed passport
+Customer 34 is leaving the Passport Office
+Cashier 2 has recorded that Customer 36 has been given their completed passport
+Cashier 1 is going on break
+Customer 36 is leaving the Passport Office
+Cashier 2 is going on break
+Cashier 0 has provided Customer 30 their completed passport
+Cashier 0 has recorded that Customer 30 has been given their completed passport
+Customer 30 is leaving the Passport Office
+Customer 38 has given SSN 45442176 to Cashier 0
+Cashier 0 has received SSN 45442176 from Customer 38
+Cashier 0 has verified that Customer 38 has been certified by a PassportClerk
+Customer 38 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 38 after certification
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5000 for Passport Clerks
+Manager has counted a total of 7400 for Cashiers
+Manager has counted a total of 18900 for the Passport Office
+Manager has woken up PictureClerk 0
+PictureClerk 0 is coming off break
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 0 has given SSN 10127590 to PictureClerk 0
+PictureClerk 0 has received SSN 10127590 from Customer 0
+PictureClerk 0 has taken a picture of Customer 0
+Customer 0 does like their picture from PictureClerk 0
+PictureClerk 0 has been told that Customer 0 does like their picture
+PassportClerk 0 has recorded Customer 47 passport documentation
+Customer 47 has gotten in regular line for Cashier 1
+PassportClerk 0 is going on break
+Cashier 0 has provided Customer 38 their completed passport
+Cashier 0 has recorded that Customer 38 has been given their completed passport
+Customer 38 is leaving the Passport Office
+Cashier 0 has signalled a Customer to come to their counter
+Customer 41 has given SSN 48305778 to Cashier 0
+Cashier 0 has received SSN 48305778 from Customer 41
+Cashier 0 has verified that Customer 41 has been certified by a PassportClerk
+Customer 0 has gotten in regular line for PassportClerk 0
+Customer 41 has given Cashier 0 $100
+PictureClerk 0 is going on break
+Cashier 0 has received the $100 from Customer 41 after certification
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5000 for Passport Clerks
+Manager has counted a total of 7500 for Cashiers
+Manager has counted a total of 19000 for the Passport Office
+Manager has woken up PassportClerk 0
+PassportClerk 0 is coming off break
+PassportClerk 0 has signalled a Customer to come to their counter
+Manager has woken up Cashier 1
+Customer 0 has given SSN 10127590 to PassportClerk 0
+Cashier 1 is coming off break
+Cashier 1 has signalled a Customer to come to their counter
+PassportClerk 0 has received SSN 10127590 from Customer 0
+PassportClerk 0 has determined that Customer 0 has both their application and picture completed
+Customer 47 has given SSN 55046608 to Cashier 1
+Cashier 1 has received SSN 55046608 from Customer 47
+Cashier 1 has verified that Customer 47 has been certified by a PassportClerk
+Customer 47 has given Cashier 1 $100
+Cashier 1 has received the $100 from Customer 47 after certification
+Customer 3 has gotten in regular line for PassportClerk 0
+Customer 7 has gotten in regular line for PictureClerk 0
+Cashier 0 has provided Customer 41 their completed passport
+Cashier 0 has recorded that Customer 41 has been given their completed passport
+Customer 41 is leaving the Passport Office
+Cashier 0 is going on break
+Customer 48 has gotten in regular line for Cashier 0
+PassportClerk 0 has recorded Customer 0 passport documentation
+Customer 0 has gotten in regular line for Cashier 1
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 3 has given SSN 12997100 to PassportClerk 0
+Cashier 1 has provided Customer 47 their completed passport
+PassportClerk 0 has received SSN 12997100 from Customer 3
+PassportClerk 0 has determined that Customer 3 has both their application and picture completed
+Cashier 1 has recorded that Customer 47 has been given their completed passport
+Customer 47 is leaving the Passport Office
+Cashier 1 has signalled a Customer to come to their counter
+Customer 0 has given SSN 10127590 to Cashier 1
+Cashier 1 has received SSN 10127590 from Customer 0
+Cashier 1 has verified that Customer 0 has been certified by a PassportClerk
+Customer 0 has given Cashier 1 $100
+Cashier 1 has received the $100 from Customer 0 after certification
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5000 for Passport Clerks
+Manager has counted a total of 7700 for Cashiers
+Manager has counted a total of 19200 for the Passport Office
+Manager has woken up PictureClerk 0
+PictureClerk 0 is coming off break
+PictureClerk 0 has signalled a Customer to come to their counter
+Manager has woken up Cashier 0
+Customer 7 has given SSN 15539448 to PictureClerk 0
+Cashier 0 is coming off break
+Cashier 0 has signalled a Customer to come to their counter
+PictureClerk 0 has received SSN 15539448 from Customer 7
+PictureClerk 0 has taken a picture of Customer 7
+Customer 48 has given SSN 56759446 to Cashier 0
+Customer 7 does not like their picture from PictureClerk 0
+Cashier 0 has received SSN 56759446 from Customer 48
+Cashier 0 has verified that Customer 48 has been certified by a PassportClerk
+PictureClerk 0 has been told that Customer 7 does not like their picture
+Customer 48 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 48 after certification
+PictureClerk 0 is going on break
+PassportClerk 0 has recorded Customer 3 passport documentation
+Customer 3 has gotten in bribe line for Cashier 0
+PassportClerk 0 is going on break
+Cashier 1 has provided Customer 0 their completed passport
+Cashier 1 has recorded that Customer 0 has been given their completed passport
+Customer 0 is leaving the Passport Office
+Customer 15 has gotten in regular line for PictureClerk 0
+Cashier 1 is going on break
+Cashier 0 has provided Customer 48 their completed passport
+Cashier 0 has recorded that Customer 48 has been given their completed passport
+Customer 48 is leaving the Passport Office
+Customer 3 has given SSN 12997100 to Cashier 0
+Cashier 0 has received SSN 12997100 from Customer 3
+Cashier 0 has verified that Customer 3 has been certified by a PassportClerk
+Customer 3 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 3 after certification
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5000 for Passport Clerks
+Manager has counted a total of 8400 for Cashiers
+Manager has counted a total of 19900 for the Passport Office
+Manager has woken up PictureClerk 0
+PictureClerk 0 is coming off break
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 15 has given SSN 22696880 to PictureClerk 0
+PictureClerk 0 has received SSN 22696880 from Customer 15
+PictureClerk 0 has taken a picture of Customer 15
+Customer 15 does like their picture from PictureClerk 0
+PictureClerk 0 has been told that Customer 15 does like their picture
+Customer 19 has gotten in regular line for PictureClerk 0
+Customer 23 has gotten in regular line for PictureClerk 1
+Cashier 0 has provided Customer 3 their completed passport
+Cashier 0 has recorded that Customer 3 has been given their completed passport
+Customer 3 is leaving the Passport Office
+Cashier 0 is going on break
+Customer 15 has gotten in regular line for PassportClerk 0
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 19 has given SSN 27893468 to PictureClerk 0
+PictureClerk 0 has received SSN 27893468 from Customer 19
+PictureClerk 0 has taken a picture of Customer 19
+Customer 19 does like their picture from PictureClerk 0
+PictureClerk 0 has been told that Customer 19 does like their picture
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5000 for Passport Clerks
+Manager has counted a total of 8400 for Cashiers
+Manager has counted a total of 19900 for the Passport Office
+Manager has woken up PictureClerk 1
+PictureClerk 1 is coming off break
+PictureClerk 1 has signalled a Customer to come to their counter
+Manager has woken up PassportClerk 0
+Customer 23 has given SSN 31298984 to PictureClerk 1
+PassportClerk 0 is coming off break
+PassportClerk 0 has signalled a Customer to come to their counter
+PictureClerk 1 has received SSN 31298984 from Customer 23
+PictureClerk 1 has taken a picture of Customer 23
+Customer 15 has given SSN 22696880 to PassportClerk 0
+Customer 23 does like their picture from PictureClerk 1
+PassportClerk 0 has received SSN 22696880 from Customer 15
+PassportClerk 0 has determined that Customer 15 has both their application and picture completed
+PictureClerk 1 has been told that Customer 23 does like their picture
+Customer 31 has gotten in regular line for PictureClerk 0
+Customer 19 has gotten in bribe line for PassportClerk 0
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 31 has given SSN 40071136 to PictureClerk 0
+PictureClerk 0 has received SSN 40071136 from Customer 31
+PictureClerk 0 has taken a picture of Customer 31
+Customer 31 does not like their picture from PictureClerk 0
+PictureClerk 0 has been told that Customer 31 does not like their picture
+PictureClerk 0 is going on break
+PassportClerk 0 has recorded Customer 15 passport documentation
+Customer 15 has gotten in regular line for Cashier 0
+Customer 23 has gotten in regular line for PassportClerk 0
+PictureClerk 1 is going on break
+Customer 19 has given SSN 27893468 to PassportClerk 0
+PassportClerk 0 has received SSN 27893468 from Customer 19
+PassportClerk 0 has determined that Customer 19 has both their application and picture completed
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5500 for Passport Clerks
+Manager has counted a total of 8400 for Cashiers
+Manager has counted a total of 20400 for the Passport Office
+Manager has woken up Cashier 0
+Cashier 0 is coming off break
+Cashier 0 has signalled a Customer to come to their counter
+Customer 15 has given SSN 22696880 to Cashier 0
+Cashier 0 has received SSN 22696880 from Customer 15
+Cashier 0 has verified that Customer 15 has been certified by a PassportClerk
+Customer 15 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 15 after certification
+PassportClerk 0 has recorded Customer 19 passport documentation
+Customer 19 has gotten in regular line for Cashier 0
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 23 has given SSN 31298984 to PassportClerk 0
+PassportClerk 0 has received SSN 31298984 from Customer 23
+PassportClerk 0 has determined that Customer 23 does not have both their application and picture completed
+Customer 23 has gone to PassportClerk 0 too soon. They are going to the back of the line.
+PassportClerk 0 is going on break
+Cashier 0 has provided Customer 15 their completed passport
+Cashier 0 has recorded that Customer 15 has been given their completed passport
+Customer 15 is leaving the Passport Office
+Cashier 0 has signalled a Customer to come to their counter
+Customer 19 has given SSN 27893468 to Cashier 0
+Cashier 0 has received SSN 27893468 from Customer 19
+Cashier 0 has verified that Customer 19 has been certified by a PassportClerk
+Customer 19 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 19 after certification
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5500 for Passport Clerks
+Manager has counted a total of 8600 for Cashiers
+Manager has counted a total of 20600 for the Passport Office
+Cashier 0 has provided Customer 19 their completed passport
+Cashier 0 has recorded that Customer 19 has been given their completed passport
+Customer 19 is leaving the Passport Office
+Cashier 0 is going on break
+Customer 46 has gotten in regular line for PictureClerk 0
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5500 for Passport Clerks
+Manager has counted a total of 8600 for Cashiers
+Manager has counted a total of 20600 for the Passport Office
+Manager has woken up PictureClerk 0
+PictureClerk 0 is coming off break
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 46 has given SSN 54422216 to PictureClerk 0
+PictureClerk 0 has received SSN 54422216 from Customer 46
+PictureClerk 0 has taken a picture of Customer 46
+Customer 46 does like their picture from PictureClerk 0
+PictureClerk 0 has been told that Customer 46 does like their picture
+Customer 46 has gotten in regular line for PassportClerk 0
+PictureClerk 0 is going on break
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5500 for Passport Clerks
+Manager has counted a total of 8600 for Cashiers
+Manager has counted a total of 20600 for the Passport Office
+Manager has woken up PassportClerk 0
+PassportClerk 0 is coming off break
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 46 has given SSN 54422216 to PassportClerk 0
+PassportClerk 0 has received SSN 54422216 from Customer 46
+PassportClerk 0 has determined that Customer 46 has both their application and picture completed
+PassportClerk 0 has recorded Customer 46 passport documentation
+Customer 46 has gotten in regular line for Cashier 0
+PassportClerk 0 is going on break
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5500 for Passport Clerks
+Manager has counted a total of 8600 for Cashiers
+Manager has counted a total of 20600 for the Passport Office
+Manager has woken up Cashier 0
+Cashier 0 is coming off break
+Cashier 0 has signalled a Customer to come to their counter
+Customer 46 has given SSN 54422216 to Cashier 0
+Cashier 0 has received SSN 54422216 from Customer 46
+Cashier 0 has verified that Customer 46 has been certified by a PassportClerk
+Customer 46 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 46 after certification
+Cashier 0 has provided Customer 46 their completed passport
+Cashier 0 has recorded that Customer 46 has been given their completed passport
+Customer 46 is leaving the Passport Office
+Cashier 0 is going on break
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5500 for Passport Clerks
+Manager has counted a total of 8700 for Cashiers
+Manager has counted a total of 20700 for the Passport Office
+Customer 7 has gotten in regular line for PictureClerk 0
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5500 for Passport Clerks
+Manager has counted a total of 8700 for Cashiers
+Manager has counted a total of 20700 for the Passport Office
+Manager has woken up PictureClerk 0
+PictureClerk 0 is coming off break
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 7 has given SSN 15539448 to PictureClerk 0
+PictureClerk 0 has received SSN 15539448 from Customer 7
+PictureClerk 0 has taken a picture of Customer 7
+Customer 7 does like their picture from PictureClerk 0
+PictureClerk 0 has been told that Customer 7 does like their picture
+Customer 7 has gotten in regular line for PassportClerk 0
+PictureClerk 0 is going on break
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5500 for Passport Clerks
+Manager has counted a total of 8700 for Cashiers
+Manager has counted a total of 20700 for the Passport Office
+Manager has woken up PassportClerk 0
+PassportClerk 0 is coming off break
+PassportClerk 0 has signalled a Customer to come to their counter
+Customer 7 has given SSN 15539448 to PassportClerk 0
+PassportClerk 0 has received SSN 15539448 from Customer 7
+PassportClerk 0 has determined that Customer 7 has both their application and picture completed
+PassportClerk 0 has recorded Customer 7 passport documentation
+Customer 7 has gotten in regular line for Cashier 0
+PassportClerk 0 is going on break
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5500 for Passport Clerks
+Manager has counted a total of 8700 for Cashiers
+Manager has counted a total of 20700 for the Passport Office
+Manager has woken up Cashier 0
+Cashier 0 is coming off break
+Cashier 0 has signalled a Customer to come to their counter
+Customer 7 has given SSN 15539448 to Cashier 0
+Cashier 0 has received SSN 15539448 from Customer 7
+Cashier 0 has verified that Customer 7 has been certified by a PassportClerk
+Customer 7 has given Cashier 0 $100
+Cashier 0 has received the $100 from Customer 7 after certification
+Customer 31 has gotten in regular line for PictureClerk 0
+Cashier 0 has provided Customer 7 their completed passport
+Cashier 0 has recorded that Customer 7 has been given their completed passport
+Customer 7 is leaving the Passport Office
+Cashier 0 is going on break
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5500 for Passport Clerks
+Manager has counted a total of 8800 for Cashiers
+Manager has counted a total of 20800 for the Passport Office
+Manager has woken up PictureClerk 0
+PictureClerk 0 is coming off break
+PictureClerk 0 has signalled a Customer to come to their counter
+Customer 31 has given SSN 40071136 to PictureClerk 0
+PictureClerk 0 has received SSN 40071136 from Customer 31
+PictureClerk 0 has taken a picture of Customer 31
+Customer 31 does like their picture from PictureClerk 0
+PictureClerk 0 has been told that Customer 31 does like their picture
+Customer 23 has gotten in regular line for PassportClerk 0
+Customer 31 has gotten in regular line for PassportClerk 1
+PictureClerk 0 is going on break
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5500 for Passport Clerks
+Manager has counted a total of 8800 for Cashiers
+Manager has counted a total of 20800 for the Passport Office
+Manager has woken up PassportClerk 0
+PassportClerk 0 is coming off break
+PassportClerk 0 has signalled a Customer to come to their counter
+Manager has woken up PassportClerk 1
+Customer 23 has given SSN 31298984 to PassportClerk 0
+PassportClerk 1 is coming off break
+PassportClerk 1 has signalled a Customer to come to their counter
+PassportClerk 0 has received SSN 31298984 from Customer 23
+PassportClerk 0 has determined that Customer 23 has both their application and picture completed
+Customer 31 has given SSN 40071136 to PassportClerk 1
+PassportClerk 1 has received SSN 40071136 from Customer 31
+PassportClerk 1 has determined that Customer 31 has both their application and picture completed
+PassportClerk 0 has recorded Customer 23 passport documentation
+Customer 23 has gotten in regular line for Cashier 0
+PassportClerk 1 has recorded Customer 31 passport documentation
+PassportClerk 0 is going on break
+Customer 31 has gotten in regular line for Cashier 1
+PassportClerk 1 is going on break
+Manager has counted a total of 0 for Application Clerks
+Manager has counted a total of 6500 for Picture Clerks
+Manager has counted a total of 5500 for Passport Clerks
+Manager has counted a total of 8800 for Cashiers
+Manager has counted a total of 20800 for the Passport Office
+Manager has woken up Cashier 0
+Cashier 0 is coming off break
+Cashier 0 has signalled a Customer to come to their counter
+Manager has woken up Cashier 1
+Customer 23 has given SSN 31298984 to Cashier 0
+Cashier 1 is coming off break
+Cashier 1 has signalled a Customer to come to their counter
+Cashier 0 has received SSN 31298984 from Customer 23
+Cashier 0 has verified that Customer 23 has been certified by a PassportClerk
+Customer 31 has given SSN 40071136 to Cashier 1
+Customer 23 has given Cashier 0 $100
+Cashier 1 has received SSN 40071136 from Customer 31
+Cashier 1 has verified that Customer 31 has been certified by a PassportClerk
+Cashier 0 has received the $100 from Customer 23 after certification
+Customer 31 has given Cashier 1 $100
+Cashier 1 has received the $100 from Customer 31 after certification
+Cashier 0 has provided Customer 23 their completed passport
+Cashier 1 has provided Customer 31 their completed passport
+Cashier 0 has recorded that Customer 23 has been given their completed passport
+Customer 23 is leaving the Passport Office
+Cashier 1 has recorded that Customer 31 has been given their completed passport
+Cashier 0 is going on break
+Customer 31 is leaving the Passport Office
+Cashier 1 is going on break
+-- Full Simulation Completed
+Enter option: 
+Cleaning up...

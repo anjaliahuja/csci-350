@@ -358,6 +358,25 @@ void Exit_Syscall(){
 
 }
 
+//Implementation for CVs
+
+void CreateCV_Syscall(int vaddr, int size) {
+  CVTableLock->Acquire();
+  printf("Creating a CV");
+
+  char* buf;
+  if(!(buf = new char[len])){
+    printf("Error allocating kernel buffer for Fork \n");
+    return;
+  }
+  else {
+    if(copyin(vaddr, len, buf)==-1){
+      printf("Bad pointer passed to fork call, thread not forked \n");
+      delete[] buf;
+      return;
+    }
+  }
+}
 
 void ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2); // Which syscall?
