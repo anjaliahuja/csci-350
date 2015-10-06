@@ -40,7 +40,7 @@ extern Lock* availMem;
 extern BitMap* bitMap; 
 
 #define NumLocks 10000
-#define NumCVs 100000
+#define NumCVs 10000
 #define NumProcesses 20
 
 extern Table* lockTable;
@@ -49,8 +49,48 @@ extern Lock* lockTableLock;
 extern Table* CVTable;
 extern Lock* CVTableLock;
 
-//extern Table* processTable;
-//extern Lock* processLock;
+extern Table* processTable;
+extern Lock* processLock;
+
+
+
+struct kernelLock {
+	Lock* lock;
+	AddrSpace* addressSpace;
+	bool isDeleted;
+	int lockCounter;
+};
+
+struct kernelCV{
+	Condition* condition;
+	AddrSpace* addressSpace;
+	bool isDeleted;
+	int cvCounter;
+};
+
+struct kernelProcess{
+	kernelProcess(){
+		addressSpace = currentThread->space; 
+		numThreads = 0;
+		locks = new bool[NumLocks];
+		for(int i = 0; i<NumLocks; i++){
+			locks[i]= false;
+		}
+		cvs = new bool[NumCVs];
+		for(int i =0; i<NumCVs; i++){
+			cvs[i] = false;
+		}
+	}
+	~kernelProcess(){
+		delete [] locks;
+		delete [] cvs;
+	}
+	AddrSpace* addressSpace;
+	int numThreads;
+	bool* locks;
+	bool* cvs; 
+};
+
 
 
 

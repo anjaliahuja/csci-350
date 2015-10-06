@@ -174,8 +174,8 @@ Initialize(int argc, char **argv)
     CVTable = new Table(NumCVs);
     CVTableLock = new Lock("CVTableLock");
 
-   // processTable = new Table(NumProcesses);
-   // processLock = new Lock("ProcessLock");
+   processTable = new Table(NumProcesses);
+   processLock = new Lock("ProcessLock");
 
 #endif
 

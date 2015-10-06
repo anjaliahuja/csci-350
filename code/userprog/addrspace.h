@@ -39,7 +39,6 @@ class AddrSpace {
  private:
     TranslationEntry *pageTable;	// Assume linear page table translation
 					// for now!
-    unsigned int numPages;		// Number of pages in the virtual 
 					// address space
 
     void StartProcess(char* filename);
@@ -48,6 +47,8 @@ class AddrSpace {
     void Exit_Syscall(int status);
 public:
     int* AllocateStack(); 
+    unsigned int numPages;      // Number of pages in the virtual 
+
 };
 
 #endif // ADDRSPACE_H
