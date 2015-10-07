@@ -57,7 +57,7 @@ extern Lock* processLock;
 struct kernelLock {
 	Lock* lock;
 	AddrSpace* addressSpace;
-	bool isDeleted;
+	bool isToBeDeleted;
 	int lockCounter;
 };
 

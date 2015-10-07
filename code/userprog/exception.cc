@@ -425,20 +425,167 @@ void Exit_Syscall(int status){
 
 }
 
-void CreateLock_Syscall() {
+int CreateLock_Syscall(unsigned int vaddr, int len) {
   lockTableLock->Acquire();
+
+  // Setting up name
+  char* name;
+  if(!(name = new char[len])){
+    printf("CreateLock: Can't allocate kernel buffer for exec system call");
+    lockTableLock->Release();
+    return -1;
+  }
+  else {
+    if(copyin(vaddr, len, name) == -1){
+      printf("CreateLock: Bad pointer passed to write");
+      delete [] name;
+      lockTableLock->Release();
+      return -1;
+    }
+  }
+
+  // Create lock
+  kernalLock* kl = new kernalLock()
+  kl->lock = new Lock(name);
+  kl->addressSpace = currentThread->space;
+  kl->isToBeDeleted = false;
+  kl->lockCounter = 0;
+
+  int index = lockTable->Put((void*)kl);
+
+  // Error checking
+  if (index == -1) {
+    printf("CreateLock: No space left to create lock")
+    lockTableLock->Release();
+    return -1;
+  }
+
+  // find current process and update lock array
+  processLock->Acquire();
+
+  bool updated = false;
+  for (int i = 0; i < NumProcesses; i++) {
+    kernalProcess* kp = (kernalProcess*) processTable->Get(i);
+    if (kp->addressSpace == currentThread->space) {
+      kp->locks[index] = true;
+      updated = true;
+      break;
+    }
+  }
+
+  if (!updated) {
+    printf("CreateLock: Invalid process");
+    processLock->Release();
+    lockTableLock->Release();
+    return -1
+  }
+
+  processLock->Release();
+  lockTableLock->Release();
+
+  return index;
 }
 
-void Acquire_Syscall() {
+void Acquire_Syscall(int index) {
   lockTableLock->Acquire();
+
+  // Error checking
+  // index falls within range of table size
+  if (index < 0 || index > NumLocks) {
+    printf("Acquire: Invalid index");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  kernalLock* kl = (kernalLock*)lockTable->Get(index);
+
+  // does lock actually exist at this index
+  if (kl->lock == NULL) {
+    printf("Acquire: Lock does not exist");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  // does thread belong to same process as thread creator
+  if (kl->addressSpace != currentThread->addressSpace) {
+    printf("Acquire: Lock belongs to a different process");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  kl->lockCounter++;
+  kl->lock->Acquire();
+
+  lockTableLock->Release();
 }
 
-void Release_Syscall() {
+int Release_Syscall(int index) {
   lockTableLock->Acquire();
+
+  // Error checking
+  // index falls within range of table size
+  if (index < 0 || index > NumLocks) {
+    printf("Release: Invalid index");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  kernalLock* kl = (kernalLock*)lockTable->Get(index);
+
+  // does lock actually exist at this index
+  if (kl->lock == NULL) {
+    printf("Release: Lock does not exist");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  // does thread belong to same process as thread creator
+  if (kl->addressSpace != currentThread->addressSpace) {
+    printf("Release: Lock belongs to a different process");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  kl->lockCounter--;
+  kl->lock->Release();
+
+  // update process table?? 
+
+  lockTableLock->Release();
 }
 
-void DestroyLock_Syscall() {
+int DestroyLock_Syscall(int index) {
   lockTableLock->Acquire();
+
+  // Error checking
+  // TODO
+
+  kernalLock* kl = lockTable->Remove(index);
+  kl->isDeleted = true;
+  
+  // find current process and update lock array
+  processLock->Acquire();
+
+  bool updated = false;
+  for (int i = 0; i < NumProcesses; i++) {
+    kernalProcess* kp = (kernalProcess*) processTable->Get(i);
+    if (kp->addressSpace == currentThread->space) {
+      kp->locks[index] = false;
+      updated = true;
+      break;
+    }
+  }
+
+  if (!updated) {
+    printf("DestroyLock: Invalid process");
+    processLock->Release();
+    lockTableLock->Release();
+    return -1
+  }
+
+  processLock->Release();
+  lockTableLock->Release();
+  return index;
 }
 
 
