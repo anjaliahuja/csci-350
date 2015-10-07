@@ -558,10 +558,31 @@ int DestroyLock_Syscall(int index) {
   lockTableLock->Acquire();
 
   // Error checking
-  // TODO
+  // index falls within range of table size
+  if (index < 0 || index > NumLocks) {
+    printf("DestroyLock: Invalid index");
+    lockTableLock->Release();
+    return -1;
+  }
 
-  kernalLock* kl = lockTable->Remove(index);
-  kl->isDeleted = true;
+  kernalLock* kl = (kernalLock*)lockTable->Get(index);
+
+  // does lock actually exist at this index
+  if (kl->lock == NULL) {
+    printf("DestroyLock: Lock does not exist");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  // does thread belong to same process as thread creator
+  if (kl->addressSpace != currentThread->addressSpace) {
+    printf("DestroyLock: Lock belongs to a different process");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  kl = lockTable->Remove(index);
+  kl->isToBeDeleted = true;
   
   // find current process and update lock array
   processLock->Acquire();
