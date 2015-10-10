@@ -129,49 +129,50 @@ Yield:
 	syscall
 	j	$31
 	.end Yield
+
+	.globl Acquire
+	.ent Acquire
 Acquire:
 	addiu $2,$0,SC_Acquire
 	syscall
 	j	$31
 	.end Acquire
 
-	.globl Acquire
-	.ent Acquire
-
+	.globl Release
+	.ent Release
 Release:
 	addiu $2,$0,SC_Release
 	syscall
 	j	$31
 	.end Release
 
-	.globl Release
-	.ent Release
+	.globl Wait
+	.ent Wait
 Wait:
 	addiu $2,$0,SC_Wait
 	syscall
 	j	$31
 	.end Wait
 
-	.globl Wait
-	.ent Wait
-
+	
+	.globl Signal
+	.ent Signal
 Signal:
 	addiu $2,$0,SC_Signal
 	syscall
 	j	$31
 	.end Signal
 
-	.globl Signal
-	.ent Signal
-
+	
+	.globl Broadcast
+	.ent Broadcast
 Broadcast:
 	addiu $2,$0,SC_Broadcast
 	syscall
 	j	$31
 	.end Broadcast
 
-	.globl Broadcast
-	.ent Broadcast
+	
 
 /* dummy function to keep gcc happy */
         .globl  __main

@@ -12,7 +12,7 @@ int main() {
     Create("testfile", 8);
     fd = Open("testfile", 8);
 
-    Write("testing a write\n", 16, fd );
+    Write("testing if compiled\n", 16, fd );
     Close(fd);
 
 
