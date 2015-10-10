@@ -136,13 +136,13 @@ void Fork(void (*func)(), char* name, int size);
  */
 void Yield();		
 
-//User program lock functions//
+/*User program lock functions*/
 int CreateLock(char* name, int size);
 int DestroyLock(int index);
 int Acquire(int index);
 int Release(int index);
 
-//User program condition variable functions//
+/*User program condition variable functions*/
 int CreateCV(char* name, int size);
 int DestroyCV(int index);
 int Wait(int lock, int CV);
