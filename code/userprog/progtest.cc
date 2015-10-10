@@ -41,12 +41,12 @@ StartProcess(char *filename)
 
     availMem->Release(); 
 
-    currentThread->space space;
+    currentThread->space = space;
 
     space->InitRegisters();     // set the initial register values
     space->RestoreState();      // load page table register
     
-    kernelProcess* process = new KernelProcess();
+    kernelProcess* process = new kernelProcess();
     processLock->Acquire();
     process->addressSpace = space;
     process->numThreads++; 
