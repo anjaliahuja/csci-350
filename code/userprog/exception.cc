@@ -676,6 +676,160 @@ int Broadcast_Syscall(int lockIndex, int CVIndex) {
   return CVIndex;
 }
 
+int CreateLock_Syscall(unsigned int vaddr, int len) {
+  lockTableLock->Acquire();
+
+  // Setting up name
+  char* name;
+  if(!(name = new char[len])){
+    printf("CreateLock: Can't allocate kernel buffer for exec system call");
+    lockTableLock->Release();
+    return -1;
+  }
+  else {
+    if(copyin(vaddr, len, name) == -1){
+      printf("CreateLock: Bad pointer passed to write");
+      delete [] name;
+      lockTableLock->Release();
+      return -1;
+    }
+  }
+
+  // Create lock
+  kernelLock* kl = new kernelLock();
+  kl->lock = new Lock(name);
+  kl->addressSpace = currentThread->space;
+  kl->isToBeDeleted = false;
+
+  int index = lockTable->Put((void*)kl);
+
+  // Error checking
+  if (index == -1) {
+    printf("CreateLock: No space left in lock table to create lock"); 
+    lockTableLock->Release();
+    return -1;
+  }
+
+  lockTableLock->Release();
+
+  return index;
+}
+
+int Acquire_Syscall(int index) {
+  lockTableLock->Acquire();
+
+  // Error checking
+  // index falls within range of table size
+  if (index < 0 || index > NumLocks) {
+    printf("Acquire: Invalid index");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  kernelLock* kl = (kernelLock*)lockTable->Get(index);
+
+  // does lock actually exist at this index
+  if (kl->lock == NULL) {
+    printf("Acquire: Lock does not exist");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  // does thread belong to same process as thread creator
+  if (kl->addressSpace != currentThread->space) {
+    printf("Acquire: Lock belongs to a different process");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  kl->lock->Acquire();
+
+  lockTableLock->Release();
+  return index;
+}
+
+int Release_Syscall(int index) {
+  lockTableLock->Acquire();
+
+  // Error checking
+  // index falls within range of table size
+  if (index < 0 || index > NumLocks) {
+    printf("Release: Invalid index");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  kernelLock* kl = (kernelLock*)lockTable->Get(index);
+
+  // does lock actually exist at this index
+  if (kl->lock == NULL) {
+    printf("Release: Lock does not exist");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  // does thread belong to same process as thread creator
+  if (kl->addressSpace != currentThread->space) {
+    printf("Release: Lock belongs to a different process");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  kl->lock->Release();
+
+  // Delete lock if destroyed was called on it previouisly and no threads 
+  // are waiting
+  if (kl->isToBeDeleted && strcmp(kl->lock->getState(), "FREE")) {
+    kl = (kernelLock*) lockTable->Remove(index);
+    delete kl;
+  }
+
+  lockTableLock->Release();
+  return index;
+}
+
+int DestroyLock_Syscall(int index) {
+  lockTableLock->Acquire();
+
+  // Error checking
+  // index falls within range of table size
+  if (index < 0 || index > NumLocks) {
+    printf("DestroyLock: Invalid index");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  kernelLock* kl = (kernelLock*)lockTable->Get(index);
+
+  // does lock actually exist at this index
+  if (kl->lock == NULL) {
+    printf("DestroyLock: Lock does not exist");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  // does thread belong to same process as thread creator
+  if (kl->addressSpace != currentThread->space) {
+    printf("DestroyLock: Lock belongs to a different process");
+    lockTableLock->Release();
+    return -1;
+  }
+
+  // if lock is busy, delete after it gets released
+  if (strcmp(kl->lock->getState(), "BUSY")) {
+    DEBUG('a', "DestroyLock: Lock is busy, set isToBeDeleted to true");
+    kl->isToBeDeleted = true;
+    lockTableLock->Release();
+    return index;
+  }
+
+  kl = (kernelLock*) lockTable->Remove(index);
+  delete kl;
+
+  lockTableLock->Release();
+  return index;
+}
+
 void ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2); // Which syscall?
     int rv=0; 	// the return value from a syscall
@@ -712,6 +866,24 @@ void ExceptionHandler(ExceptionType which) {
 		DEBUG('a', "Close syscall.\n");
 		Close_Syscall(machine->ReadRegister(4));
 		break;
+      case SC_CreateLock:
+    DEBUG('a', "Create lock syscall.\n");
+    CreateLock_Syscall(machine->ReadRegister(4),
+                       machine->ReadRegister(5));
+    break;
+      case SC_Acquire:
+    DEBUG('a', "Create acquire syscall.\n");
+    Acquire_Syscall(machine->ReadRegister(4));
+    break;
+      case SC_Release:
+    DEBUG('a', "Create release syscall.\n");
+    Release_Syscall(machine->ReadRegister(4));
+    break;
+      case SC_DestroyLock:
+    DEBUG('a', "Create destroy lock syscall.\n");
+    DestroyLock_Syscall(machine->ReadRegister(4));
+    break;
+
 	}
 
 	// Put in the return value and increment the PC

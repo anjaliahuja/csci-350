@@ -77,6 +77,8 @@ class Lock {
                     // checking in Release, and in
                     // Condition variable ops below.
 
+    char* getState() { return state; }
+
   private:
     char* name;             // for debugging
     char* state;
