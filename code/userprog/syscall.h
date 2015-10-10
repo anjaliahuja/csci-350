@@ -30,6 +30,16 @@
 #define SC_Fork		9
 #define SC_Yield	10
 
+#define SC_CreateLock   11
+#define SC_DestroyLock  12
+#define SC_Acquire      13
+#define SC_Release      14
+#define SC_CreateCV     15
+#define SC_DestroyCV    16
+#define SC_Wait         17
+#define SC_Signal       18
+#define SC_Broadcast    19
+
 #define MAXFILENAME 256
 
 #ifndef IN_ASM
@@ -134,7 +144,7 @@ int Release(int index);
 
 //User program condition variable functions//
 int CreateCV(char* name, int size);
-int DestroyCV(char* name, int size);
+int DestroyCV(int index);
 int Wait(int lock, int CV);
 int Signal(int lock, int CV);
 int Broadcast(int lock, int CV);
