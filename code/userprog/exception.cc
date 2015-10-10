@@ -752,7 +752,7 @@ void Exec_Syscall(unsigned int vaddr, int len){
 }
 
 
-void Yield_Syscall(unsigned int vaddr){
+void Yield_Syscall(){
   currentThread->Yield();
 } 
 void Exit_Syscall(int status){
