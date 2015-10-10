@@ -144,7 +144,7 @@ int Release(int index);
 
 //User program condition variable functions//
 int CreateCV(char* name, int size);
-int DestroyCV(char* name, int size);
+int DestroyCV(int index);
 int Wait(int lock, int CV);
 int Signal(int lock, int CV);
 int Broadcast(int lock, int CV);
