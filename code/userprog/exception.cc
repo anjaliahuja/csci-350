@@ -427,22 +427,253 @@ void Exit_Syscall(int status){
 
 //Implementation for CVs
 
-void CreateCV_Syscall(int vaddr, int size) {
+int CreateCV_Syscall(int vaddr, int size) {
   CVTableLock->Acquire();
   printf("Creating a CV");
 
   char* buf;
-  if(!(buf = new char[len])){
-    printf("Error allocating kernel buffer for Fork \n");
-    return;
+  if(!(buf = new char[size])){
+    printf("Create CV:Error allocating kernel buffer for Fork \n");
+    return -1;
   }
   else {
-    if(copyin(vaddr, len, buf)==-1){
-      printf("Bad pointer passed to fork call, thread not forked \n");
+    if(copyin(vaddr, size, buf)==-1){
+      printf("Create CV: Bad pointer passed to fork call, thread not forked \n");
       delete[] buf;
-      return;
+      return -1;
     }
   }
+  //Error checking
+  //If CVTable is full, then don't create new CV
+  if(CVTable->NumUsed() >= NumCVs) {
+      printf("Create CV: Condition Variable Table is full 1, couldn't create Condition");
+      CVTableLock->Release();
+      return -1;
+  }
+
+  //Creating condition
+  Condition * cv = new Condition(buf);
+  kernelCV* kcv = new kernelCV();
+  kcv->condition = cv;
+  kcv->toBeDeleted = false;
+  kcv->addressSpace = currentThread->space;
+  kcv->cvCounter = 0;
+
+  int index = CVTable->Put((void*) kcv);
+  if (index == -1) {
+    printf("Create CV: Condition Variable Table is full 2, couldn't create Condition");
+  }
+
+  CVTableLock->Release();
+  return index;
+}
+
+int DestroyCV_Syscall(int index) {
+  CVTableLock->Acquire();
+  printf("Destroying a CV");
+  //Error checking
+  if (index < 0 || index > NumCVs) {
+    printf("Destroy CV: Invalid Index");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  kernelCV* kcv = (kernelCV*)CVTable->Get(index);
+
+  if (kcv == NULL || kcv->condition == NULL) {
+    printf("Destroy CV: CV does not exist");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  if (kcv->addressSpace != currentThread->space) {
+    printf("DestroyCV: CV belongs to a different process");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  //Destryoing condition
+  if (kcv->cvCounter == 0){
+    kcv = (kernelCV*) CVTable->Remove(index);
+    delete kcv->condition;
+    delete kcv;
+  } else {
+    kcv->toBeDeleted = true;
+  }
+
+  CVTableLock->Release();
+  return index;
+}
+
+int Wait_Syscall(int lockIndex, int CVIndex) {
+  CVTableLock->Acquire();
+  printf("Wait CV: Lock index %d amd CV index %d are in wait", lockIndex, CVIndex);
+
+  //Error checking
+  //validating lock
+  if (lockIndex < 0 || lockIndex > NumLocks) {
+    printf("Wait CV: Invalid Lock Index");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  kernelLock* kl = (kernelLock*)lockTable->Get(lockIndex);
+
+  if (kl == NULL) {
+    printf("Wait CV: CV does not exist");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  if (kl->addressSpace != currentThread->space) {
+    printf("WaitCV: CV belongs to a different process");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  //validating cv
+  if (CVIndex < 0 || CVIndex > NumCVs) {
+    printf("Wait CV: Invalid Lock Index");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  kernelCV* kcv = (kernelCV*)CVTable->Get(CVIndex);
+
+  if (kcv == NULL || kcv->condition == NULL) {
+    printf("Wait CV: CV does not exist");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  if (kcv->addressSpace != currentThread->space) {
+    printf("WaitCV: CV belongs to a different process");
+    CVTableLock->Release();
+    return -1;
+  }
+  //Wait
+  kcv->cvCounter++;
+  CVTableLock->Release();
+  kcv->condition->Wait(kl->lock);
+  CVTableLock->Acquire();
+  kcv->cvCounter;
+
+  //Check if needs to be deleted
+  if (kcv->toBeDeleted == true && kcv->cvCounter == 0) {
+    printf("Wait CV: Condition is deleted");
+    kcv = (kernelCV*) CVTable->Remove(CVIndex);
+    delete kcv->condition;
+    delete kcv;
+  }
+
+  CVTableLock->Release();
+  return CVIndex;
+}
+
+int Signal_Syscall(int lockIndex, int CVIndex) {
+  CVTableLock->Acquire();
+  //Error checking
+  printf("Signal CV: Lock index %d amd CV index %d are in wait", lockIndex, CVIndex);
+
+  //Error checking
+  //validating lock
+  if (lockIndex < 0 || lockIndex > NumLocks) {
+    printf("Wait CV: Invalid Lock Index");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  kernelLock* kl = (kernelLock*)lockTable->Get(lockIndex);
+
+  if (kl == NULL) {
+    printf("Wait CV: CV does not exist");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  if (kl->addressSpace != currentThread->space) {
+    printf("WaitCV: CV belongs to a different process");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  //validating cv
+  if (CVIndex < 0 || CVIndex > NumCVs) {
+    printf("Wait CV: Invalid Lock Index");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  kernelCV* kcv = (kernelCV*)CVTable->Get(CVIndex);
+
+  if (kcv == NULL || kcv->condition == NULL) {
+    printf("Wait CV: CV does not exist");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  if (kcv->addressSpace != currentThread->space) {
+    printf("WaitCV: CV belongs to a different process");
+    CVTableLock->Release();
+    return -1;
+  }
+  //Signal
+  kcv->condition->Signal(kl->lock);
+  CVTableLock->Release();
+  return CVIndex;
+}
+
+int Broadcast_Syscall(int lockIndex, int CVIndex) {
+  CVTableLock->Acquire();
+  //Error checking
+  printf("Broadcast CV: Lock index %d amd CV index %d are in wait", lockIndex, CVIndex);
+
+  //Error checking
+  //validating lock
+  if (lockIndex < 0 || lockIndex > NumLocks) {
+    printf("Wait CV: Invalid Lock Index");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  kernelLock* kl = (kernelLock*)lockTable->Get(lockIndex);
+
+  if (kl == NULL) {
+    printf("Wait CV: CV does not exist");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  if (kl->addressSpace != currentThread->space) {
+    printf("WaitCV: CV belongs to a different process");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  //validating cv
+  if (CVIndex < 0 || CVIndex > NumCVs) {
+    printf("Wait CV: Invalid Lock Index");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  kernelCV* kcv = (kernelCV*)CVTable->Get(CVIndex);
+
+  if (kcv == NULL || kcv->condition == NULL) {
+    printf("Wait CV: CV does not exist");
+    CVTableLock->Release();
+    return -1;
+  }
+
+  if (kcv->addressSpace != currentThread->space) {
+    printf("WaitCV: CV belongs to a different process");
+    CVTableLock->Release();
+    return -1;
+  }
+  //Broadcast
+  kcv->condition->Broadcast(kl->lock);
+  CVTableLock->Release();
+  return CVIndex;
 }
 
 void ExceptionHandler(ExceptionType which) {
