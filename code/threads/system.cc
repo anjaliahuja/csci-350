@@ -35,7 +35,7 @@ BitMap* bitMap;
 Lock* availMem; //physical memory available
 
 Table* processTable;
-Lock* processTableLock;
+Lock* processLock;
 
 Table* lockTable;
 Lock* lockTableLock;
