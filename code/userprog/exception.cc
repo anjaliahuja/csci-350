@@ -351,7 +351,7 @@ void Exec_Syscall(unsigned int vaddr, int len){
 
 
 void Yield_Syscall(unsigned int vaddr){
-
+  currentThread->Yield();
 } 
 void Exit_Syscall(int status){
   processLock->Acquire();
@@ -412,9 +412,34 @@ void Exit_Syscall(int status){
 
   //Case 3: Last thread in process but not last process, need to reclaim all locks, cvs, stack memory
   else if(!lastProcess && process->numThreads == 1){
+      //Delete CVs
 
-  }
+      availMem->Acquire();
+        for(unsigned int i=0; i< currentThread->space->numPages; i++){
+          if(currentThread->space->pageTable[i].valid){
+            bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
+            currentThread->space->pageTable[i].valid= FALSE;
+          }
+        }
+      availMem->Release();
+      
+      //Delete CVs
+      for(int i =0; i<NumCVs; i++){
+        DestroyCV(i);
+        }
 
+      //Delete Locks
+        for(int i =0; i<NumLocks; i++){
+          DestroyLock(i);
+            }
+          
+
+
+        processTable->Remove(processID);
+        delete process;
+
+      }
+   
   else{
     printf("Invalid case");
   }
