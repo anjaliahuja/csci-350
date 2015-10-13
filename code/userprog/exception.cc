@@ -485,13 +485,13 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   // Setting up name
   char* name;
   if(!(name = new char[len])){
-    printf("CreateLock: Can't allocate kernel buffer for exec system call");
+    printf("CreateLock: Can't allocate kernel buffer for exec system call\n");
     lockTableLock->Release();
     return -1;
   }
   else {
     if(copyin(vaddr, len, name) == -1){
-      printf("CreateLock: Bad pointer passed to write");
+      printf("CreateLock: Bad pointer passed to write\n");
       delete [] name;
       lockTableLock->Release();
       return -1;
@@ -508,7 +508,7 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
 
   // Error checking
   if (index == -1) {
-    printf("CreateLock: No space left in lock table to create lock"); 
+    printf("CreateLock: No space left in lock table to create lock\n"); 
     lockTableLock->Release();
     return -1;
   }
@@ -524,7 +524,7 @@ int Acquire_Syscall(int index) {
   // Error checking
   // index falls within range of table size
   if (index < 0 || index > NumLocks) {
-    printf("Acquire: Invalid index");
+    printf("Acquire: Invalid index\n");
     lockTableLock->Release();
     return -1;
   }
@@ -533,14 +533,14 @@ int Acquire_Syscall(int index) {
 
   // does lock actually exist at this index
   if (kl->lock == NULL) {
-    printf("Acquire: Lock does not exist");
+    printf("Acquire: Lock does not exist\n");
     lockTableLock->Release();
     return -1;
   }
 
   // does thread belong to same process as thread creator
   if (kl->addressSpace != currentThread->space) {
-    printf("Acquire: Lock belongs to a different process");
+    printf("Acquire: Lock belongs to a different process\n");
     lockTableLock->Release();
     return -1;
   }
@@ -557,7 +557,7 @@ int Release_Syscall(int index) {
   // Error checking
   // index falls within range of table size
   if (index < 0 || index > NumLocks) {
-    printf("Release: Invalid index");
+    printf("Release: Invalid index\n");
     lockTableLock->Release();
     return -1;
   }
@@ -566,14 +566,14 @@ int Release_Syscall(int index) {
 
   // does lock actually exist at this index
   if (kl->lock == NULL) {
-    printf("Release: Lock does not exist");
+    printf("Release: Lock does not exist\n");
     lockTableLock->Release();
     return -1;
   }
 
   // does thread belong to same process as thread creator
   if (kl->addressSpace != currentThread->space) {
-    printf("Release: Lock belongs to a different process");
+    printf("Release: Lock belongs to a different process\n");
     lockTableLock->Release();
     return -1;
   }
@@ -597,7 +597,7 @@ int DestroyLock_Syscall(int index) {
   // Error checking
   // index falls within range of table size
   if (index < 0 || index > NumLocks) {
-    printf("DestroyLock: Invalid index");
+    printf("DestroyLock: Invalid index\n");
     lockTableLock->Release();
     return -1;
   }
@@ -606,21 +606,21 @@ int DestroyLock_Syscall(int index) {
 
   // does lock actually exist at this index
   if (kl->lock == NULL) {
-    printf("DestroyLock: Lock does not exist");
+    printf("DestroyLock: Lock does not exist\n");
     lockTableLock->Release();
     return -1;
   }
 
   // does thread belong to same process as thread creator
   if (kl->addressSpace != currentThread->space) {
-    printf("DestroyLock: Lock belongs to a different process");
+    printf("DestroyLock: Lock belongs to a different process\n");
     lockTableLock->Release();
     return -1;
   }
 
   // if lock is busy, delete after it gets released
   if (strcmp(kl->lock->getState(), "BUSY")) {
-    DEBUG('a', "DestroyLock: Lock is busy, set isToBeDeleted to true");
+    DEBUG('a', "DestroyLock: Lock is busy, set isToBeDeleted to true\n");
     kl->isToBeDeleted = true;
     lockTableLock->Release();
     return index;
@@ -637,11 +637,10 @@ void internal_fork(int pc){
   currentThread->space->InitRegisters();
   machine->WriteRegister(PCReg, pc);
   machine->WriteRegister(NextPCReg, pc+4);
-  machine->WriteRegister(StackReg, currentThread->stackreg);
   currentThread->space->RestoreState();
+  machine->WriteRegister(StackReg, currentThread->stackreg);
 
   machine->Run();
-
 }
 
 void Fork_Syscall(int pc, unsigned int vaddr, int len){
@@ -672,12 +671,12 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
       break;
     }
   }
-  if(processID = -1){
+  if(processID == -1){
     printf("Invalid process identified");
     processLock->Release();
     return;
   }
-
+  process->numThreads++;
   processLock->Release();
 
     if(pc == 0){
@@ -694,6 +693,7 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
   t->stackVP = stackRegister[1];
   delete[] stackRegister;
   t->space = currentThread->space;
+
   t->Fork((VoidFunctionPtr)internal_fork, pc);
 }
 
@@ -769,7 +769,7 @@ void Exit_Syscall(int status){
   kernelProcess* process;
   for(int i =0; i<NumProcesses; i++){
     process = (kernelProcess*) processTable->Get(i);
-    if(process = NULL){
+    if(process == NULL){
       continue; 
     }
     if(process->addressSpace == currentThread->space){
@@ -782,7 +782,6 @@ void Exit_Syscall(int status){
     processLock->Release();
     return;
   }
-
   //3 Cases
   //Case 1: Check if thread has called exit in a process but its not the last thread
   //Reclaim 8 pages 
@@ -808,6 +807,8 @@ void Exit_Syscall(int status){
       currentThread->space->pageTable[i].valid = FALSE;
     }
     availMem->Release();
+
+     currentThread->Finish();
     processLock->Release();
     interrupt->Halt();
   }
@@ -845,7 +846,6 @@ void Exit_Syscall(int status){
   else{
     printf("Invalid case");
   }
-
 
   processLock->Release();
   currentThread->Finish();
@@ -939,6 +939,10 @@ void ExceptionHandler(ExceptionType which) {
     case SC_Exec:
         DEBUG('a', "Exec syscall.\n");
         Exec_Syscall(machine->ReadRegister(4), machine->ReadRegister(5));
+        break;
+    case SC_Exit:
+        DEBUG('a', "Exit syscall.\n");
+        Exit_Syscall(machine->ReadRegister(4));
         break;
 
 	}

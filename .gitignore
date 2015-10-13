@@ -1,3 +1,9 @@
 # Compiled files
 *.o
 nachos
+*.coff
+halt
+matmult
+sort
+testfiles
+testfile

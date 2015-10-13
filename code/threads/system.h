@@ -77,24 +77,6 @@ struct kernelProcess{
 	int numThreads;
 };
 
-//in lock class make public method as is busy or is available, so if the lock isn't being used, you can go and destroy it, but if the locks busy, dont destroy
-
-//if the lock is busy or if CV is not empty (CVs don't have a state but have a wait queue) if wait queue isnt empty
-//Can't destroy it now so you don't want to forget
-
-//in exit system call you go through all locks and CVs and delete everything
-//if someone is using it, mark it as 'is to be deleted' when someone releases a lock- after you release- check if its supposed to be deleted
-//if its not busy, delete there
-//modify original lock and release classes to check if busy
-//no semaphores, remove semaphores, because of that (in test suite it guarantees to get the lock first because of sems) without sems
-//behavior is different, still can say one of the threads is going to get the lock first and print it out
-//certain statements like whoever is first, what you could put- we used -rs37, 37 gave us this output, explain how thats correct 
-//you should have a negative test where you create acquire release and DELETE and then maybe try to acquire it after so you show that check works 
-//whatever variable you had in project one, use that as the name but now thats an int
-//now when you do an acquire, instead of l being there, its between the processes
-
-
-
 #endif
 
 #ifdef FILESYS_NEEDED 		// FILESYS or FILESYS_STUB 
