@@ -406,6 +406,7 @@ bool test6;
 bool test7;
 int MONEY;
 
+// variables to make sure threads terminate when simulation is complete
 int numCustomers;
 
 
@@ -1490,7 +1491,7 @@ void Manager::ManagerStart() {
           }
         }
       for(int j = 0; j < NUM_PIC_CLERKS; j++) {
-          if (PicClerks[j]->getLineSize() > 0 && PicClerks[j] ->getState() == 2) {
+          if (PicClerks[j] ->getState() == 2) {
             PicClerks[j]->Acquire();
             PicClerks[j]->getCV()->Signal(PicClerks[j]->getLock());
             std::cout << "Manager has woken up " << PicClerks[j]->getName() << std::endl;
@@ -1501,7 +1502,7 @@ void Manager::ManagerStart() {
           }
         }
       for(int j = 0; j < NUM_PASSPORT_CLERKS; j++) {
-          if (PassportClerks[j]->getLineSize() > 0 && PassportClerks[j] ->getState() == 2) {
+          if (PassportClerks[j] ->getState() == 2) {
             PassportClerks[j]->Acquire();
             PassportClerks[j]->getCV()->Signal(PassportClerks[j]->getLock());
             std::cout << "Manager has woken up " << PassportClerks[j]->getName() << std::endl;
@@ -1512,7 +1513,7 @@ void Manager::ManagerStart() {
           }
         }
       for(int j = 0; j < NUM_CASHIERS; j++) {
-          if (Cashiers[j]->getLineSize() > 0 && Cashiers[j] ->getState() == 2) {
+          if (Cashiers[j] ->getState() == 2) {
             Cashiers[j]->Acquire();
             Cashiers[j]->getCV()->Signal(Cashiers[j]->getLock());
             std::cout << "Manager has woken up " << Cashiers[j]->getName() << std::endl;
