@@ -5,7 +5,7 @@
 #include "syscall.h"
 
 int t1_l1, t1_l2, t1_l3, t2_l1, t3_l1;
-int t1_c1, t2_c1, t3_c1;
+int t2_c1, t3_c1;
 
 void t1_t4();
 void t1_t5();
@@ -91,17 +91,10 @@ void t1_t4() {
 /* 
    --------------------------------------------------
    t1_t5() -- test1 thread 5
-       Creating several locks and invalid indices.
+       Accessing invalid indices.
    --------------------------------------------------
 */
 void t1_t5() {
-  int i;
-  Write("t1_t5 creating lock t1_l2\n", sizeof("t1_t5 creating lock t1_l2\n"), ConsoleOutput);
-  t1_l2 = CreateLock("t1_l2",5);
-
-  Write("t1_t5 creating lock t1_l3\n", sizeof("t1_t5 creating lock t1_l3\n"), ConsoleOutput);
-  t1_l3 = CreateLock("t1_l3",5);
-
   Write("t1_t5 acquiring and releasing at index -1\n", sizeof("t1_t5 acquiring and releasing at index -1\n"), ConsoleOutput);
   Acquire(-1);
   Release(-1);
@@ -120,7 +113,7 @@ void t2_t1() {
   Acquire(t2_l1);
   Write("t2_t1 acquired t2_l1, signalling t2_c1\n", sizeof("t2_t1 acquired t2_l1, signalling t2_c1\n"), ConsoleOutput);
 
-  Signal(t2_c1, t2_l1);
+  Signal(t2_l1, t2_c1);
 
   Write("t2_t1 releasing t2_l1\n", sizeof("t2_t1 releasing t2_l1\n"), ConsoleOutput);
   Release(t2_l1);
@@ -136,9 +129,10 @@ void t2_t1() {
 */
 void t2_t2() {
   Acquire(t2_l1);
+
   Write("t2_t2 acquired t2_l1, waiting on t2_c1\n", sizeof("t2_t2 acquired t2_l1, signalling t2_c1\n"), ConsoleOutput);
   
-  Wait(t2_c1, t2_l1);
+  Wait(t2_l1, t2_c1);
 
   Write("t2_t2 releasing t2_l1\n", sizeof("t2_t2 releasing t2_l1\n"), ConsoleOutput);
   Release(t2_l1);
@@ -176,7 +170,6 @@ int main() {
   Close(fd);
 
   t1_l1 = CreateLock("t1_l1", 5); 
-  t1_c1 = CreateCV("t1_c1", 5);
 
   Write("Test 1\n", sizeof("Test 1\n"), ConsoleOutput);
 
