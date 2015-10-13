@@ -637,8 +637,8 @@ void internal_fork(int pc){
   currentThread->space->InitRegisters();
   machine->WriteRegister(PCReg, pc);
   machine->WriteRegister(NextPCReg, pc+4);
-  machine->WriteRegister(StackReg, currentThread->stackreg);
   currentThread->space->RestoreState();
+  machine->WriteRegister(StackReg, currentThread->stackreg);
 
   machine->Run();
 }
@@ -676,7 +676,7 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
     processLock->Release();
     return;
   }
-
+  process->numThreads++;
   processLock->Release();
 
     if(pc == 0){

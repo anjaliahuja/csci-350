@@ -7,10 +7,10 @@
 int t1_l1;
 
 void t1() {
-  int i; 
+
   Acquire(t1_l1);
   Write("t1_t1 acquired t1_l1\n", sizeof("t1_t1 acquired t1_l1\n"), ConsoleOutput);
-  for (i = 0; i < 100000; i++) ;
+
   Write("t1_t1 releasing t1_l1\n", sizeof("t1_t1 releasing t1_l1\n"), ConsoleOutput);
   Release(t1_l1);
 
