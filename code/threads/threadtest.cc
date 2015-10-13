@@ -406,6 +406,8 @@ bool test6;
 bool test7;
 int MONEY;
 
+int numCustomers;
+
 
 //Defining Classes
 
@@ -504,6 +506,7 @@ class AppClerk : public Thread {
 
     void AppClerkStart() { 
       while(true) {
+      if (numCustomers == 0) break;
         AppClerkLineLock->Acquire();
         if (SenatorArrived) {
           SenatorLock->Acquire();
@@ -542,8 +545,8 @@ class AppClerk : public Thread {
           //TODO: Add code for on break
           this->state = 2;
           std::cout << name << " is going on break" << std::endl;
-          AppClerkLineLock->Release();
           this->lock->Acquire();
+          AppClerkLineLock->Release();
           cv->Wait(this->lock);
           std::cout << name << " is coming off break" << std::endl;
           // Signal manager that i'm awake
@@ -553,8 +556,8 @@ class AppClerk : public Thread {
           continue;
         }
 
-        AppClerkLineLock->Release();
         this->lock->Acquire();
+        AppClerkLineLock->Release();
 
         //Wait for customer data
         cv->Wait(this->lock);
@@ -692,6 +695,7 @@ class PicClerk : public Thread {
 
     void PicClerkStart() {
       while(true) {
+      if (numCustomers == 0) break;
         PicClerkLineLock->Acquire();
 
         if (SenatorArrived && !setUpSenator) {
@@ -732,8 +736,8 @@ class PicClerk : public Thread {
                     //TODO: Add code for on break
           this->state = 2;
           std::cout << name << " is going on break" << std::endl;
-          PicClerkLineLock->Release();
           this->lock->Acquire();
+          PicClerkLineLock->Release();
           cv->Wait(this->lock);
           std::cout << name << " is coming off break" << std::endl;
           cv->Signal(this->lock);
@@ -906,6 +910,7 @@ class PassportClerk : public Thread {
 
     void PassportClerkStart() {
       while(true) {
+      if (numCustomers == 0) break;
         PassportClerkLineLock->Acquire();
          if (SenatorArrived && !setUpSenator) {
           SenatorLock->Acquire();
@@ -945,8 +950,8 @@ class PassportClerk : public Thread {
                     //TODO: Add code for on break
           this->state = 2;
           std::cout << name << " is going on break" << std::endl;
-          PassportClerkLineLock->Release();
           this->lock->Acquire();
+          PassportClerkLineLock->Release();
           cv->Wait(this->lock);
           std::cout << name << " is coming off break" << std::endl;
           cv->Signal(this->lock);
@@ -955,8 +960,8 @@ class PassportClerk : public Thread {
           continue;
         }
 
-        PassportClerkLineLock->Release();
         this->lock->Acquire();
+        PassportClerkLineLock->Release();
 
         // Wait for customer to come to counter.
         cv->Wait(this->lock);
@@ -1105,6 +1110,7 @@ class Cashier : public Thread {
     }
     void CashierStart() {
       while(true) {
+        if (numCustomers == 0) break;
         CashierLineLock->Acquire();
         if (SenatorArrived && !setUpSenator) {
           SenatorLock->Acquire();
@@ -1146,8 +1152,8 @@ class Cashier : public Thread {
                     //TODO: Add code for on break
           this->state = 2;
           std::cout << name << " is going on break" << std::endl;
-          CashierLineLock->Release();
           this->lock->Acquire();
+          CashierLineLock->Release();
           cv->Wait(this->lock);
           std::cout << name << " is coming off break" << std::endl;
           cv->Signal(this->lock);
@@ -1156,8 +1162,8 @@ class Cashier : public Thread {
           continue;
         }
 
-        CashierLineLock->Release();
         this->lock->Acquire();
+        CashierLineLock->Release();
 
         // Wait for customer to come to counter.
         cv->Wait(this->lock);
@@ -1305,6 +1311,8 @@ class Manager : public Thread{
     }
 
     void ManagerStart();
+
+    void finish();
   private:
     char* name;
 
@@ -1322,6 +1330,11 @@ Manager* manager;
 
 //List of Customers
 Customer** Customers;
+
+void Manager::finish() {
+      printf("%s", currentThread->getName());
+
+}
 
 void Manager::ManagerStart() {
   while(true) {
@@ -1452,7 +1465,7 @@ void Manager::ManagerStart() {
       }
     }
 
-    for(int i = 0; i < 100; i++) {
+    for(int i = 0; i < 1000; i++) {
       currentThread->Yield();
     }
 
@@ -1462,6 +1475,56 @@ void Manager::ManagerStart() {
       continue;
     }
     if (test1) continue;
+
+    // no more customers
+    if (numCustomers == 0) {
+      for(int j = 0; j < NUM_APP_CLERKS; j++) {
+          if(AppClerks[j]->getState() == 2) {
+            AppClerks[j]->Acquire();
+            AppClerks[j]->getCV()->Signal(AppClerks[j]->getLock());
+            std::cout << "Manager has woken up " << AppClerks[j]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            AppClerks[j]->getCV()->Wait(AppClerks[j]->getLock());
+            AppClerks[j]->Release();
+          }
+        }
+      for(int j = 0; j < NUM_PIC_CLERKS; j++) {
+          if (PicClerks[j]->getLineSize() > 0 && PicClerks[j] ->getState() == 2) {
+            PicClerks[j]->Acquire();
+            PicClerks[j]->getCV()->Signal(PicClerks[j]->getLock());
+            std::cout << "Manager has woken up " << PicClerks[j]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            PicClerks[j]->getCV()->Wait(PicClerks[j]->getLock());
+            PicClerks[j]->Release();
+          }
+        }
+      for(int j = 0; j < NUM_PASSPORT_CLERKS; j++) {
+          if (PassportClerks[j]->getLineSize() > 0 && PassportClerks[j] ->getState() == 2) {
+            PassportClerks[j]->Acquire();
+            PassportClerks[j]->getCV()->Signal(PassportClerks[j]->getLock());
+            std::cout << "Manager has woken up " << PassportClerks[j]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            PassportClerks[j]->getCV()->Wait(PassportClerks[j]->getLock());
+            PassportClerks[j]->Release();
+          }
+        }
+      for(int j = 0; j < NUM_CASHIERS; j++) {
+          if (Cashiers[j]->getLineSize() > 0 && Cashiers[j] ->getState() == 2) {
+            Cashiers[j]->Acquire();
+            Cashiers[j]->getCV()->Signal(Cashiers[j]->getLock());
+            std::cout << "Manager has woken up " << Cashiers[j]->getName() << std::endl;
+            
+            // Wait for AppClerk to acknowledge
+            Cashiers[j]->getCV()->Wait(Cashiers[j]->getLock());
+            Cashiers[j]->Release();
+          }
+        }
+      break;
+    }
+    
     int total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
     std::cout << "Manager has counted a total of " << AppClerkBribeMoney << " for Application Clerks" << std::endl;
     std::cout << "Manager has counted a total of " << PicClerkBribeMoney << " for Picture Clerks" << std::endl;
@@ -1560,6 +1623,7 @@ void Customer::CustomerStart() {
     PayCashier(my_line);
 
     std::cout << name << " is leaving the Passport Office" << std::endl;
+    numCustomers--;
     sem.V();
   }
 }
@@ -1951,7 +2015,7 @@ void TEST_1() {
 
   NUM_CUSTOMERS = 5;
   NUM_APP_CLERKS = 2;
-
+  numCustomers = NUM_CUSTOMERS;
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
   AppClerkLineLock = new Lock("appClerk_lineLock");
@@ -1998,7 +2062,7 @@ void TEST_2() {
   Cashiers = new Cashier*[NUM_CASHIERS];
   manager = new Manager("Manager", 0);
   int SSN = 10000000;
-
+  numCustomers = NUM_CUSTOMERS;
   std::cout << "Number of Customers = " << NUM_CUSTOMERS << std::endl;
   std::cout << "Number of ApplicationClerks = " << NUM_APP_CLERKS << std::endl;
   std::cout << "Number of PictureClerks = " << NUM_PIC_CLERKS << std::endl;
@@ -2074,7 +2138,7 @@ void TEST_3() {
   NUM_CUSTOMERS = 3;
   NUM_CASHIERS = 1;
   int SSN = 100000000;
-
+  numCustomers = NUM_CUSTOMERS;
   std::cout << "Number of Customers = " << NUM_CUSTOMERS << std::endl;
   std::cout << "Number of ApplicationClerks = 0" << std::endl;
   std::cout << "Number of PictureClerks = 0" << std::endl;
@@ -2115,7 +2179,7 @@ void TEST_4() {
 
   NUM_CUSTOMERS = 1;
   NUM_APP_CLERKS = 1;
-
+  numCustomers = NUM_CUSTOMERS;
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
   Customers = new Customer*[NUM_CUSTOMERS];
   manager = new Manager("Manager", 0);
@@ -2155,7 +2219,7 @@ void TEST_5() {
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
   AppClerkLineLock = new Lock("appClerk_lineLock");
-
+  numCustomers = NUM_CUSTOMERS;
 
   for(int i = 0; i < NUM_APP_CLERKS; i++) {
     char* debugName = new char[15];
@@ -2208,6 +2272,7 @@ void TEST_6() {
   std::cout << "Number of Senators = 0" << std::endl;
   std::cout << std::endl;
 
+  numCustomers = NUM_CUSTOMERS;
   AppClerkLineLock = new Lock("appClerk_lineLock");
   PicClerkLineLock = new Lock("picClerk_lineLock");
   PassportClerkLineLock = new Lock("passportClerk_lineLock");
@@ -2286,6 +2351,7 @@ void TEST_7() {
   std::cout << "Number of Senators = 1" << std::endl;
   std::cout << std::endl;
 
+  numCustomers = NUM_CUSTOMERS;
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
   PicClerks = new PicClerk*[NUM_PIC_CLERKS];
@@ -2363,6 +2429,7 @@ void FULL_SIMULATION() {
   std::cout << "Number of Senators = 0" << std::endl;
   std::cout << std::endl;
 
+  numCustomers = NUM_CUSTOMERS;
   Customers = new Customer*[NUM_CUSTOMERS];
   AppClerks = new AppClerk*[NUM_APP_CLERKS];
   PicClerks = new PicClerk*[NUM_PIC_CLERKS];
@@ -2453,7 +2520,7 @@ void Problem2() {
   std::cout << " 9. Quit" << std::endl;
 
   int testSelection = 0;
-  while(testSelection != 9) {
+  while(true) {
     std::cout << "Enter option: ";
     std::cin >> testSelection;
     if(testSelection == 1) {
@@ -2550,6 +2617,7 @@ void Problem2() {
         sem.P();
       }
       std::cout << "-- Full Simulation Completed" << std::endl;
+
     }
     else if(testSelection == 9) {    
       std::cout << "Quitting!" << std::endl;
@@ -2564,5 +2632,12 @@ void Problem2() {
       PicClerkBribeMoney = 0;
       PassportClerkBribeMoney = 0;
       CashierMoney = 0;
-  }
+
+      NUM_CASHIERS = 0;
+      NUM_CUSTOMERS = 0;
+      NUM_APP_CLERKS = 0;
+      NUM_PASSPORT_CLERKS = 0;
+      NUM_PIC_CLERKS = 0;
+      numCustomers = 0;
+    }
 }
