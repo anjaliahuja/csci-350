@@ -148,8 +148,8 @@ void Lock::Release() {
 
   // If thread does not own lock, throw error.
   if (!this->isHeldByCurrentThread()) {
-    printf("Lock::Release -> current Thread %s doesn't own lock %s, Thread %s does!\n", 
-      currentThread->getName(), this->name, this->lockOwnerThread->getName());
+    printf("Lock::Release -> current Thread %s doesn't own lock %s\n", 
+      currentThread->getName(), this->name);
     (void) interrupt->SetLevel(oldLevel);
     return;
   }
