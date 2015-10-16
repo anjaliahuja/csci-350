@@ -436,7 +436,7 @@ int Wait_Syscall(int lockIndex, int CVIndex) {
     CVTableLock->Release();
     return -1;
   }
-  process->cvs[index] = false;
+  process->cvs[CVIndex] = false;
   processLock->Release();
   }
 
@@ -558,7 +558,7 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   printf("in createlock");
   lockTableLock->Acquire();
   // Setting up name
-  char* name = new char[size+1];
+  char* name = new char[len+1];
   if(!name){
     printf("CreateLock: Can't allocate kernel buffer for create lock\n");
     lockTableLock->Release();
@@ -649,7 +649,7 @@ int Acquire_Syscall(int index) {
     return -1;
   }
 
-  kl->counter++; 
+  kl->lockCounter++; 
   kl->lock->Acquire();
 
   lockTableLock->Release();
@@ -684,10 +684,10 @@ int Release_Syscall(int index) {
   }
 
   kl->lock->Release();
-  kl->counter--;
+  kl->lockCounter--;
   // Delete lock if destroyed was called on it previouisly and no threads 
   // are waiting
-  if (kl->isToBeDeleted && strcmp(kl->lock->getState(), "FREE") == 0 && kl->counter==0) {
+  if (kl->isToBeDeleted && strcmp(kl->lock->getState(), "FREE") == 0 && kl->lockCounter==0) {
     kl = (kernelLock*) lockTable->Remove(index); 
     delete kl->lock;
     delete kl;
@@ -708,7 +708,7 @@ int Release_Syscall(int index) {
       if (processID == -1) {
         printf("Error: invalid process identifier (ReleaseLock_Syscall)\n");
         processLock->Release();
-        locktablelock->Release();
+        lockTableLock->Release();
         return -1;
       }
       process->locks[index] = false;
