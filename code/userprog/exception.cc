@@ -234,14 +234,14 @@ int CreateCV_Syscall(int vaddr, int size) {
   CVTableLock->Acquire();
   DEBUG('a', "Creating a CV\n");
 
-  char* buf;
-  if(!(buf = new char[size])){
-    printf("Create CV:Error allocating kernel buffer for Fork \n");
+  char* buf = new char[size+1];
+  if(!buf){
+    printf("Create CV:Error allocating kernel buffer for create CV \n");
     return -1;
   }
   else {
     if(copyin(vaddr, size, buf)==-1){
-      printf("Create CV: Bad pointer passed to fork call, thread not forked \n");
+      printf("Create CV: Bad pointer passed \n");
       delete[] buf;
       return -1;
     }
@@ -267,8 +267,32 @@ int CreateCV_Syscall(int vaddr, int size) {
     printf("Create CV: Condition Variable Table is full 2, couldn't create Condition\n");
   }
 
-  CVTableLock->Release();
-  return index;
+//Update process table
+    processLock->Acquire();
+
+    int processID = -1;
+    kernelProcess* process;
+    for(int i =0; i<NumProcesses; i++){
+      process = (kernelProcess*) processTable->Get(i);
+      if(process == NULL){
+        continue;
+      }
+      if(process->addressSpace == currentThread->space){
+        processID = i;
+        break;
+      }
+    }
+    if(processID == -1){
+      printf("Invalid process identifier in create lock");
+      processLock->Release();
+      CVTableLock->Release();
+      return -1;
+    }
+    process->cvs[index] = true;
+    processLock->Release();
+
+    CVTableLock->Release();
+    return index;
 }
 
 int DestroyCV_Syscall(int index) {
@@ -300,9 +324,35 @@ int DestroyCV_Syscall(int index) {
     kcv = (kernelCV*) CVTable->Remove(index);
     delete kcv->condition;
     delete kcv;
+
+    //Update process table
+  processLock->Acquire();
+
+  int processID = -1;
+  kernelProcess* process;
+  for(int i =0; i<NumProcesses; i++){
+    process = (kernelProcess*) processTable->Get(i);
+    if(process == NULL){
+      continue;
+    }
+    if(process->addressSpace == currentThread->space){
+      processID = i;
+      break;
+    }
+  }
+  if(processID == -1){
+    printf("Invalid process identifier in create lock");
+    processLock->Release();
+    CVTableLock->Release();
+    return -1;
+  }
+  process->cvs[index] = false;
+  processLock->Release();
+
   } else {
     kcv->toBeDeleted = true;
   }
+
 
   CVTableLock->Release();
   return index;
@@ -359,7 +409,7 @@ int Wait_Syscall(int lockIndex, int CVIndex) {
   CVTableLock->Release();
   kcv->condition->Wait(kl->lock);
   CVTableLock->Acquire();
-  kcv->cvCounter;
+  kcv->cvCounter--;
 
   //Check if needs to be deleted
   if (kcv->toBeDeleted == true && kcv->cvCounter == 0) {
@@ -367,6 +417,27 @@ int Wait_Syscall(int lockIndex, int CVIndex) {
     kcv = (kernelCV*) CVTable->Remove(CVIndex);
     delete kcv->condition;
     delete kcv;
+
+    int processID = -1;
+  kernelProcess* process;
+  for(int i =0; i<NumProcesses; i++){
+    process = (kernelProcess*) processTable->Get(i);
+    if(process == NULL){
+      continue;
+    }
+    if(process->addressSpace == currentThread->space){
+      processID = i;
+      break;
+    }
+  }
+  if(processID == -1){
+    printf("Invalid process identifier in create lock");
+    processLock->Release();
+    CVTableLock->Release();
+    return -1;
+  }
+  process->cvs[index] = false;
+  processLock->Release();
   }
 
   CVTableLock->Release();
@@ -474,7 +545,11 @@ int Broadcast_Syscall(int lockIndex, int CVIndex) {
     return -1;
   }
   //Broadcast
-  kcv->condition->Broadcast(kl->lock);
+  int CVS = kcv->cvCounter;
+  for(int i = 0; i < CVS; i++){
+    Signal_Syscall(lockIndex, CVIndex);
+  }
+ 
   CVTableLock->Release();
   return CVIndex;
 }
