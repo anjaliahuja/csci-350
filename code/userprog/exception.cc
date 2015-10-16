@@ -268,7 +268,6 @@ int CreateCV_Syscall(int vaddr, int size) {
   }
 
   CVTableLock->Release();
-  printf("numUsed: %d\n", CVTable->NumUsed());
   return index;
 }
 
@@ -481,6 +480,7 @@ int Broadcast_Syscall(int lockIndex, int CVIndex) {
 }
 
 int CreateLock_Syscall(unsigned int vaddr, int len) {
+  printf("in createlock");
   lockTableLock->Acquire();
   // Setting up name
   char* name;
@@ -498,6 +498,7 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
     }
   }
 
+  printf(" %s ", name);
   // Create lock
   kernelLock* kl = new kernelLock();
   kl->lock = new Lock(name);
@@ -514,11 +515,12 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   }
 
   lockTableLock->Release();
-
+  printf("%d\n", index);
   return index;
 }
 
 int Acquire_Syscall(int index) {
+  printf("acquire %d\n", index);
   lockTableLock->Acquire();
 
   // Error checking

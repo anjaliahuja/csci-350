@@ -55,7 +55,6 @@ void t1_t3() {
   Acquire(t1_l1);
 
   Fork(t1_t4, "t1_t4", sizeof("t1_t4"));
-  Fork(t1_t5, "t1_t5", sizeof("t1_t5"));
   Exit(0);
 }
 
@@ -82,23 +81,29 @@ void t1_t4() {
   Write("t1_t4 releasing t1_l1\n", sizeof("t1_t4 releasing t1_l1\n"), ConsoleOutput);
   Release(t1_l1);
 
-  Write("t1_t4 acquiring t1_l1\n", sizeof("t1_t4 acquiring t1_l1\n"), ConsoleOutput);
+  Write("t1_t4 acquiring t1_l1 after it was destroyed\n", sizeof("t1_t4 acquiring t1_l1 after it was destroyed\n"), ConsoleOutput);
   Acquire(t1_l1);
 
+  Fork(t1_t5, "t1_t5", sizeof("t1_t5"));
   Exit(0);
 }
 
 /* 
    --------------------------------------------------
    t1_t5() -- test1 thread 5
-       Accessing invalid indices.
+       Creating multiple locks and Accessing invalid indices.
    --------------------------------------------------
 */
 void t1_t5() {
+  t1_l2 = CreateLock("t1_l2", 5);
+  t1_l3 = CreateLock("2", 1);
+  Acquire(t1_l2);
+  Acquire(t1_l3);
+/*
   Write("t1_t5 acquiring and releasing at index -1\n", sizeof("t1_t5 acquiring and releasing at index -1\n"), ConsoleOutput);
   Acquire(-1);
   Release(-1);
-
+*/
   startTest2();
   Exit(0);
 }
