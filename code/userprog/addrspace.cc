@@ -167,7 +167,7 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
 
         executable->ReadAt(
             &(machine->mainMemory[pageTable[i].physicalPage * PageSize]),
-            PageSize, noffH.code.inFileAddr + i*PageSize);
+            PageSize, 40 + i*PageSize);
             
         }
     

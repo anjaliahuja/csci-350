@@ -483,16 +483,15 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   printf("in createlock");
   lockTableLock->Acquire();
   // Setting up name
-  char* name;
-  if(!(name = new char[len])){
-    printf("CreateLock: Can't allocate kernel buffer for exec system call\n");
+  char* name = new char[size+1];
+  if(!name){
+    printf("CreateLock: Can't allocate kernel buffer for create lock\n");
     lockTableLock->Release();
     return -1;
   }
   else {
     if(copyin(vaddr, len, name) == -1){
-      printf("CreateLock: Bad pointer passed to write\n");
-      delete [] name;
+      printf("CreateLock: Bad pointer passed to create lock\n");
       lockTableLock->Release();
       return -1;
     }
@@ -500,8 +499,9 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
 
   printf(" %s ", name);
   // Create lock
+  Lock* lock = new Lock(name);
   kernelLock* kl = new kernelLock();
-  kl->lock = new Lock(name);
+  kl->lock = lock;
   kl->addressSpace = currentThread->space;
   kl->isToBeDeleted = false;
 
@@ -514,8 +514,35 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
     return -1;
   }
 
+  //Update process table
+  processLock->Acquire();
+
+  int processID = -1;
+  kernelProcess* process;
+  for(int i =0; i<NumProcesses; i++){
+    process = (kernelProcess*) processTable->Get(i);
+    if(process == NULL){
+      continue;
+    }
+    if(process->addressSpace == currentThread->space){
+      processID = i;
+      break;
+    }
+  }
+  if(processID == -1){
+    printf("Invalid process identifier in create lock");
+    processLock->Release();
+    lockTableLock->Release();
+    return -1;
+  }
+  process->locks[index] = true;
+  processLock->Release();
+
+
+
   lockTableLock->Release();
   printf("%d\n", index);
+
   return index;
 }
 
@@ -547,6 +574,7 @@ int Acquire_Syscall(int index) {
     return -1;
   }
 
+  kl->counter++; 
   kl->lock->Acquire();
 
   lockTableLock->Release();
@@ -581,12 +609,35 @@ int Release_Syscall(int index) {
   }
 
   kl->lock->Release();
-
+  kl->counter--;
   // Delete lock if destroyed was called on it previouisly and no threads 
   // are waiting
-  if (kl->isToBeDeleted && strcmp(kl->lock->getState(), "FREE") == 0) {
-    kl = (kernelLock*) lockTable->Remove(index);
+  if (kl->isToBeDeleted && strcmp(kl->lock->getState(), "FREE") == 0 && kl->counter==0) {
+    kl = (kernelLock*) lockTable->Remove(index); 
+    delete kl->lock;
     delete kl;
+
+    processLock->Acquire();
+      int processID = -1;
+      kernelProcess* process;
+      for (int i=0; i < NumProcesses; i++) {
+        process = (kernelProcess*) processTable->Get(i);
+        if (process == NULL) {
+          continue;
+        }
+        if (process->addressSpace == currentThread->space) {
+          processID = i;
+          break;
+        }
+      }
+      if (processID == -1) {
+        printf("Error: invalid process identifier (ReleaseLock_Syscall)\n");
+        processLock->Release();
+        locktablelock->Release();
+        return -1;
+      }
+      process->locks[index] = false;
+
   }
 
   lockTableLock->Release();
