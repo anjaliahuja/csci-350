@@ -572,6 +572,10 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
     }
   }
 
+  if(lockTable->NumUsed() >= NumLocks){
+    printf("Error: no more locks available. Lock not created.\n");
+  }
+
   printf(" %s ", name);
   // Create lock
   Lock* lock = new Lock(name);
