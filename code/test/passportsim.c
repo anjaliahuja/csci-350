@@ -271,7 +271,7 @@ void startAppClerk(int id) {
 
     Release(AppClerks[id].lock);
     /*for(i =20; i<100; ++i){
-      currentThread->Yield();
+      Yield();
     }*/
     Acquire(AppClerks[id].lock);
 
@@ -302,8 +302,142 @@ void startCashiers(int id) {
 
 }
 
-void startManager() {
+void managerWakeup(Clerk* clerk) {
+  Acquire(clerk->lock);
+  Signal(clerk->lock, clerk->cv);
+  /* Print out 
+  std::cout << "Manager has woken up " << clerk->name << std::endl;
+  */
+  Wait(clerk->lock, clerk->cv);
+  Release(clerk->lock);
+}
 
+void startManager() {
+  int i, j, total = 0;
+  while(true) {
+    for(i = 0; i < NUM_APPCLERKS; i++) {
+    /*If the clerk is on break, aka their state is 2 and their line has more than 3 people
+    Wake up the thread*/
+    if(queue_size(&AppClerks[i].line) > 2 || (SenatorArrived)) {
+        for(j = 0; j < NUM_APPCLERKS; j++) {
+          if(AppClerks[j].state == 2) {
+            managerWakeup(&AppClerks[j]);
+          }
+        }
+        break;
+      }
+
+      if (i == NUM_APPCLERKS-1) {
+        for(j = 0; j < NUM_APPCLERKS; j++) {
+          if (queue_size(&AppClerks[j].line) > 0 && AppClerks[j].state == 2) {
+            managerWakeup(&AppClerks[j]);
+          }
+        }
+      }
+    }
+     
+    for(i = 0; i < NUM_PICCLERKS; i++) {
+     if(queue_size(&PicClerks[i].line) > 2 || (SenatorArrived)) {
+          for(j = 0; j < NUM_PICCLERKS; j++) {
+            if(PicClerks[j].state == 2) {
+              managerWakeup(&PicClerks[j]);
+            }
+          }
+          break;
+        }
+
+      if (i == NUM_PICCLERKS-1) {
+        for(j = 0; j < NUM_PICCLERKS; j++) {
+          if (queue_size(&PicClerks[j].line) > 0 && PicClerks[j] .state == 2) {
+              managerWakeup(&PicClerks[j]);
+          }
+        }
+      }
+    }
+
+    for(i = 0; i < NUM_PASSPORTCLERKS; i++) {
+     if(queue_size(&PassportClerks[i].line) > 2 || (SenatorArrived)) {
+        for(j = 0; j < NUM_PASSPORTCLERKS; j++) {
+          if(PassportClerks[j].state == 2) {
+            managerWakeup(&PassportClerks[j]);
+          }
+        }
+        break;
+      }
+
+      if (i == NUM_PASSPORTCLERKS-1) {
+        for(j = 0; j < NUM_PASSPORTCLERKS; j++) {
+          if (queue_size(&PassportClerks[j].line) > 0 && PassportClerks[j].state == 2) {
+            managerWakeup(&PassportClerks[j]);
+          }
+        }
+      }
+    }
+
+    for(i = 0; i < NUM_CASHIERS; i++) {
+      if(queue_size(&Cashiers[i].line) > 2 || (SenatorArrived)) {
+        for(j = 0; j < NUM_CASHIERS; j++) {
+          if(Cashiers[j].state == 2) {
+            managerWakeup(&Cashiers[j]);
+          }
+        }
+        break;
+      }
+
+      if (i == NUM_CASHIERS-1) {
+        for(j = 0; j < NUM_CASHIERS; j++) {
+          if (queue_size(&Cashiers[j].line) > 0 && Cashiers[j].state== 2) {
+            managerWakeup(&Cashiers[j]);
+          }
+        }
+      }
+    }
+
+    for(i = 0; i < 1000; i++) {
+      /*Yield();*/
+    }
+
+    /*Add code for checking amount of money we have*/
+    /*if (SenatorArrived) {
+      sem.V();
+      continue;
+    }
+    if (test1) continue;*/
+
+    /* no more customers */
+    if (numCustomers == 0) {
+      for(j = 0; j < NUM_APPCLERKS; j++) {
+          if(AppClerks[j].state == 2) {
+            managerWakeup(&AppClerks[j]);
+          }
+        }
+      for(j = 0; j < NUM_PICCLERKS; j++) {
+          if (PicClerks[j] .state == 2) {
+            managerWakeup(&PicClerks[j]);
+          }
+        }
+      for(j = 0; j < NUM_PASSPORTCLERKS; j++) {
+          if (PassportClerks[j].state == 2) {
+            managerWakeup(&PassportClerks[j]);
+          }
+        }
+      for(j = 0; j < NUM_CASHIERS; j++) {
+          if (Cashiers[j] . state == 2) {
+            managerWakeup(&Cashiers[j]);
+          }
+        }
+      break;
+    }
+    
+    total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
+    /*
+    std::cout << "Manager has counted a total of " << AppClerkBribeMoney << " for Application Clerks" << std::endl;
+    std::cout << "Manager has counted a total of " << PicClerkBribeMoney << " for Picture Clerks" << std::endl;
+    std::cout << "Manager has counted a total of " << PassportClerkBribeMoney << " for Passport Clerks" << std::endl;
+    std::cout << "Manager has counted a total of " << CashierMoney << " for Cashiers" << std::endl;
+    std::cout << "Manager has counted a total of " << total << " for the Passport Office" << std::endl;
+    */
+  }
 }
 
 void init() {
