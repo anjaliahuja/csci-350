@@ -895,7 +895,7 @@ void Exec_Syscall(unsigned int vaddr, int len){
   AddrSpace* addressSpace;
 
   if (exec == NULL){
-    printf("file is null");
+    printf("file is null %s\n", file);
     return;
   }
 
@@ -922,6 +922,8 @@ void Exec_Syscall(unsigned int vaddr, int len){
   }
   t->Fork((VoidFunctionPtr)internal_exec,0);  
 
+  delete exec;
+  delete [] file;
 
 }
 
