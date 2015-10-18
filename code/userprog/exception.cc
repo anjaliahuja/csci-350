@@ -1,18 +1,18 @@
 // exception.cc 
-//	Entry point into the Nachos kernel from user programs.
-//	There are two kinds of things that can cause control to
-//	transfer back to here from user code:
+//  Entry point into the Nachos kernel from user programs.
+//  There are two kinds of things that can cause control to
+//  transfer back to here from user code:
 //
-//	syscall -- The user code explicitly requests to call a procedure
-//	in the Nachos kernel.  Right now, the only function we support is
-//	"Halt".
+//  syscall -- The user code explicitly requests to call a procedure
+//  in the Nachos kernel.  Right now, the only function we support is
+//  "Halt".
 //
-//	exceptions -- The user code does something that the CPU can't handle.
-//	For instance, accessing memory that doesn't exist, arithmetic errors,
-//	etc.  
+//  exceptions -- The user code does something that the CPU can't handle.
+//  For instance, accessing memory that doesn't exist, arithmetic errors,
+//  etc.  
 //
-//	Interrupts (which can also cause control to transfer from user
-//	code into the Nachos kernel) are handled elsewhere.
+//  Interrupts (which can also cause control to transfer from user
+//  code into the Nachos kernel) are handled elsewhere.
 //
 // For now, this only handles the Halt() system call.
 // Everything else core dumps.
@@ -34,21 +34,21 @@ int copyin(unsigned int vaddr, int len, char *buf) {
     // Return the number of bytes so read, or -1 if an error occors.
     // Errors can generally mean a bad virtual address was passed in.
     bool result;
-    int n=0;			// The number of bytes copied in
+    int n=0;      // The number of bytes copied in
     int *paddr = new int;
 
     while ( n >= 0 && n < len) {
       result = machine->ReadMem( vaddr, 1, paddr );
       while(!result) // FALL 09 CHANGES
-	  {
-   			result = machine->ReadMem( vaddr, 1, paddr ); // FALL 09 CHANGES: TO HANDLE PAGE FAULT IN THE ReadMem SYS CALL
-	  }	
+    {
+        result = machine->ReadMem( vaddr, 1, paddr ); // FALL 09 CHANGES: TO HANDLE PAGE FAULT IN THE ReadMem SYS CALL
+    } 
       
       buf[n++] = *paddr;
      
       if ( !result ) {
-	//translation failed
-	return -1;
+  //translation failed
+  return -1;
       }
 
       vaddr++;
@@ -64,15 +64,15 @@ int copyout(unsigned int vaddr, int len, char *buf) {
     // occors.  Errors can generally mean a bad virtual address was
     // passed in.
     bool result;
-    int n=0;			// The number of bytes copied in
+    int n=0;      // The number of bytes copied in
 
     while ( n >= 0 && n < len) {
       // Note that we check every byte's address
       result = machine->WriteMem( vaddr, 1, (int)(buf[n++]) );
 
       if ( !result ) {
-	//translation failed
-	return -1;
+  //translation failed
+  return -1;
       }
 
       vaddr++;
@@ -85,14 +85,14 @@ void Create_Syscall(unsigned int vaddr, int len) {
     // Create the file with the name in the user buffer pointed to by
     // vaddr.  The file name is at most MAXFILENAME chars long.  No
     // way to return errors, though...
-    char *buf = new char[len+1];	// Kernel buffer to put the name in
+    char *buf = new char[len+1];  // Kernel buffer to put the name in
 
     if (!buf) return;
 
     if( copyin(vaddr,len,buf) == -1 ) {
-	printf("%s","Bad pointer passed to Create\n");
-	delete buf;
-	return;
+  printf("%s","Bad pointer passed to Create\n");
+  delete buf;
+  return;
     }
 
     buf[len]='\0';
@@ -108,19 +108,19 @@ int Open_Syscall(unsigned int vaddr, int len) {
     // the file is opened successfully, it is put in the address
     // space's file table and an id returned that can find the file
     // later.  If there are any errors, -1 is returned.
-    char *buf = new char[len+1];	// Kernel buffer to put the name in
-    OpenFile *f;			// The new open file
-    int id;				// The openfile id
+    char *buf = new char[len+1];  // Kernel buffer to put the name in
+    OpenFile *f;      // The new open file
+    int id;       // The openfile id
 
     if (!buf) {
-	printf("%s","Can't allocate kernel buffer in Open\n");
-	return -1;
+  printf("%s","Can't allocate kernel buffer in Open\n");
+  return -1;
     }
 
     if( copyin(vaddr,len,buf) == -1 ) {
-	printf("%s","Bad pointer passed to Open\n");
-	delete[] buf;
-	return -1;
+  printf("%s","Bad pointer passed to Open\n");
+  delete[] buf;
+  return -1;
     }
 
     buf[len]='\0';
@@ -129,12 +129,12 @@ int Open_Syscall(unsigned int vaddr, int len) {
     delete[] buf;
 
     if ( f ) {
-	if ((id = currentThread->space->fileTable.Put(f)) == -1 )
-	    delete f;
-	return id;
+  if ((id = currentThread->space->fileTable.Put(f)) == -1 )
+      delete f;
+  return id;
     }
     else
-	return -1;
+  return -1;
 }
 
 void Write_Syscall(unsigned int vaddr, int len, int id) {
@@ -145,34 +145,34 @@ void Write_Syscall(unsigned int vaddr, int len, int id) {
     // up in the current address space's open file table and used as
     // the target of the write.
     
-    char *buf;		// Kernel buffer for output
-    OpenFile *f;	// Open file for output
+    char *buf;    // Kernel buffer for output
+    OpenFile *f;  // Open file for output
 
     if ( id == ConsoleInput) return;
     
     if ( !(buf = new char[len]) ) {
-	printf("%s","Error allocating kernel buffer for write!\n");
-	return;
+  printf("%s","Error allocating kernel buffer for write!\n");
+  return;
     } else {
         if ( copyin(vaddr,len,buf) == -1 ) {
-	    printf("%s","Bad pointer passed to to write: data not written\n");
-	    delete[] buf;
-	    return;
-	}
+      printf("%s","Bad pointer passed to to write: data not written\n");
+      delete[] buf;
+      return;
+  }
     }
 
     if ( id == ConsoleOutput) {
       for (int ii=0; ii<len; ii++) {
-	printf("%c",buf[ii]);
+  printf("%c",buf[ii]);
       }
 
     } else {
-	if ( (f = (OpenFile *) currentThread->space->fileTable.Get(id)) ) {
-	    f->Write(buf, len);
-	} else {
-	    printf("%s","Bad OpenFileId passed to Write\n");
-	    len = -1;
-	}
+  if ( (f = (OpenFile *) currentThread->space->fileTable.Get(id)) ) {
+      f->Write(buf, len);
+  } else {
+      printf("%s","Bad OpenFileId passed to Write\n");
+      len = -1;
+  }
     }
 
     delete[] buf;
@@ -184,14 +184,14 @@ int Read_Syscall(unsigned int vaddr, int len, int id) {
     // a Write arrives for the synchronized Console, and no such
     // console exists, create one.    We reuse len as the number of bytes
     // read, which is an unnessecary savings of space.
-    char *buf;		// Kernel buffer for input
-    OpenFile *f;	// Open file for output
+    char *buf;    // Kernel buffer for input
+    OpenFile *f;  // Open file for output
 
     if ( id == ConsoleOutput) return -1;
     
     if ( !(buf = new char[len]) ) {
-	printf("%s","Error allocating kernel buffer in Read\n");
-	return -1;
+  printf("%s","Error allocating kernel buffer in Read\n");
+  return -1;
     }
 
     if ( id == ConsoleInput) {
@@ -199,21 +199,21 @@ int Read_Syscall(unsigned int vaddr, int len, int id) {
       scanf("%s", buf);
 
       if ( copyout(vaddr, len, buf) == -1 ) {
-	printf("%s","Bad pointer passed to Read: data not copied\n");
+  printf("%s","Bad pointer passed to Read: data not copied\n");
       }
     } else {
-	if ( (f = (OpenFile *) currentThread->space->fileTable.Get(id)) ) {
-	    len = f->Read(buf, len);
-	    if ( len > 0 ) {
-	        //Read something from the file. Put into user's address space
-  	        if ( copyout(vaddr, len, buf) == -1 ) {
-		    printf("%s","Bad pointer passed to Read: data not copied\n");
-		}
-	    }
-	} else {
-	    printf("%s","Bad OpenFileId passed to Read\n");
-	    len = -1;
-	}
+  if ( (f = (OpenFile *) currentThread->space->fileTable.Get(id)) ) {
+      len = f->Read(buf, len);
+      if ( len > 0 ) {
+          //Read something from the file. Put into user's address space
+            if ( copyout(vaddr, len, buf) == -1 ) {
+        printf("%s","Bad pointer passed to Read: data not copied\n");
+    }
+      }
+  } else {
+      printf("%s","Bad OpenFileId passed to Read\n");
+      len = -1;
+  }
     }
 
     delete[] buf;
@@ -232,16 +232,16 @@ void Close_Syscall(int fd) {
 }
 int CreateCV_Syscall(int vaddr, int size) {
   CVTableLock->Acquire();
-  printf("Creating a CV");
+  DEBUG('a', "Creating a CV\n");
 
-  char* buf;
-  if(!(buf = new char[size])){
-    printf("Create CV:Error allocating kernel buffer for Fork \n");
+  char* buf = new char[size+1];
+  if(!buf){
+    printf("Create CV:Error allocating kernel buffer for create CV \n");
     return -1;
   }
   else {
     if(copyin(vaddr, size, buf)==-1){
-      printf("Create CV: Bad pointer passed to fork call, thread not forked \n");
+      printf("Create CV: Bad pointer passed \n");
       delete[] buf;
       return -1;
     }
@@ -249,7 +249,7 @@ int CreateCV_Syscall(int vaddr, int size) {
   //Error checking
   //If CVTable is full, then don't create new CV
   if(CVTable->NumUsed() >= NumCVs) {
-      printf("Create CV: Condition Variable Table is full 1, couldn't create Condition");
+      printf("Create CV: Condition Variable Table is full 1, couldn't create Condition\n");
       CVTableLock->Release();
       return -1;
   }
@@ -264,19 +264,43 @@ int CreateCV_Syscall(int vaddr, int size) {
 
   int index = CVTable->Put((void*) kcv);
   if (index == -1) {
-    printf("Create CV: Condition Variable Table is full 2, couldn't create Condition");
+    printf("Create CV: Condition Variable Table is full 2, couldn't create Condition\n");
   }
 
-  CVTableLock->Release();
-  return index;
+//Update process table
+    processLock->Acquire();
+
+    int processID = -1;
+    kernelProcess* process;
+    for(int i =0; i<NumProcesses; i++){
+      process = (kernelProcess*) processTable->Get(i);
+      if(process == NULL){
+        continue;
+      }
+      if(process->addressSpace == currentThread->space){
+        processID = i;
+        break;
+      }
+    }
+    if(processID == -1){
+      printf("Invalid process identifier in create lock");
+      processLock->Release();
+      CVTableLock->Release();
+      return -1;
+    }
+    process->cvs[index] = true;
+    processLock->Release();
+
+    CVTableLock->Release();
+    return index;
 }
 
 int DestroyCV_Syscall(int index) {
   CVTableLock->Acquire();
-  printf("Destroying a CV");
+  DEBUG('a', "Destroying a CV\n");
   //Error checking
   if (index < 0 || index > NumCVs) {
-    printf("Destroy CV: Invalid Index");
+    printf("Destroy CV: Invalid Index\n");
     CVTableLock->Release();
     return -1;
   }
@@ -284,13 +308,13 @@ int DestroyCV_Syscall(int index) {
   kernelCV* kcv = (kernelCV*)CVTable->Get(index);
 
   if (kcv == NULL || kcv->condition == NULL) {
-    printf("Destroy CV: CV does not exist");
+    printf("Destroy CV: CV does not exist\n");
     CVTableLock->Release();
     return -1;
   }
 
   if (kcv->addressSpace != currentThread->space) {
-    printf("DestroyCV: CV belongs to a different process");
+    printf("DestroyCV: CV belongs to a different process\n");
     CVTableLock->Release();
     return -1;
   }
@@ -300,9 +324,35 @@ int DestroyCV_Syscall(int index) {
     kcv = (kernelCV*) CVTable->Remove(index);
     delete kcv->condition;
     delete kcv;
+
+    //Update process table
+  processLock->Acquire();
+
+  int processID = -1;
+  kernelProcess* process;
+  for(int i =0; i<NumProcesses; i++){
+    process = (kernelProcess*) processTable->Get(i);
+    if(process == NULL){
+      continue;
+    }
+    if(process->addressSpace == currentThread->space){
+      processID = i;
+      break;
+    }
+  }
+  if(processID == -1){
+    printf("Invalid process identifier in create lock");
+    processLock->Release();
+    CVTableLock->Release();
+    return -1;
+  }
+  process->cvs[index] = false;
+  processLock->Release();
+
   } else {
     kcv->toBeDeleted = true;
   }
+
 
   CVTableLock->Release();
   return index;
@@ -310,12 +360,12 @@ int DestroyCV_Syscall(int index) {
 
 int Wait_Syscall(int lockIndex, int CVIndex) {
   CVTableLock->Acquire();
-  printf("Wait CV: Lock index %d amd CV index %d are in wait", lockIndex, CVIndex);
+  DEBUG('a', "Wait CV: Lock index %d and CV index %d are in wait\n", lockIndex, CVIndex);
 
   //Error checking
   //validating lock
   if (lockIndex < 0 || lockIndex > NumLocks) {
-    printf("Wait CV: Invalid Lock Index");
+    printf("Wait: Invalid Lock Index\n");
     CVTableLock->Release();
     return -1;
   }
@@ -323,20 +373,20 @@ int Wait_Syscall(int lockIndex, int CVIndex) {
   kernelLock* kl = (kernelLock*)lockTable->Get(lockIndex);
 
   if (kl == NULL) {
-    printf("Wait CV: CV does not exist");
+    printf("Wait: CV does not exist\n");
     CVTableLock->Release();
     return -1;
   }
 
   if (kl->addressSpace != currentThread->space) {
-    printf("WaitCV: CV belongs to a different process");
+    printf("Wait: CV belongs to a different process\n");
     CVTableLock->Release();
     return -1;
   }
 
   //validating cv
   if (CVIndex < 0 || CVIndex > NumCVs) {
-    printf("Wait CV: Invalid Lock Index");
+    printf("Wait: Invalid Lock Index\n");
     CVTableLock->Release();
     return -1;
   }
@@ -344,29 +394,53 @@ int Wait_Syscall(int lockIndex, int CVIndex) {
   kernelCV* kcv = (kernelCV*)CVTable->Get(CVIndex);
 
   if (kcv == NULL || kcv->condition == NULL) {
-    printf("Wait CV: CV does not exist");
+    printf("Wait: CV does not exist\n");
     CVTableLock->Release();
     return -1;
   }
 
   if (kcv->addressSpace != currentThread->space) {
-    printf("WaitCV: CV belongs to a different process");
+    printf("Wait: CV belongs to a different process\n");
     CVTableLock->Release();
     return -1;
   }
+
   //Wait
-  kcv->cvCounter++;
   CVTableLock->Release();
-  kcv->condition->Wait(kl->lock);
+  kcv->cvCounter++;
+  if(!kcv->condition->Wait(kl->lock)){
+    CVTableLock->Release();
+    return -1;
+  }
   CVTableLock->Acquire();
-  kcv->cvCounter;
 
   //Check if needs to be deleted
   if (kcv->toBeDeleted == true && kcv->cvCounter == 0) {
-    printf("Wait CV: Condition is deleted");
+    printf("Wait: Condition is deleted\n");
     kcv = (kernelCV*) CVTable->Remove(CVIndex);
     delete kcv->condition;
     delete kcv;
+
+    int processID = -1;
+  kernelProcess* process;
+  for(int i =0; i<NumProcesses; i++){
+    process = (kernelProcess*) processTable->Get(i);
+    if(process == NULL){
+      continue;
+    }
+    if(process->addressSpace == currentThread->space){
+      processID = i;
+      break;
+    }
+  }
+  if(processID == -1){
+    printf("Invalid process identifier in create lock");
+    processLock->Release();
+    CVTableLock->Release();
+    return -1;
+  }
+  process->cvs[CVIndex] = false;
+  processLock->Release();
   }
 
   CVTableLock->Release();
@@ -376,12 +450,12 @@ int Wait_Syscall(int lockIndex, int CVIndex) {
 int Signal_Syscall(int lockIndex, int CVIndex) {
   CVTableLock->Acquire();
   //Error checking
-  printf("Signal CV: Lock index %d amd CV index %d are in wait", lockIndex, CVIndex);
+  DEBUG('a', "Signal CV: Lock index %d amd CV index %d are in wait\n", lockIndex, CVIndex);
 
   //Error checking
   //validating lock
   if (lockIndex < 0 || lockIndex > NumLocks) {
-    printf("Wait CV: Invalid Lock Index");
+    printf("Signal: Invalid Lock Index\n");
     CVTableLock->Release();
     return -1;
   }
@@ -389,20 +463,20 @@ int Signal_Syscall(int lockIndex, int CVIndex) {
   kernelLock* kl = (kernelLock*)lockTable->Get(lockIndex);
 
   if (kl == NULL) {
-    printf("Wait CV: CV does not exist");
+    printf("Signal: CV does not exist\n");
     CVTableLock->Release();
     return -1;
   }
 
   if (kl->addressSpace != currentThread->space) {
-    printf("WaitCV: CV belongs to a different process");
+    printf("Signal: CV belongs to a different process\n");
     CVTableLock->Release();
     return -1;
   }
 
   //validating cv
   if (CVIndex < 0 || CVIndex > NumCVs) {
-    printf("Wait CV: Invalid Lock Index");
+    printf("Signal: Invalid Lock Index\n");
     CVTableLock->Release();
     return -1;
   }
@@ -410,18 +484,23 @@ int Signal_Syscall(int lockIndex, int CVIndex) {
   kernelCV* kcv = (kernelCV*)CVTable->Get(CVIndex);
 
   if (kcv == NULL || kcv->condition == NULL) {
-    printf("Wait CV: CV does not exist");
+    printf("Signal: CV does not exist\n");
     CVTableLock->Release();
     return -1;
   }
 
   if (kcv->addressSpace != currentThread->space) {
-    printf("WaitCV: CV belongs to a different process");
+    printf("Signal: CV belongs to a different process\n");
     CVTableLock->Release();
     return -1;
   }
   //Signal
-  kcv->condition->Signal(kl->lock);
+
+  if (!kcv->condition->Signal(kl->lock)){
+    CVTableLock->Release();
+    return -1;
+  }
+  kcv->cvCounter--;
   CVTableLock->Release();
   return CVIndex;
 }
@@ -429,12 +508,12 @@ int Signal_Syscall(int lockIndex, int CVIndex) {
 int Broadcast_Syscall(int lockIndex, int CVIndex) {
   CVTableLock->Acquire();
   //Error checking
-  printf("Broadcast CV: Lock index %d amd CV index %d are in wait", lockIndex, CVIndex);
+  DEBUG('a', "Broadcast CV: Lock index %d amd CV index %d are in wait\n", lockIndex, CVIndex);
 
   //Error checking
   //validating lock
   if (lockIndex < 0 || lockIndex > NumLocks) {
-    printf("Wait CV: Invalid Lock Index");
+    printf("Broadcast: Invalid Lock Index\n");
     CVTableLock->Release();
     return -1;
   }
@@ -442,20 +521,20 @@ int Broadcast_Syscall(int lockIndex, int CVIndex) {
   kernelLock* kl = (kernelLock*)lockTable->Get(lockIndex);
 
   if (kl == NULL) {
-    printf("Wait CV: CV does not exist");
+    printf("Broadcast: CV does not exist\n");
     CVTableLock->Release();
     return -1;
   }
 
   if (kl->addressSpace != currentThread->space) {
-    printf("WaitCV: CV belongs to a different process");
+    printf("Broadcast: CV belongs to a different process\n");
     CVTableLock->Release();
     return -1;
   }
 
   //validating cv
   if (CVIndex < 0 || CVIndex > NumCVs) {
-    printf("Wait CV: Invalid Lock Index");
+    printf("Broadcast: Invalid Lock Index\n");
     CVTableLock->Release();
     return -1;
   }
@@ -463,18 +542,19 @@ int Broadcast_Syscall(int lockIndex, int CVIndex) {
   kernelCV* kcv = (kernelCV*)CVTable->Get(CVIndex);
 
   if (kcv == NULL || kcv->condition == NULL) {
-    printf("Wait CV: CV does not exist");
+    printf("Broadcast: CV does not exist\n");
     CVTableLock->Release();
     return -1;
   }
 
   if (kcv->addressSpace != currentThread->space) {
-    printf("WaitCV: CV belongs to a different process");
+    printf("Broadcast: CV belongs to a different process\n");
     CVTableLock->Release();
     return -1;
   }
   //Broadcast
   kcv->condition->Broadcast(kl->lock);
+ 
   CVTableLock->Release();
   return CVIndex;
 }
@@ -483,24 +563,28 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   lockTableLock->Acquire();
 
   // Setting up name
-  char* name;
-  if(!(name = new char[len])){
-    printf("CreateLock: Can't allocate kernel buffer for exec system call\n");
+  char* name = new char[len+1];
+  if(!name){
+    printf("CreateLock: Can't allocate kernel buffer for create lock\n");
     lockTableLock->Release();
     return -1;
   }
   else {
     if(copyin(vaddr, len, name) == -1){
-      printf("CreateLock: Bad pointer passed to write\n");
-      delete [] name;
+      printf("CreateLock: Bad pointer passed to create lock\n");
       lockTableLock->Release();
       return -1;
     }
   }
 
+  if(lockTable->NumUsed() >= NumLocks){
+    printf("Error: no more locks available. Lock not created.\n");
+  }
+
   // Create lock
+  Lock* lock = new Lock(name);
   kernelLock* kl = new kernelLock();
-  kl->lock = new Lock(name);
+  kl->lock = lock;
   kl->addressSpace = currentThread->space;
   kl->isToBeDeleted = false;
 
@@ -512,6 +596,30 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
     lockTableLock->Release();
     return -1;
   }
+
+  //Update process table
+  processLock->Acquire();
+
+  int processID = -1;
+  kernelProcess* process;
+  for(int i =0; i<NumProcesses; i++){
+    process = (kernelProcess*) processTable->Get(i);
+    if(process == NULL){
+      continue;
+    }
+    if(process->addressSpace == currentThread->space){
+      processID = i;
+      break;
+    }
+  }
+  if(processID == -1){
+    printf("Invalid process identifier in create lock");
+    processLock->Release();
+    lockTableLock->Release();
+    return -1;
+  }
+  process->locks[index] = true;
+  processLock->Release();
 
   lockTableLock->Release();
 
@@ -532,7 +640,7 @@ int Acquire_Syscall(int index) {
   kernelLock* kl = (kernelLock*)lockTable->Get(index);
 
   // does lock actually exist at this index
-  if (kl->lock == NULL) {
+  if (kl == NULL || kl->lock == NULL) {
     printf("Acquire: Lock does not exist\n");
     lockTableLock->Release();
     return -1;
@@ -545,7 +653,8 @@ int Acquire_Syscall(int index) {
     return -1;
   }
 
-  kl->lock->Acquire();
+  if(kl->lock->Acquire())
+    kl->lockCounter++; 
 
   lockTableLock->Release();
   return index;
@@ -565,7 +674,7 @@ int Release_Syscall(int index) {
   kernelLock* kl = (kernelLock*)lockTable->Get(index);
 
   // does lock actually exist at this index
-  if (kl->lock == NULL) {
+  if (kl == NULL || kl->lock == NULL) {
     printf("Release: Lock does not exist\n");
     lockTableLock->Release();
     return -1;
@@ -578,13 +687,36 @@ int Release_Syscall(int index) {
     return -1;
   }
 
-  kl->lock->Release();
-
-  // Delete lock if destroyed was called on it previouisly and no threads 
+  if (kl->lock->Release());
+    kl->lockCounter--;
+  // Delete lock if destroyed wcqs called on it previouisly and no threads 
   // are waiting
-  if (kl->isToBeDeleted && strcmp(kl->lock->getState(), "FREE")) {
-    kl = (kernelLock*) lockTable->Remove(index);
+  if (kl->isToBeDeleted && strcmp(kl->lock->getState(), "FREE") == 0 && kl->lockCounter==0) {
+    kl = (kernelLock*) lockTable->Remove(index); 
+    delete kl->lock;
     delete kl;
+
+    processLock->Acquire();
+      int processID = -1;
+      kernelProcess* process;
+      for (int i=0; i < NumProcesses; i++) {
+        process = (kernelProcess*) processTable->Get(i);
+        if (process == NULL) {
+          continue;
+        }
+        if (process->addressSpace == currentThread->space) {
+          processID = i;
+          break;
+        }
+      }
+      if (processID == -1) {
+        printf("Error: invalid process identifier (ReleaseLock_Syscall)\n");
+        processLock->Release();
+        lockTableLock->Release();
+        return -1;
+      }
+      process->locks[index] = false;
+      processLock->Release();
   }
 
   lockTableLock->Release();
@@ -605,7 +737,7 @@ int DestroyLock_Syscall(int index) {
   kernelLock* kl = (kernelLock*)lockTable->Get(index);
 
   // does lock actually exist at this index
-  if (kl->lock == NULL) {
+  if (kl == NULL || kl->lock == NULL) {
     printf("DestroyLock: Lock does not exist\n");
     lockTableLock->Release();
     return -1;
@@ -619,7 +751,7 @@ int DestroyLock_Syscall(int index) {
   }
 
   // if lock is busy, delete after it gets released
-  if (strcmp(kl->lock->getState(), "BUSY")) {
+  if (strcmp(kl->lock->getState(), "BUSY") == 0) {
     DEBUG('a', "DestroyLock: Lock is busy, set isToBeDeleted to true\n");
     kl->isToBeDeleted = true;
     lockTableLock->Release();
@@ -635,12 +767,19 @@ int DestroyLock_Syscall(int index) {
 
 void internal_fork(int pc){
   currentThread->space->InitRegisters();
+
   machine->WriteRegister(PCReg, pc);
+
   machine->WriteRegister(NextPCReg, pc+4);
   currentThread->space->RestoreState();
+
   machine->WriteRegister(StackReg, currentThread->stackreg);
 
+  currentThread->space->RestoreState();
+
+
   machine->Run();
+
 }
 
 void Fork_Syscall(int pc, unsigned int vaddr, int len){
@@ -656,7 +795,6 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
       return;
     }
   }
-
 
   processLock->Acquire();
   int processID = -1;
@@ -684,7 +822,6 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
   }
 
 
-
   //Fork new thread
   Thread* t = new Thread(buf);
   //Allocate stack
@@ -695,6 +832,8 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
   t->space = currentThread->space;
 
   t->Fork((VoidFunctionPtr)internal_fork, pc);
+  currentThread->Yield();
+  delete [] buf;
 }
 
 void internal_exec(int pc){
@@ -857,56 +996,56 @@ void Exit_Syscall(int status){
 
 void ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2); // Which syscall?
-    int rv=0; 	// the return value from a syscall
+    int rv=0;   // the return value from a syscall
 
     if ( which == SyscallException ) {
-	switch (type) {
-	    default:
-		DEBUG('a', "Unknown syscall - shutting down.\n");
-	 case SC_Halt:
-    		DEBUG('a', "Shutdown, initiated by user program.\n");
-    		interrupt->Halt();
-    		break;
-	 case SC_Create:
-    		DEBUG('a', "Create syscall.\n");
-    		Create_Syscall(machine->ReadRegister(4), machine->ReadRegister(5));
-    		break;
-	 case SC_Open:
-    		DEBUG('a', "Open syscall.\n");
-    		rv = Open_Syscall(machine->ReadRegister(4), machine->ReadRegister(5));
-    		break;
-	 case SC_Write:
-    		DEBUG('a', "Write syscall.\n");
-    		Write_Syscall(machine->ReadRegister(4),
-    			      machine->ReadRegister(5),
-    			      machine->ReadRegister(6));
-    		break;
-	  case SC_Read:
-    		DEBUG('a', "Read syscall.\n");
-    		rv = Read_Syscall(machine->ReadRegister(4),
-    			      machine->ReadRegister(5),
-    			      machine->ReadRegister(6));
-    		break;
-	  case SC_Close:
-    		DEBUG('a', "Close syscall.\n");
-    		Close_Syscall(machine->ReadRegister(4));
-    		break;
+  switch (type) {
+      default:
+    DEBUG('a', "Unknown syscall - shutting down.\n");
+   case SC_Halt:
+        DEBUG('a', "Shutdown, initiated by user program.\n");
+        interrupt->Halt();
+        break;
+   case SC_Create:
+        DEBUG('a', "Create syscall.\n");
+        Create_Syscall(machine->ReadRegister(4), machine->ReadRegister(5));
+        break;
+   case SC_Open:
+        DEBUG('a', "Open syscall.\n");
+        rv = Open_Syscall(machine->ReadRegister(4), machine->ReadRegister(5));
+        break;
+   case SC_Write:
+        DEBUG('a', "Write syscall.\n");
+        Write_Syscall(machine->ReadRegister(4),
+                machine->ReadRegister(5),
+                machine->ReadRegister(6));
+        break;
+    case SC_Read:
+        DEBUG('a', "Read syscall.\n");
+        rv = Read_Syscall(machine->ReadRegister(4),
+                machine->ReadRegister(5),
+                machine->ReadRegister(6));
+        break;
+    case SC_Close:
+        DEBUG('a', "Close syscall.\n");
+        Close_Syscall(machine->ReadRegister(4));
+        break;
     case SC_CreateLock:
         DEBUG('a', "Create lock syscall.\n");
-        CreateLock_Syscall(machine->ReadRegister(4),
+        rv = CreateLock_Syscall(machine->ReadRegister(4),
                            machine->ReadRegister(5));
         break;
     case SC_Acquire:
         DEBUG('a', "Create acquire syscall.\n");
-        Acquire_Syscall(machine->ReadRegister(4));
+        rv = Acquire_Syscall(machine->ReadRegister(4));
         break;
     case SC_Release:
         DEBUG('a', "Create release syscall.\n");
-        Release_Syscall(machine->ReadRegister(4));
+        rv = Release_Syscall(machine->ReadRegister(4));
         break;
     case SC_DestroyLock:
         DEBUG('a', "Create destroy lock syscall.\n");
-        DestroyLock_Syscall(machine->ReadRegister(4));
+        rv = DestroyLock_Syscall(machine->ReadRegister(4));
         break;
     case SC_CreateCV:
         DEBUG('a', "CreateCV syscall.\n");
@@ -945,14 +1084,14 @@ void ExceptionHandler(ExceptionType which) {
         Exit_Syscall(machine->ReadRegister(4));
         break;
 
-	}
+  }
 
-	// Put in the return value and increment the PC
-	machine->WriteRegister(2,rv);
-	machine->WriteRegister(PrevPCReg,machine->ReadRegister(PCReg));
-	machine->WriteRegister(PCReg,machine->ReadRegister(NextPCReg));
-	machine->WriteRegister(NextPCReg,machine->ReadRegister(PCReg)+4);
-	return;
+  // Put in the return value and increment the PC
+  machine->WriteRegister(2,rv);
+  machine->WriteRegister(PrevPCReg,machine->ReadRegister(PCReg));
+  machine->WriteRegister(PCReg,machine->ReadRegister(NextPCReg));
+  machine->WriteRegister(NextPCReg,machine->ReadRegister(PCReg)+4);
+  return;
     } else {
       cout<<"Unexpected user mode exception - which:"<<which<<"  type:"<< type<<endl;
       interrupt->Halt();

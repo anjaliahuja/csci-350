@@ -56,6 +56,7 @@ struct kernelLock {
 	Lock* lock;
 	AddrSpace* addressSpace;
 	bool isToBeDeleted;
+	int lockCounter;
 };
 
 struct kernelCV{
@@ -69,12 +70,24 @@ struct kernelProcess{
 	kernelProcess(){
 		addressSpace = currentThread->space; 
 		numThreads = 0;
+		locks = new bool [NumLocks];
+		for(int i =0; i<NumLocks; i++){
+			locks[i] = false;
+		}
+		cvs = new bool[NumCVs];
+		for(int i = 0; i< NumCVs; i++){
+			cvs[i] = false;
+		}
 	}
 	~kernelProcess(){
+		delete [] locks;
+		delete [] cvs;
 	}
 
 	AddrSpace* addressSpace;
 	int numThreads;
+	bool* locks;
+	bool* cvs;
 };
 
 #endif
