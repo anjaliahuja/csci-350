@@ -113,7 +113,7 @@ Lock::~Lock() {
 }
 
 
-void Lock::Acquire() {
+bool Lock::Acquire() {
   // Disable interrupts.
   IntStatus oldLevel = interrupt->SetLevel(IntOff); 
 
@@ -122,7 +122,7 @@ void Lock::Acquire() {
     (void) interrupt->SetLevel(oldLevel);
     printf("Lock::Acquire -> Thread %s already owns lock %s!\n", 
       this->lockOwnerThread->getName(), this->name);
-    return;
+    return false;
   }
 
   // If the lock is available change to busy.
@@ -139,10 +139,10 @@ void Lock::Acquire() {
 
   //Restore interrupts.
   (void) interrupt->SetLevel(oldLevel);
-  return;
+  return true;
 }
 
-void Lock::Release() {
+bool Lock::Release() {
   // Disable interrupts.
   IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
@@ -151,7 +151,7 @@ void Lock::Release() {
     printf("Lock::Release -> current Thread %s doesn't own lock %s\n", 
       currentThread->getName(), this->name);
     (void) interrupt->SetLevel(oldLevel);
-    return;
+    return false;
   }
 
   // If there is a thread in the wait queue, remove the thread.
@@ -168,7 +168,7 @@ void Lock::Release() {
 
   // Restore interrupts.
   (void) interrupt->SetLevel(oldLevel);
-  return;
+  return true;
 }
 
 bool Lock::isHeldByCurrentThread() {

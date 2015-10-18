@@ -320,10 +320,8 @@ int DestroyCV_Syscall(int index) {
   }
 
   //Destryoing condition
-
   if (kcv->cvCounter == 0){
     kcv = (kernelCV*) CVTable->Remove(index);
-    DEBUG('e', "Deleted CV: %d ", index);
     delete kcv->condition;
     delete kcv;
 
@@ -587,7 +585,7 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   kl->toBeDeleted = false;
 
   int index = lockTable->Put((void*)kl);
-
+  printf("Index in create lock: %d", index);
   // Error checking
   if (index == -1) {
     printf("CreateLock: No space left in lock table to create lock\n"); 
@@ -622,7 +620,6 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
 
 
   lockTableLock->Release();
-  printf("%d\n", index);
 
   return index;
 }
@@ -655,8 +652,9 @@ int Acquire_Syscall(int index) {
     return -1;
   }
 
-  kl->lockCounter++; 
-  kl->lock->Acquire();
+  if(kl->lock->Acquire()){
+    kl->lockCounter++;
+  }
 
   lockTableLock->Release();
   return index;
@@ -688,9 +686,9 @@ int Release_Syscall(int index) {
     lockTableLock->Release();
     return -1;
   }
-
-  kl->lock->Release();
-  kl->lockCounter--;
+  if(  kl->lock->Release()){
+    kl->lockCounter--;
+  }
   // Delete lock if destroyed was called on it previouisly and no threads 
   // are waiting
   if (kl->toBeDeleted && strcmp(kl->lock->getState(), "FREE") == 0 && kl->lockCounter==0) {
@@ -760,46 +758,15 @@ int DestroyLock_Syscall(int index) {
     return index;
   }
 
+  kl = (kernelLock*) lockTable->Remove(index);
+  delete kl;
 
-   if (kl->lockCounter == 0){
-    kl = (kernelLock*) lockTable->Remove(index);
-    DEBUG('e', "Deleted Lock: %d ", index);
-    delete kl->lock;
-    delete kl;
-
-    //Update process table
-  processLock->Acquire();
-
-  int processID = -1;
-  kernelProcess* process;
-  for(int i =0; i<NumProcesses; i++){
-    process = (kernelProcess*) processTable->Get(i);
-    if(process == NULL){
-      continue;
-    }
-    if(process->addressSpace == currentThread->space){
-      processID = i;
-      break;
-    }
-  }
-  if(processID == -1){
-        printf("Invalid process identifier in create lock");
-        processLock->Release();
-        lockTableLock->Release();
-        return -1;
-      }
-      process->locks[index] = false;
-      processLock->Release();
-
-    } else {
-      kl->toBeDeleted = true;
-    }
-
-    lockTableLock->Release();
-    return index;
+  lockTableLock->Release();
+  return index;
 }
 
 void internal_fork(int pc){
+  printf("currentThread in internal fork: %s \n", currentThread->getName());
   currentThread->space->InitRegisters();
 
   machine->WriteRegister(PCReg, pc);
@@ -866,7 +833,10 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
   delete[] stackRegister;
   t->space = currentThread->space;
 
+  printf("Thread name in fork: %s \n", t->getName());
   t->Fork((VoidFunctionPtr)internal_fork, pc);
+  currentThread->Yield();
+
 
   delete [] buf;
 }
@@ -924,6 +894,7 @@ void Exec_Syscall(unsigned int vaddr, int len){
 
   delete exec;
   delete [] file;
+
 
 }
 
@@ -1076,16 +1047,16 @@ void ExceptionHandler(ExceptionType which) {
         break;
     case SC_CreateLock:
         DEBUG('a', "Create lock syscall.\n");
-        CreateLock_Syscall(machine->ReadRegister(4),
+        rv = CreateLock_Syscall(machine->ReadRegister(4),
                            machine->ReadRegister(5));
         break;
     case SC_Acquire:
         DEBUG('a', "Create acquire syscall.\n");
-        Acquire_Syscall(machine->ReadRegister(4));
+        rv = Acquire_Syscall(machine->ReadRegister(4));
         break;
     case SC_Release:
         DEBUG('a', "Create release syscall.\n");
-        Release_Syscall(machine->ReadRegister(4));
+        rv = Release_Syscall(machine->ReadRegister(4));
         break;
     case SC_DestroyLock:
         DEBUG('a', "Create destroy lock syscall.\n");

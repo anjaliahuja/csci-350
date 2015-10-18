@@ -1,17 +1,17 @@
 #include "syscall.h"
 
 void t1(){
-	Printf("t1\n", sizeof("t1\n"));
+	Write("t1\n", sizeof("t1\n"), ConsoleOutput);
 	Exit(0);
 }
 
 void t2(){
-	Printf("t2\n", sizeof("t1\n"));
+	Write("t2\n", sizeof("t1\n"), ConsoleOutput);
 	Exit(0);
 }
 
 void t3(){
-	Printf("t3\n", sizeof("t1\n"));
+	Write("t3\n", sizeof("t1\n"), ConsoleOutput);
 	Exit(0);
 }
 
@@ -20,10 +20,9 @@ void t3(){
 
 
 int main(){
-	Exec("../test/testexitprogram", sizeof(../test/testexitprogram));
-	Exec("../test/testexitprogram", sizeof(../test/testexitprogram));
-	Exec("../test/testexitprogram", sizeof(../test/testexitprogram));
-
+	Exec("../test/testexitprogram", sizeof("../test/testexitprogram"));
+	/*Exec("../test/testexitprogram", sizeof("../test/testexitprogram"));
+	*/
 
 	Fork(t1, "name", sizeof("name"));	
 	Fork(t2, "name", sizeof("name"));

@@ -7,6 +7,7 @@
 int t1_l1, t1_l2, t1_l3, t2_l1, t3_l1;
 int t2_c1, t3_c1;
 
+
 void t1_t4();
 void t1_t5();
 void startTest2();
@@ -19,7 +20,7 @@ void startTest2();
 */
 void t1_t1() {
   int i;
-    Write("In t1_t1\n", sizeof("In t1_t1\n"), ConsoleOutput);
+  Write("In t1_t1\n", sizeof("In t1_t1\n"), ConsoleOutput);
 
   Acquire(t1_l1);
   Write("t1_t1 acquired t1_l1\n", sizeof("t1_t1 acquired t1_l1\n"), ConsoleOutput);
@@ -27,6 +28,7 @@ void t1_t1() {
   Write("t1_t1 releasing t1_l1\n", sizeof("t1_t1 releasing t1_l1\n"), ConsoleOutput);
   Release(t1_l1);
 
+  
   Exit(0);
 }
 
@@ -98,7 +100,7 @@ void t1_t4() {
 */
 void t1_t5() {
   t1_l2 = CreateLock("t1_l2", 5);
-  t1_l3 = CreateLock("2", 1);
+  t1_l3 = CreateLock("t1_l3", 5);
   Acquire(t1_l2);
   Acquire(t1_l3);
 /*
@@ -182,7 +184,8 @@ int main() {
   Write("Test 1\n", sizeof("Test 1\n"), ConsoleOutput);
 
   Fork(t1_t1, "t1_t1", sizeof("t1_t1"));
-  Write("After Fork\n", sizeof("After Fork"), ConsoleOutput);
   Fork(t1_t2, "t1_t2", sizeof("t1_t2"));
-  Fork(t1_t3, "t1_t3", sizeof("t1_t3"));  
+  Fork(t1_t3, "t1_t3", sizeof("t1_t3"));
+
+  
 }
