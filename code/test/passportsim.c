@@ -94,10 +94,10 @@ int queue_pop(Queue* q) {
   if(q->numElements == 0) {
     return -1;
   }
-  for (i = 0; i < (NUM_CUSTOMERS+5)-1; i++) {
+  for (i = 0; i < (NUM_CUSTOMERS+4); i++) {
     q->array[i] = q->array[i+1];
   }
-  q->array[NUM_CUSTOMERS+5] = -1;
+  q->array[NUM_CUSTOMERS+4] = -1;
   returnVal = q->front;
   q->front = q->array[0];
   q->numElements--;
@@ -370,9 +370,7 @@ void startAppClerk(int id) {
   int i;
 
   while(true) {
-    if(numCustomers == 0) {
-      break;
-    }
+    if(numCustomers == 0) break;
     Acquire(AppClerkLineLock);
     if (SenatorArrived) {
 
@@ -408,11 +406,10 @@ void startAppClerk(int id) {
     /*print out */
 
     Release(AppClerks[id].lock);
-    /*for(i =20; i<100; ++i){
+    for(i =20; i<100; ++i){
       Yield();
-    }*/
+    }
     Acquire(AppClerks[id].lock);
-
     Signal(AppClerks[id].lock, AppClerks[id].cv);
     /*print out */
 
@@ -429,15 +426,272 @@ void startAppClerk(int id) {
 }
 
 void startPicClerk(int id) {
+  int i;
 
+  while(true) {
+    if (numCustomers == 0) break;
+    Acquire(PicClerkLineLock);
+
+    if (SenatorArrived /*&& !setUpSenator*/) {
+
+    } else if (queue_size(&PicClerks[id].bribeLine) != 0) {
+      Signal(PicClerkLineLock, PicClerks[id].bribeLineCV);
+      PicClerkBribeMoney += 500;
+      PicClerks[id].state = 1;
+      PicClerks[id].currentCustomer = queue_pop(&PicClerks[id].bribeLine);
+    } else if (queue_size(&PicClerks[id].line) != 0) {
+      Signal(PicClerkLineLock, PicClerks[id].lineCV);
+      /*
+      std::cout << name << " has signalled a Customer to come to their counter" << std::endl;
+      */
+      PicClerks[id].state = 1;
+      PicClerks[id].currentCustomer = queue_pop(&PicClerks[id].bribeLine);
+    } else if (!SenatorArrived) {
+      PicClerks[id].state = 2;
+      /*
+      std::cout << name << " is going on break" << std::endl;
+      */
+      Acquire(PicClerks[id].lock);
+      Release(PicClerkLineLock);
+      Wait(PicClerks[id].lock, PicClerks[id].cv);
+      /*
+      std::cout << name << " is coming off break" << std::endl;
+      */
+      Signal(PicClerks[id].lock, PicClerks[id].cv);
+      Release(PicClerks[id].lock);
+      PicClerks[id].state = 0;
+      continue;
+    }
+
+    Acquire(PicClerks[id].lock);
+    Release(PicClerkLineLock);
+
+    /* Wait for customer data */
+    Wait(PicClerks[id].lock, PicClerks[id].cv);
+
+    /*
+    std::cout << name << " has received SSN " << currentCustomer->getSSN();
+    std::cout << " from " << currentCustomer->getName() << std::endl;
+    */
+
+    /* Do my job, customer now waiting */
+    Signal(PicClerks[id].lock, PicClerks[id].cv);
+    /*
+    std::cout << name << " has taken a picture of " << currentCustomer->getName() << std::endl;
+    */
+
+    /* waiting for approval */
+    Wait(PicClerks[id].lock, PicClerks[id].cv);
+
+    if (!PicClerks[id].likePicture) {
+      /*
+      std::cout << name << " has been told that " << currentCustomer->getName();
+      std::cout << " does not like their picture" << std::endl;
+      */
+      Signal(PicClerks[id].lock, PicClerks[id].cv);
+    }
+    else {
+      /*
+      std::cout << name << " has been told that " << currentCustomer->getName();
+      std::cout << " does like their picture" << std::endl;
+      */
+
+      Release(PicClerks[id].lock);
+      for(i =20; i<100; ++i){
+          Yield();
+      }
+      Acquire(PicClerks[id].lock);
+      Signal(PicClerks[id].lock, PicClerks[id].cv);
+    }
+    Wait(PicClerks[id].lock, PicClerks[id].cv);
+    /*if (SenatorArrived && setUpSenator) {
+      SenatorLock->Acquire();
+      senatorCV->Wait(SenatorLock);
+      SenatorLock->Release();
+    }*/
+
+    PicClerks[id].currentCustomer = -1;
+    Release(PicClerks[id].lock);
+  }
 }
 
 void startPassportClerk(int id) {
+  int i, random;
 
+  while(true) {
+    if(numCustomers == 0) break;
+    Acquire(PassportClerkLineLock);
+    if (SenatorArrived) {
+
+    } else if (queue_size(&PassportClerks[id].bribeLine) != 0) {
+      Signal(PassportClerkLineLock, PassportClerks[id].bribeLineCV);
+      /* print out */
+      PassportClerkBribeMoney += 500;
+      PassportClerks[id].state = 1;
+      PassportClerks[id].currentCustomer = queue_pop(&PassportClerks[id].bribeLine);
+    } else if (queue_size(&PassportClerks[id].line) != 0) {
+      Signal(PassportClerkLineLock, PassportClerks[id].lineCV);
+      /* print out */
+      PassportClerkBribeMoney += 500;
+      PassportClerks[id].state = 1;
+      PassportClerks[id].currentCustomer = queue_pop(&PassportClerks[id].line);
+    } else {
+      Acquire(PassportClerks[id].lock);
+      PassportClerks[id].state = 2;
+      /*print out*/
+      Release(PassportClerkLineLock);
+      Wait(PassportClerks[id].lock, PassportClerks[id].cv);
+      /*print out*/
+      Signal(PassportClerks[id].lock, PassportClerks[id].cv);
+      PassportClerks[id].state = 0;
+
+      Release(PassportClerks[id].lock);
+      continue;
+    }
+    Acquire(PassportClerks[id].lock);
+    Release(PassportClerkLineLock);
+
+    Wait(PassportClerks[id].lock, PassportClerks[id].cv);
+
+    /*
+    std::cout << name << " has received SSN " << currentCustomer->getSSN();
+    std::cout << " from " << currentCustomer->getName() << std::endl;
+    */
+
+    /* 5% chance that passport clerk makes a mistake.*/
+    random = Rand()%20;
+    if (random == 0) {
+      /*
+      std::cout << name << " has determined that " << currentCustomer->getName();
+      std::cout << " does not have both their application and picture completed" << std::endl;
+      */
+      Customers[PassportClerks[id].currentCustomer].sendToBackOfLine = true;
+      Signal(PassportClerks[id].lock, PassportClerks[id].cv);
+    }
+    else {
+      /*
+      std::cout << name << " has determined that " << currentCustomer->getName();
+      std::cout << " has both their application and picture completed" << std::endl;
+      */
+      Signal(PassportClerks[id].lock, PassportClerks[id].cv);
+      Release(PassportClerks[id].lock);
+      for(i =20; i<100; ++i){
+          Yield();
+      }
+      Acquire(PassportClerks[id].lock);
+      Signal(PassportClerks[id].lock, PassportClerks[id].cv);
+      /*
+      std::cout << name << " has recorded " << currentCustomer->getName() << " passport documentation" << std::endl;
+      */
+    }
+
+    Wait(PassportClerks[id].lock, PassportClerks[id].cv);
+
+    /*if (SenatorArrived && setUpSenator) {
+      SenatorLock->Acquire();
+      senatorCV->Wait(SenatorLock);
+      SenatorLock->Release();
+    }*/
+
+    PassportClerks[id].currentCustomer = -1;
+    Release(PassportClerks[id].lock);
+  }
 }
 
 void startCashiers(int id) {
+  int i, random;
 
+  while(true) {
+    if(numCustomers == 0) break;
+    Acquire(CashierLineLock);
+    if (SenatorArrived) {
+
+    } else if (queue_size(&Cashiers[id].bribeLine) != 0) {
+      Signal(CashierLineLock, Cashiers[id].bribeLineCV);
+      /* print out */
+      CashierMoney += 500;
+      Cashiers[id].state = 1;
+      Cashiers[id].currentCustomer = queue_pop(&Cashiers[id].bribeLine);
+    } else if (queue_size(&Cashiers[id].line) != 0) {
+      Signal(CashierLineLock, Cashiers[id].lineCV);
+      /* print out */
+      Cashiers[id].state = 1;
+      Cashiers[id].currentCustomer = queue_pop(&Cashiers[id].line);
+    } else {
+      Acquire(Cashiers[id].lock);
+      Cashiers[id].state = 2;
+      /*print out*/
+      Release(CashierLineLock);
+      Wait(Cashiers[id].lock, Cashiers[id].cv);
+      /*print out*/
+      Signal(Cashiers[id].lock, Cashiers[id].cv);
+      Cashiers[id].state = 0;
+
+      Release(Cashiers[id].lock);
+      continue;
+    }
+    Acquire(Cashiers[id].lock);
+    Release(CashierLineLock);
+
+    Wait(Cashiers[id].lock, Cashiers[id].cv);
+
+    /*
+    std::cout << name << " has received SSN " << currentCustomer->getSSN();
+    std::cout << " from " << currentCustomer->getName() << std::endl;
+    */
+
+    /* 5% chance that passport clerk makes a mistake.*/
+    random = Rand()%20;
+    if (random == 0) {
+      /*
+      std::cout << name << " has received the $100 from " << currentCustomer->getName();
+      std::cout << " before certification. They are to go to the back of the line" << std::endl;
+      */
+      Customers[Cashiers[id].currentCustomer].sendToBackOfLine = true;
+      Signal(Cashiers[id].lock, Cashiers[id].cv);
+    }
+    else {
+      Signal(Cashiers[id].lock, Cashiers[id].cv);
+      /*
+      std::cout << name << " has verified that " << currentCustomer->getName();
+      std::cout << " has been certified by a PassportClerk" << std::endl;
+      */
+      Wait(Cashiers[id].lock, Cashiers[id].cv);
+      CashierMoney += 100;
+      /*
+      std::cout << name << " has received the $100 from " << currentCustomer->getName();
+      std::cout << " after certification" << std::endl;
+      */
+
+      Release(Cashiers[id].lock);
+      for(i =20; i<100; ++i){
+          Yield();
+      }
+      Acquire(Cashiers[id].lock);
+      /*
+      std::cout << name << " has provided " << currentCustomer->getName();
+      std::cout << " their completed passport" << std::endl;
+      */
+
+      Wait(Cashiers[id].lock, Cashiers[id].cv);
+      /*
+      std::cout << name << " has recorded that " << currentCustomer->getName();
+      std::cout << " has been given their completed passport" << std::endl;
+      */
+      Signal(Cashiers[id].lock, Cashiers[id].cv);
+    }
+
+    Wait(Cashiers[id].lock, Cashiers[id].cv);
+
+    /*if (SenatorArrived && setUpSenator) {
+      SenatorLock->Acquire();
+      senatorCV->Wait(SenatorLock);
+      SenatorLock->Release();
+    }*/
+
+    Cashiers[id].currentCustomer = -1;
+    Release(Cashiers[id].lock);
+  }
 }
 
 void managerWakeup(Clerk* clerk) {
@@ -532,7 +786,7 @@ void startManager() {
     }
 
     for(i = 0; i < 1000; i++) {
-      /*Yield();*/
+      Yield();
     }
 
     /*Add code for checking amount of money we have*/
