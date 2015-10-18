@@ -42,6 +42,9 @@ typedef struct {
   int currentCustomer;
   Queue line;
   Queue bribeLine;
+
+  /* For Pic Clerk only*/
+  bool likePicture;
 } Clerk;
 
 typedef struct {
@@ -183,15 +186,150 @@ void getAppFiled(int my_line, int customer) {
 }
 
 void getPicTaken(int my_line, int customer) {
+  int dislikePicture = 0, i;
+  Acquire(PicClerks[my_line].lock);
 
+  Signal(PicClerks[my_line].lock, PicClerks[my_line].cv);
+  /* Print out
+  std::cout << this->name << " has given SSN " << ssn << " to " << PicClerks[my_line]->getName() << std::endl;
+  */
+
+  /* Waits for pic clerk to take picture */
+  Wait(PicClerks[my_line].lock, PicClerks[my_line].cv);
+  /* dislikePicture = Rand () % 100 + 1;*/ /*chooses percentage between 1-99*/
+  if (dislikePicture > 50)  {
+    /*
+      std::cout << this->name << " does not like their picture from " << PicClerks[my_line]->getName() << std::endl;
+    */ 
+      PicClerks[my_line].likePicture = false;
+      Signal(PicClerks[my_line].lock, PicClerks[my_line].cv);
+      /* Has to get back in a line.
+         Wait to make sure that clerk acknowledges & then go back in line
+      */
+      Wait(PicClerks[my_line].lock, PicClerks[my_line].cv);
+
+      /*Signal clerk that I'm leaving*/
+      Signal(PicClerks[my_line].lock, PicClerks[my_line].cv);
+      
+      /* Implemented so that the if the clerk they were at can become available again
+         Not necessarily punishment
+      */
+      Release(PicClerks[my_line].lock);
+      for(i =100; i<1000; ++i){
+          Yield();
+      }
+
+      getPicTaken(findLine('p', Customers[customer].isSenator , customer), customer);
+      return;
+  }
+
+  PicClerks[my_line].likePicture = true;
+
+  /*
+  std::cout << this->name << " does like their picture from " << PicClerks[my_line]->getName() << std::endl;
+  * Signal clerk and Wait to make sure that clerk acknowledges.
+  */
+
+  Signal(PicClerks[my_line].lock, PicClerks[my_line].cv);
+  Wait(PicClerks[my_line].lock, PicClerks[my_line].cv);
+
+  /* Signal clerk that I'm leaving */
+  Signal(PicClerks[my_line].lock, PicClerks[my_line].cv);
+  Customers[customer].pic_clerk = true;
+  Release(PicClerks[my_line].lock);  
 }
 
 void getPassport(int my_line, int customer) {
+  int i;
+  Acquire(PassportClerks[my_line].lock);
+  Signal(PassportClerks[my_line].lock, PassportClerks[my_line].cv);
 
+  /* Print out
+  std::cout << this->name << " has given SSN " << ssn << " to " << PassportClerks[my_line]->getName() << std::endl;
+  */
+
+  /* Wait to determine whether they go back in line */
+  Wait(PassportClerks[my_line].lock, PassportClerks[my_line].cv);
+
+  if(Customers[customer].sendToBackOfLine){
+    /* send customer to back of line after yield
+    std::cout << this->name << " has gone to " << PassportClerks[my_line]->getName() << " too soon. ";
+    std::cout << "They are going to the back of the line." << std::endl;
+    */
+
+    /* Signal clerk that I'm leaving */
+    Signal(PassportClerks[my_line].lock, PassportClerks[my_line].cv);
+    Release(PassportClerks[my_line].lock);
+    for(i =100; i<1000; ++i){
+        Yield();
+    }
+
+    Customers[customer].sendToBackOfLine = false;
+    /* Assuming back of line does not mean their current line */
+    getPassport(findLine('s', Customers[customer].isSenator, customer), customer);
+    return;
+  } 
+  
+  /* waits for passport clerk to record passport */
+  Wait(PassportClerks[my_line].lock, PassportClerks[my_line].cv);    
+  
+  /* Signal clerk that I'm leaving */
+  Signal(PassportClerks[my_line].lock, PassportClerks[my_line].cv);
+  Customers[customer].passport_clerk = true;
+  Release(PassportClerks[my_line].lock);  
 }
 
 void payCashier(int my_line, int customer) {
+  int i;
 
+  Acquire(Cashiers[my_line].lock);
+  Signal(Cashiers[my_line].lock, Cashiers[my_line].cv);
+
+  /*
+  std::cout << this->name << " has given SSN " << ssn << " to " << Cashiers[my_line]->getName() << std::endl;
+  */
+
+  /* Wait to determine whether they go back in line */
+  Wait(Cashiers[my_line].lock, Cashiers[my_line].cv);
+
+  if(Customers[customer].sendToBackOfLine){
+    /* send customer to back of line after yield */
+    /*
+    std::cout << this->name << " has gone to " << Cashiers[my_line]->getName() << " too soon. ";
+    std::cout << "They are going to the back of the line." << std::endl;
+    */
+
+    /* Signal cashier that I'm leaving */
+    Signal(Cashiers[my_line].lock, Cashiers[my_line].cv);
+
+    Release(Cashiers[my_line].lock);
+    for(i =100; i<1000; ++i){
+        Yield();
+    }
+
+    Customers[customer].sendToBackOfLine = false;
+    payCashier(findLine('c', Customers[customer].isSenator, customer), customer);
+    return;
+  }
+  
+  Signal(Cashiers[my_line].lock, Cashiers[my_line].cv);
+  Customers[customer].money -= 100;
+  /*if (test6) MONEY += 100;*/
+  /*
+  std::cout << this->name << " has given " << Cashiers[my_line]->getName() << " $100" << std::endl;
+  */
+
+  /* waits for cashier to give me passport */
+  Wait(Cashiers[my_line].lock, Cashiers[my_line].cv);
+
+
+  /* ensure cashier that i've been given my passport */
+  Signal(Cashiers[my_line].lock, Cashiers[my_line].cv);
+  Wait(Cashiers[my_line].lock, Cashiers[my_line].cv);
+
+  /* Signal cashier that I'm leaving */
+  Signal(Cashiers[my_line].lock, Cashiers[my_line].cv);
+  Release(Cashiers[my_line].lock);  
 }
 
 /* Class functions */
