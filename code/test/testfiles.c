@@ -7,8 +7,6 @@
 int t1_l1, t1_l2, t1_l3, t2_l1, t3_l1;
 int t2_c1, t3_c1;
 
-void t1_t4();
-void t1_t5();
 void startTest2();
 
 /* 
@@ -19,8 +17,6 @@ void startTest2();
 */
 void t1_t1() {
   int i;
-    Write("In t1_t1\n", sizeof("In t1_t1\n"), ConsoleOutput);
-
   Acquire(t1_l1);
   Write("t1_t1 acquired t1_l1\n", sizeof("t1_t1 acquired t1_l1\n"), ConsoleOutput);
 
@@ -56,7 +52,6 @@ void t1_t3() {
   Write("t1_t3 acquiring t1_l1\n", sizeof("t1_t3 acquiring t1_l1\n"), ConsoleOutput);
   Acquire(t1_l1);
 
-  Fork(t1_t4, "t1_t4", sizeof("t1_t4"));
   Exit(0);
 }
 
@@ -86,7 +81,6 @@ void t1_t4() {
   Write("t1_t4 acquiring t1_l1 after it was destroyed\n", sizeof("t1_t4 acquiring t1_l1 after it was destroyed\n"), ConsoleOutput);
   Acquire(t1_l1);
 
-  Fork(t1_t5, "t1_t5", sizeof("t1_t5"));
   Exit(0);
 }
 
@@ -97,8 +91,10 @@ void t1_t4() {
    --------------------------------------------------
 */
 void t1_t5() {
+  Write("t1_t5 creating tl_l2 and tl_l3\n", sizeof("t1_t5 creating tl_l2 and tl_l3\n"), ConsoleOutput);
   t1_l2 = CreateLock("t1_l2", 5);
-  t1_l3 = CreateLock("2", 1);
+  t1_l3 = CreateLock("t1_l3", 5);
+  Write("t1_t5 acquiring tl_l2 and tl_l3\n", sizeof("t1_t5 acquiring tl_l2 and tl_l3\n"), ConsoleOutput);
   Acquire(t1_l2);
   Acquire(t1_l3);
 /*
@@ -182,7 +178,8 @@ int main() {
   Write("Test 1\n", sizeof("Test 1\n"), ConsoleOutput);
 
   Fork(t1_t1, "t1_t1", sizeof("t1_t1"));
-  Write("After Fork\n", sizeof("After Fork"), ConsoleOutput);
   Fork(t1_t2, "t1_t2", sizeof("t1_t2"));
   Fork(t1_t3, "t1_t3", sizeof("t1_t3"));  
+  Fork(t1_t4, "t1_t4", sizeof("t1_t4"));
+  Fork(t1_t5, "t1_t5", sizeof("t1_t5"));
 }

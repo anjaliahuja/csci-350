@@ -653,8 +653,8 @@ int Acquire_Syscall(int index) {
     return -1;
   }
 
-  kl->lockCounter++; 
-  kl->lock->Acquire();
+  if(kl->lock->Acquire())
+    kl->lockCounter++; 
 
   lockTableLock->Release();
   return index;
@@ -687,9 +687,9 @@ int Release_Syscall(int index) {
     return -1;
   }
 
-  kl->lock->Release();
-  kl->lockCounter--;
-  // Delete lock if destroyed was called on it previouisly and no threads 
+  if (kl->lock->Release());
+    kl->lockCounter--;
+  // Delete lock if destroyed wcqs called on it previouisly and no threads 
   // are waiting
   if (kl->isToBeDeleted && strcmp(kl->lock->getState(), "FREE") == 0 && kl->lockCounter==0) {
     kl = (kernelLock*) lockTable->Remove(index); 
@@ -716,7 +716,7 @@ int Release_Syscall(int index) {
         return -1;
       }
       process->locks[index] = false;
-
+      processLock->Release();
   }
 
   lockTableLock->Release();
@@ -766,6 +766,7 @@ int DestroyLock_Syscall(int index) {
 }
 
 void internal_fork(int pc){
+  printf("currentThread: %s\n", currentThread->getName());
   currentThread->space->InitRegisters();
 
   machine->WriteRegister(PCReg, pc);
@@ -795,7 +796,6 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
       return;
     }
   }
-
 
   processLock->Acquire();
   int processID = -1;
@@ -831,9 +831,10 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
   t->stackVP = stackRegister[1];
   delete[] stackRegister;
   t->space = currentThread->space;
+  printf("currentThread sys: %s\n", t->getName());
 
   t->Fork((VoidFunctionPtr)internal_fork, pc);
-
+  currentThread->Yield();
   delete [] buf;
 }
 
