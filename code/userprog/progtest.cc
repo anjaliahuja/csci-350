@@ -43,6 +43,8 @@ StartProcess(char *filename)
 
     currentThread->space = space;
 
+    delete executable;
+
     space->InitRegisters();     // set the initial register values
     space->RestoreState();      // load page table register
     
@@ -57,7 +59,6 @@ StartProcess(char *filename)
         printf("No more room in process table");
         return;
     }
-    delete executable;			// close file
 
     machine->Run();			// jump to the user progam
     ASSERT(FALSE);			// machine->Run never returns;
