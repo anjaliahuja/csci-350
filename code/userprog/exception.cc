@@ -767,12 +767,19 @@ int DestroyLock_Syscall(int index) {
 
 void internal_fork(int pc){
   currentThread->space->InitRegisters();
+
   machine->WriteRegister(PCReg, pc);
+
   machine->WriteRegister(NextPCReg, pc+4);
   currentThread->space->RestoreState();
+
   machine->WriteRegister(StackReg, currentThread->stackreg);
 
+  currentThread->space->RestoreState();
+
+
   machine->Run();
+
 }
 
 void Fork_Syscall(int pc, unsigned int vaddr, int len){
@@ -816,7 +823,6 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
   }
 
 
-
   //Fork new thread
   Thread* t = new Thread(buf);
   //Allocate stack
@@ -827,6 +833,8 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
   t->space = currentThread->space;
 
   t->Fork((VoidFunctionPtr)internal_fork, pc);
+
+  delete [] buf;
 }
 
 void internal_exec(int pc){
