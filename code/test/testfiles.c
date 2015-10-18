@@ -19,6 +19,8 @@ void startTest2();
 */
 void t1_t1() {
   int i;
+    Write("In t1_t1\n", sizeof("In t1_t1\n"), ConsoleOutput);
+
   Acquire(t1_l1);
   Write("t1_t1 acquired t1_l1\n", sizeof("t1_t1 acquired t1_l1\n"), ConsoleOutput);
 
@@ -115,6 +117,7 @@ void t1_t5() {
    --------------------------------------------------
 */
 void t2_t1() {
+
   Acquire(t2_l1);
   Write("t2_t1 acquired t2_l1, signalling t2_c1\n", sizeof("t2_t1 acquired t2_l1, signalling t2_c1\n"), ConsoleOutput);
 
@@ -179,6 +182,7 @@ int main() {
   Write("Test 1\n", sizeof("Test 1\n"), ConsoleOutput);
 
   Fork(t1_t1, "t1_t1", sizeof("t1_t1"));
+  Write("After Fork\n", sizeof("After Fork"), ConsoleOutput);
   Fork(t1_t2, "t1_t2", sizeof("t1_t2"));
   Fork(t1_t3, "t1_t3", sizeof("t1_t3"));  
 }
