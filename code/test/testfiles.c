@@ -4,10 +4,13 @@
 
 #include "syscall.h"
 
-int t1_l1, t1_l2, t1_l3, t2_l1, t3_l1;
-int t2_c1, t3_c1;
+int t1_l1, t1_l2, t1_l3, t2_l1, t3_l1, t4_l1, t5_l1;
+int t2_c1, t3_c1, t4_c1, t5_c1;
 
 void startTest2();
+void startTest3();
+void startTest4();
+void startTest5();
 
 /* 
    --------------------------------------------------
@@ -97,11 +100,11 @@ void t1_t5() {
   Write("t1_t5 acquiring tl_l2 and tl_l3\n", sizeof("t1_t5 acquiring tl_l2 and tl_l3\n"), ConsoleOutput);
   Acquire(t1_l2);
   Acquire(t1_l3);
-/*
+
   Write("t1_t5 acquiring and releasing at index -1\n", sizeof("t1_t5 acquiring and releasing at index -1\n"), ConsoleOutput);
   Acquire(-1);
   Release(-1);
-*/
+
   startTest2();
   Exit(0);
 }
@@ -134,11 +137,37 @@ void t2_t1() {
 void t2_t2() {
   Acquire(t2_l1);
 
-  Write("t2_t2 acquired t2_l1, waiting on t2_c1\n", sizeof("t2_t2 acquired t2_l1, signalling t2_c1\n"), ConsoleOutput);
+  Write("t2_t2 acquired t2_l1, waiting on t2_c1\n", sizeof("t2_t2 acquired t2_l1, waiting on t2_c1\n"), ConsoleOutput);
   
   Wait(t2_l1, t2_c1);
 
   Write("t2_t2 releasing t2_l1\n", sizeof("t2_t2 releasing t2_l1\n"), ConsoleOutput);
+  Release(t2_l1);
+
+  startTest3();
+  Exit(0);
+}
+
+/* 
+   --------------------------------------------------
+   t2_t2() -- test2 thread 2
+       This thread will wait on a pre-signalled variable
+   --------------------------------------------------
+*/
+void t2_t3() {
+  Write("t2_t3 acquiring t2_l1\n", sizeof("t2_t3 acquiring t2_l1\n"), ConsoleOutput);
+  Acquire(t2_l1);
+
+  Write("t2_t3 signalling t2_c1\n", sizeof("t2_t3 signalling t2_c1\n"), ConsoleOutput);  
+  Signal(t2_l1, t2_c1);
+
+  Write("t2_t3 destroying t2_c1\n", sizeof("t2_t3 destroying t2_c1\n"), ConsoleOutput);
+  DestroyCV(t2_c1);
+
+  Write("t2_t3 signalling destroyed t2_c1\n", sizeof("t2_t3 signalling destroyed t2_c1\n"), ConsoleOutput);  
+  Signal(t2_l1, t2_c1);
+
+  Write("t2_t3 releasing t2_l1\n", sizeof("t2_t3 releasing t2_l1\n"), ConsoleOutput);
   Release(t2_l1);
 
   Exit(0);
@@ -152,6 +181,139 @@ void startTest2() {
 
   Fork(t2_t1, "t2_t1", sizeof("t2_t1"));
   Fork(t2_t2, "t2_t2", sizeof("t2_t1"));
+  Fork(t2_t3, "t2_t3", sizeof("t2_t3"));
+}
+
+/* --------------------------------------------------
+// t3_waiter()
+//     These threads will wait on the t3_c1 condition variable.  Only
+//     one t3_waiter will be released
+// --------------------------------------------------
+*/
+void t3_waiter() {
+    Acquire(t3_l1);
+    Write("t3_waiter acquired t3_l1, waiting on t3_c1\n", sizeof("t3_waiter acquired t3_l1, waiting on t3_c1\n"), ConsoleOutput);
+    
+    Wait(t3_l1, t3_c1);
+
+    Write("t3_waiter freed from t3_c1\n", sizeof("t3_waiter freed from t3_c1\n"), ConsoleOutput);
+
+    Release(t3_l1);
+
+    Exit(0);
+}
+
+
+/* --------------------------------------------------
+// t3_signaller()
+//     This threads will signal the t3_c1 condition variable.  Only
+//     one t3_signaller will be released
+// --------------------------------------------------
+*/
+void t3_signaller() {
+    Acquire(t3_l1);
+
+    Write("t3_signaller acquired t3_l1, signalling t3_c1\n", sizeof("t3_signaller acquired t3_l1, signalling t3_c1\n"), ConsoleOutput);
+
+    Signal(t3_l1, t3_c1);
+
+    Write("t3_signaller releasing t3_l1\n", sizeof("t3_signaller releasing t3_l1\n"), ConsoleOutput);
+
+    Release(t3_l1);
+
+    startTest4();
+    Exit(0);
+}
+
+void startTest3() {
+  int i;
+  Write("\nTest 3\n", sizeof("\nTest 3\n"), ConsoleOutput);
+
+  t3_l1 = CreateLock("t3_l1", sizeof("t3_l1"));
+  t3_c1 = CreateCV("t3_c1", sizeof("t3_c1"));
+
+  /* Need to find a way to fork threads in a for loop 
+    so that each thread has a unique name.
+  */
+  for(i = 0; i < 5; i++) {
+    Fork(t3_waiter, "t3_waiter", sizeof("t3_waiter"));
+  }
+
+  Fork(t3_signaller, "t3_signaller", sizeof("t3_signaller"));
+}
+/* --------------------------------------------------
+// t4_waiter()
+//     These threads will wait on the t4_c1 condition variable.  All
+//     t4_waiters will be released
+// --------------------------------------------------
+*/
+void t4_waiter() {
+    Acquire(t4_l1);
+    Write("t4_waiter acquired t4_l1, waiting on t4_c1\n", sizeof("t4_waiter acquired t4_l1, waiting on t4_c1\n"), ConsoleOutput);
+
+    Wait(t4_l1, t4_c1);
+
+    Write("t4_waiter freed from t4_c1\n", sizeof("t4_waiter freed from t4_c1\n"), ConsoleOutput);
+    Release(t4_l1);
+
+    Exit(0);
+}
+
+
+/* --------------------------------------------------
+// t2_signaller()
+//     This thread will broadcast to the t4_c1 condition variable.
+//     All t4_waiters will be released
+// --------------------------------------------------
+*/
+void t4_signaller() {
+    Acquire(t4_l1);
+    Write("t4_signaller acquired t4_l1, broadcasting t4_c1\n", sizeof("t4_signaller acquired t4_l1, broadcasting t4_c1\n"), ConsoleOutput);
+
+    Broadcast(t4_l1, t4_c1);
+
+    Write("t4_signaller releasing t4_l1\n", sizeof("t4_signaller releasing t4_l1\n"), ConsoleOutput);
+    Release(t4_l1);
+
+    startTest5();
+    Exit(0);
+}
+
+void startTest4() {
+  int i;
+  Write("\nTest 4\n", sizeof("\nTest 4\n"), ConsoleOutput);
+
+  t4_l1 = CreateLock("t4_l1", sizeof("t4_l1"));
+  t4_c1 = CreateCV("t4_c1", sizeof("t4_c1"));
+
+  /* Need to find a way to fork threads in a for loop 
+    so that each thread has a unique name.
+  */
+  for(i = 0; i < 5; i++) {
+    Fork(t4_waiter, "t4_waiter", sizeof("t4_waiter"));
+  }
+
+  Fork(t4_signaller, "t4_signaller", sizeof("t4_signaller"));
+
+}
+
+void t5_t1() {
+
+  Exit(0);
+}
+
+void t5_t2() {
+
+  Exit(0);
+}
+
+void startTest5() {
+  Write("\nTest 5\n", sizeof("\nTest 5\n"), ConsoleOutput);
+  t5_l1 = CreateLock("t5_l1", sizeof("t5_l1"));
+  t5_c1 = CreateCV("t5_c1", sizeof("t5_c1"));
+
+  Fork(t5_t1, "t5_t1", sizeof("t5_t1"));
+  Fork(t5_t2, "t5_t2", sizeof("t5_t2"));
 }
 
 

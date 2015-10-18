@@ -186,7 +186,7 @@ Condition::~Condition() {
   delete this->waitConditionQueue;
 }
 
-void Condition::Wait(Lock* conditionLock) { 
+bool Condition::Wait(Lock* conditionLock) { 
   // Disable interrupts.
   IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
@@ -195,7 +195,7 @@ void Condition::Wait(Lock* conditionLock) {
     printf("Condition::Wait -> conditionLock %s , in condition %s, is null\n", 
       conditionLock->getName(), this->name);
     (void) interrupt->SetLevel(oldLevel);
-    return;
+    return false;
   }
 
   // If waitingLock is null, set to conditionLock.
@@ -209,7 +209,7 @@ void Condition::Wait(Lock* conditionLock) {
     printf("Condition::Wait -> waitingLock %s, in condition %s, doesn't equal conditionLock %s\n", 
       this->waitingLock->getName(), this->name, conditionLock->getName());
     (void) interrupt->SetLevel(oldLevel);
-    return;
+    return false;
   }
 
   // Release lock, add currentThread to waitQueue and sleep.
@@ -223,10 +223,10 @@ void Condition::Wait(Lock* conditionLock) {
   
   //Restore interrupts.
   (void) interrupt->SetLevel(oldLevel);
-  return;
+  return true;
 }
 
-void Condition::Signal(Lock* conditionLock) { 
+bool Condition::Signal(Lock* conditionLock) { 
   // Disable interrupts.
   IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
@@ -235,7 +235,7 @@ void Condition::Signal(Lock* conditionLock) {
     printf("Condition::Signal -> No thread waiting in condition %s\n",
       this->name);
     (void) interrupt->SetLevel(oldLevel);
-    return;
+    return false;
   }
 
   // If conditionLock is null, throw error.
@@ -243,7 +243,7 @@ void Condition::Signal(Lock* conditionLock) {
     printf("Condition::Signal -> conditionLock %s, in condition %s, is null\n", 
       conditionLock->getName(), this->name);
     (void) interrupt->SetLevel(oldLevel);
-    return;
+    return false;
   }
 
   // If waitingLock and conditionLock are not the same, they are on different 
@@ -252,7 +252,7 @@ void Condition::Signal(Lock* conditionLock) {
     printf("Condition::Signal -> waitingLock %s , in condition %s, doesn't equal conditionLock %s\n", 
       this->waitingLock->getName(), this->name, conditionLock->getName());
     (void) interrupt->SetLevel(oldLevel);
-    return;
+    return false;
   }
 
   // Remove/wakeup thread and place on wait queue.
@@ -266,7 +266,7 @@ void Condition::Signal(Lock* conditionLock) {
   
   // Restore interrupts.
   (void) interrupt->SetLevel(oldLevel);
-  return;
+  return true;
 }
 
 void Condition::Broadcast(Lock* conditionLock) { 

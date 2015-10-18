@@ -297,7 +297,7 @@ int CreateCV_Syscall(int vaddr, int size) {
 
 int DestroyCV_Syscall(int index) {
   CVTableLock->Acquire();
-  printf("Destroying a CV");
+  DEBUG('a', "Destroying a CV\n");
   //Error checking
   if (index < 0 || index > NumCVs) {
     printf("Destroy CV: Invalid Index\n");
@@ -404,12 +404,15 @@ int Wait_Syscall(int lockIndex, int CVIndex) {
     CVTableLock->Release();
     return -1;
   }
+
   //Wait
-  kcv->cvCounter++;
   CVTableLock->Release();
-  kcv->condition->Wait(kl->lock);
+  kcv->cvCounter++;
+  if(!kcv->condition->Wait(kl->lock)){
+    CVTableLock->Release();
+    return -1;
+  }
   CVTableLock->Acquire();
-  kcv->cvCounter--;
 
   //Check if needs to be deleted
   if (kcv->toBeDeleted == true && kcv->cvCounter == 0) {
@@ -492,7 +495,12 @@ int Signal_Syscall(int lockIndex, int CVIndex) {
     return -1;
   }
   //Signal
-  kcv->condition->Signal(kl->lock);
+
+  if (!kcv->condition->Signal(kl->lock)){
+    CVTableLock->Release();
+    return -1;
+  }
+  kcv->cvCounter--;
   CVTableLock->Release();
   return CVIndex;
 }
@@ -500,7 +508,7 @@ int Signal_Syscall(int lockIndex, int CVIndex) {
 int Broadcast_Syscall(int lockIndex, int CVIndex) {
   CVTableLock->Acquire();
   //Error checking
-  printf("Broadcast CV: Lock index %d amd CV index %d are in wait\n", lockIndex, CVIndex);
+  DEBUG('a', "Broadcast CV: Lock index %d amd CV index %d are in wait\n", lockIndex, CVIndex);
 
   //Error checking
   //validating lock
@@ -545,18 +553,15 @@ int Broadcast_Syscall(int lockIndex, int CVIndex) {
     return -1;
   }
   //Broadcast
-  int CVS = kcv->cvCounter;
-  for(int i = 0; i < CVS; i++){
-    Signal_Syscall(lockIndex, CVIndex);
-  }
+  kcv->condition->Broadcast(kl->lock);
  
   CVTableLock->Release();
   return CVIndex;
 }
 
 int CreateLock_Syscall(unsigned int vaddr, int len) {
-  printf("in createlock");
   lockTableLock->Acquire();
+
   // Setting up name
   char* name = new char[len+1];
   if(!name){
@@ -576,7 +581,6 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
     printf("Error: no more locks available. Lock not created.\n");
   }
 
-  printf(" %s ", name);
   // Create lock
   Lock* lock = new Lock(name);
   kernelLock* kl = new kernelLock();
@@ -617,16 +621,12 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   process->locks[index] = true;
   processLock->Release();
 
-
-
   lockTableLock->Release();
-  printf("%d\n", index);
 
   return index;
 }
 
 int Acquire_Syscall(int index) {
-  printf("acquire %d\n", index);
   lockTableLock->Acquire();
 
   // Error checking
@@ -766,7 +766,6 @@ int DestroyLock_Syscall(int index) {
 }
 
 void internal_fork(int pc){
-  printf("currentThread: %s\n", currentThread->getName());
   currentThread->space->InitRegisters();
 
   machine->WriteRegister(PCReg, pc);
@@ -831,7 +830,6 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
   t->stackVP = stackRegister[1];
   delete[] stackRegister;
   t->space = currentThread->space;
-  printf("currentThread sys: %s\n", t->getName());
 
   t->Fork((VoidFunctionPtr)internal_fork, pc);
   currentThread->Yield();
@@ -1034,20 +1032,20 @@ void ExceptionHandler(ExceptionType which) {
         break;
     case SC_CreateLock:
         DEBUG('a', "Create lock syscall.\n");
-        CreateLock_Syscall(machine->ReadRegister(4),
+        rv = CreateLock_Syscall(machine->ReadRegister(4),
                            machine->ReadRegister(5));
         break;
     case SC_Acquire:
         DEBUG('a', "Create acquire syscall.\n");
-        Acquire_Syscall(machine->ReadRegister(4));
+        rv = Acquire_Syscall(machine->ReadRegister(4));
         break;
     case SC_Release:
         DEBUG('a', "Create release syscall.\n");
-        Release_Syscall(machine->ReadRegister(4));
+        rv = Release_Syscall(machine->ReadRegister(4));
         break;
     case SC_DestroyLock:
         DEBUG('a', "Create destroy lock syscall.\n");
-        DestroyLock_Syscall(machine->ReadRegister(4));
+        rv = DestroyLock_Syscall(machine->ReadRegister(4));
         break;
     case SC_CreateCV:
         DEBUG('a', "CreateCV syscall.\n");
