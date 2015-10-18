@@ -586,10 +586,10 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   kernelLock* kl = new kernelLock();
   kl->lock = lock;
   kl->addressSpace = currentThread->space;
-  kl->isToBeDeleted = false;
+  kl->toBeDeleted = false;
 
   int index = lockTable->Put((void*)kl);
-
+  printf("Index in create lock: %d", index);
   // Error checking
   if (index == -1) {
     printf("CreateLock: No space left in lock table to create lock\n"); 
@@ -653,6 +653,7 @@ int Acquire_Syscall(int index) {
     return -1;
   }
 
+
   if(kl->lock->Acquire())
     kl->lockCounter++; 
 
@@ -687,11 +688,12 @@ int Release_Syscall(int index) {
     return -1;
   }
 
+
   if (kl->lock->Release());
     kl->lockCounter--;
   // Delete lock if destroyed wcqs called on it previouisly and no threads 
   // are waiting
-  if (kl->isToBeDeleted && strcmp(kl->lock->getState(), "FREE") == 0 && kl->lockCounter==0) {
+  if (kl->toBeDeleted && strcmp(kl->lock->getState(), "FREE") == 0 && kl->lockCounter==0) {
     kl = (kernelLock*) lockTable->Remove(index); 
     delete kl->lock;
     delete kl;
@@ -753,7 +755,7 @@ int DestroyLock_Syscall(int index) {
   // if lock is busy, delete after it gets released
   if (strcmp(kl->lock->getState(), "BUSY") == 0) {
     DEBUG('a', "DestroyLock: Lock is busy, set isToBeDeleted to true\n");
-    kl->isToBeDeleted = true;
+    kl->toBeDeleted = true;
     lockTableLock->Release();
     return index;
   }
@@ -766,6 +768,7 @@ int DestroyLock_Syscall(int index) {
 }
 
 void internal_fork(int pc){
+  printf("currentThread in internal fork: %s \n", currentThread->getName());
   currentThread->space->InitRegisters();
 
   machine->WriteRegister(PCReg, pc);
@@ -831,8 +834,10 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
   delete[] stackRegister;
   t->space = currentThread->space;
 
+  printf("Thread name in fork: %s \n", t->getName());
   t->Fork((VoidFunctionPtr)internal_fork, pc);
   currentThread->Yield();
+
   delete [] buf;
 }
 
@@ -860,7 +865,7 @@ void Exec_Syscall(unsigned int vaddr, int len){
   AddrSpace* addressSpace;
 
   if (exec == NULL){
-    printf("file is null");
+    printf("file is null %s\n", file);
     return;
   }
 
@@ -886,6 +891,9 @@ void Exec_Syscall(unsigned int vaddr, int len){
     return;
   }
   t->Fork((VoidFunctionPtr)internal_exec,0);  
+
+  delete exec;
+  delete [] file;
 
 
 }
@@ -926,6 +934,7 @@ void Exit_Syscall(int status){
   //Reclaim 8 pages 
 
   if(process->numThreads > 1){
+    DEBUG('e', "Exit case 1: not last thread in process");
     availMem->Acquire();
     int pageNum = currentThread->stackVP;
     for(int i = 0; i < 8; i++){
@@ -933,21 +942,26 @@ void Exit_Syscall(int status){
       currentThread->space->pageTable[pageNum].valid = FALSE;
       pageNum--;
     }
+    currentThread->space->AvailPages(); // for testing exit
     availMem->Release(); 
     process->numThreads--;
-    DEBUG('b', "Exit thread case 1\n");
+    DEBUG('e', "Exit thread case 1\n");
   }
 
   //Case 2: last executing thread in last process (ready queue is empty)
   else if(lastProcess && process->numThreads == 1){
+    DEBUG('e', "Exit case 2: last thread in last process");
     availMem->Acquire();
     for(unsigned int i =0; i<currentThread->space->numPages; i++){
-      bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
-      currentThread->space->pageTable[i].valid = FALSE;
+      if(currentThread->space->pageTable[i].valid){
+        bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
+        currentThread->space->pageTable[i].valid = FALSE;
+      }
     }
+    currentThread->space->AvailPages();//testing exit
     availMem->Release();
 
-     currentThread->Finish();
+    currentThread->Finish();
     processLock->Release();
     interrupt->Halt();
   }
@@ -955,7 +969,7 @@ void Exit_Syscall(int status){
   //Case 3: Last thread in process but not last process, need to reclaim all locks, cvs, stack memory
   else if(!lastProcess && process->numThreads == 1){
       //Delete CVs
-
+      DEBUG('e', "Case 3: last thread in process but not last process, need to reclaim memory");
       availMem->Acquire();
         for(unsigned int i=0; i< currentThread->space->numPages; i++){
           if(currentThread->space->pageTable[i].valid){
@@ -963,6 +977,7 @@ void Exit_Syscall(int status){
             currentThread->space->pageTable[i].valid= FALSE;
           }
         }
+      currentThread->space->AvailPages(); //testing exit
       availMem->Release();
       
       //Delete CVs
