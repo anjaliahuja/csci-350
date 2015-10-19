@@ -168,13 +168,17 @@ int findLine(char type, bool isSenator, int customer) {
     random = Rand(9, 0);
     if (Customers[customer].money >= 600 && AppClerks[my_line].state == 1 && random < 3) {
       queue_push(&AppClerks[my_line].bribeLine, customer);
-      /*std::cout << this->name << " has gotten in bribe line for " << AppClerks[my_line]->getName() << std::endl;*/
+      Printf("Customer %d has gotten in bribe line for ApplicationClerk %d\n", 
+        sizeof("Customer %d has gotten in bribe line for ApplicationClerk %d\n"),
+        Customers[customer].ssn*1000+AppClerks[my_line].id);
       Wait(AppClerkLineLock, AppClerks[my_line].bribeLineCV);
       Customers[customer].money -= 500;
     } else {
       if (AppClerks[my_line].state == 1 || AppClerks[my_line].state == 2) {
         queue_push(&AppClerks[my_line].bribeLine, customer);
-        /*std::cout << this->name << " has gotten in regular line for " << AppClerks[my_line]->getName() << std::endl;*/
+        Printf("Customer %d has gotten in regular line for ApplicationClerk %d\n", 
+          sizeof("Customer %d has gotten in regular line for ApplicationClerk %d\n"), 
+          Customers[customer].ssn*1000+AppClerks[my_line].id);
         Wait(AppClerkLineLock, AppClerks[my_line].lineCV);
       } else {
         AppClerks[my_line].currentCustomer = customer;
@@ -204,13 +208,17 @@ int findLine(char type, bool isSenator, int customer) {
     random = Rand(9, 0);
     if (Customers[customer].money >= 600 && PicClerks[my_line].state == 1 && random < 3) {
       queue_push(&PicClerks[my_line].bribeLine, customer);
-      /*std::cout << this->name << " has gotten in bribe line for " << PicClerks[my_line]->getName() << std::endl;*/
+      Printf("Customer %d has gotten in bribe line for PictureClerk %d\n", 
+        sizeof("Customer %d has gotten in bribe line for PictureClerk %d\n"),
+        Customers[customer].ssn*1000+PicClerks[my_line].id);      
       Wait(PicClerkLineLock, PicClerks[my_line].bribeLineCV);
       Customers[customer].money -= 500;
     } else {
       if (PicClerks[my_line].state == 1 || PicClerks[my_line].state == 2) {
         queue_push(&PicClerks[my_line].bribeLine, customer);
-        /*std::cout << this->name << " has gotten in regular line for " << PicClerks[my_line]->getName() << std::endl;*/
+        Printf("Customer %d has gotten in regular line for PictureClerk %d\n", 
+          sizeof("Customer %d has gotten in regular line for PictureClerk %d\n"), 
+          Customers[customer].ssn*1000+PicClerks[my_line].id);
         Wait(PicClerkLineLock, PicClerks[my_line].lineCV);
       } else {
         PicClerks[my_line].currentCustomer = customer;
@@ -240,13 +248,17 @@ int findLine(char type, bool isSenator, int customer) {
     random = Rand(9, 0);
     if (Customers[customer].money >= 600 && PassportClerks[my_line].state == 1 && random < 3) {
       queue_push(&PassportClerks[my_line].bribeLine, customer);
-      /*std::cout << this->name << " has gotten in bribe line for " << PassportClerks[my_line]->getName() << std::endl;*/
+      Printf("Customer %d has gotten in bribe line for PassportClerk %d\n", 
+        sizeof("Customer %d has gotten in bribe line for PassportClerk %d\n"),
+        Customers[customer].ssn*1000+PassportClerks[my_line].id);      
       Wait(PassportClerkLineLock, PassportClerks[my_line].bribeLineCV);
       Customers[customer].money -= 500;
     } else {
       if (PassportClerks[my_line].state == 1 || PassportClerks[my_line].state == 2) {
         queue_push(&PassportClerks[my_line].bribeLine, customer);
-        /*std::cout << this->name << " has gotten in regular line for " << PassportClerks[my_line]->getName() << std::endl;*/
+        Printf("Customer %d has gotten in regular line for PassportClerk %d\n", 
+          sizeof("Customer %d has gotten in regular line for PassportClerk %d\n"), 
+          Customers[customer].ssn*1000+PassportClerks[my_line].id);
         Wait(PassportClerkLineLock, PassportClerks[my_line].lineCV);
       } else {
         PassportClerks[my_line].currentCustomer = customer;
@@ -276,13 +288,17 @@ int findLine(char type, bool isSenator, int customer) {
     random = Rand(9, 0);
     if (Customers[customer].money >= 600 && Cashiers[my_line].state == 1 && random < 3) {
       queue_push(&Cashiers[my_line].bribeLine, customer);
-      /*std::cout << this->name << " has gotten in bribe line for " << Cashiers[my_line]->getName() << std::endl;*/
+      Printf("Customer %d has gotten in bribe line for Cashier %d\n", 
+        sizeof("Customer %d has gotten in bribe line for Cashier %d\n"),
+        Customers[customer].ssn*1000+Cashiers[my_line].id);
       Wait(CashierLineLock, Cashiers[my_line].bribeLineCV);
       Customers[customer].money -= 500;
     } else {
       if (Cashiers[my_line].state == 1 || Cashiers[my_line].state == 2) {
         queue_push(&Cashiers[my_line].bribeLine, customer);
-        /*std::cout << this->name << " has gotten in regular line for " << Cashiers[my_line]->getName() << std::endl;*/
+        Printf("Customer %d has gotten in regular line for Cashier %d\n", 
+          sizeof("Customer %d has gotten in regular line for Cashier %d\n"), 
+          Customers[customer].ssn*1000+Cashiers[my_line].id);
         Wait(CashierLineLock, Cashiers[my_line].lineCV);
       } else {
         Cashiers[my_line].currentCustomer = customer;
@@ -299,7 +315,9 @@ int findLine(char type, bool isSenator, int customer) {
 void getAppFiled(int my_line, int customer) {
   Acquire(AppClerks[my_line].lock);
   Signal(AppClerks[my_line].lock, AppClerks[my_line].cv);
-  /*print out*/
+  Printf("Customer %d has given SSN %d to ApplicationClerk %d\n",
+    sizeof("Customer %d has given SSN %d to ApplicationClerk %d\n"),
+    customer*1000000+customer*1000+AppClerks[my_line].id);
   Wait(AppClerks[my_line].lock, AppClerks[my_line].cv);
 
   Signal(AppClerks[my_line].lock, AppClerks[my_line].cv);
@@ -484,7 +502,9 @@ void startCustomer() {
     my_line = findLine('c', isSen, id);
     payCashier(my_line, id);
 
-    /*print out*/
+    Printf("Customer %d is leaving the Passport Office\n", 
+      sizeof("Customer %d is leaving the Passport Office\n"), 
+      id);
     numCustomers--;
   }
   Exit(0);
@@ -504,23 +524,31 @@ void startAppClerk() {
 
     } else if (queue_size(&AppClerks[id].bribeLine) != 0) {
       Signal(AppClerkLineLock, AppClerks[id].bribeLineCV);
-      /* print out */
       AppClerkBribeMoney += 500;
       AppClerks[id].state = 1;
       AppClerks[id].currentCustomer = queue_pop(&AppClerks[id].bribeLine);
+      Printf("ApplicationClerk %d has received $500 from Customer %d\n",
+        sizeof("ApplicationClerk %d has received $500 from Customer %d\n"),
+        id*1000+AppClerks[id].currentCustomer);
     } else if (queue_size(&AppClerks[id].line) != 0) {
       Signal(AppClerkLineLock, AppClerks[id].lineCV);
-      /* print out */
+      Printf("ApplicationClerk %d has signalled a Customer to come to their counter\n",
+        sizeof("ApplicationClerk %d has signalled a Customer to come to their counter\n"),
+        id);
       AppClerkBribeMoney += 500;
       AppClerks[id].state = 1;
       AppClerks[id].currentCustomer = queue_pop(&AppClerks[id].line);
     } else {
       Acquire(AppClerks[id].lock);
       AppClerks[id].state = 2;
-      /*print out*/
+      Printf("ApplicationClerk %d is going on break\n",
+        sizeof("ApplicationClerk %d is going on break\n"),
+        id);
       Release(AppClerkLineLock);
       Wait(AppClerks[id].lock, AppClerks[id].cv);
-      /*print out*/
+      Printf("ApplicationClerk %d is coming off break\n",
+        sizeof("ApplicationClerk %d is coming off break\n"),
+        id);
       Signal(AppClerks[id].lock, AppClerks[id].cv);
       AppClerks[id].state = 0;
 
@@ -531,7 +559,9 @@ void startAppClerk() {
     Release(AppClerkLineLock);
 
     Wait(AppClerks[id].lock, AppClerks[id].cv);
-    /*print out */
+    Printf("ApplicationClerk %d has received SSN %d from Customer %d\n",
+        sizeof("ApplicationClerk %d has received SSN %d from Customer %d\n"),
+        id*1000000+AppClerks[id].currentCustomer*1000+AppClerks[id].currentCustomer);
 
     Release(AppClerks[id].lock);
     for(i =20; i<100; ++i){
@@ -539,7 +569,9 @@ void startAppClerk() {
     }
     Acquire(AppClerks[id].lock);
     Signal(AppClerks[id].lock, AppClerks[id].cv);
-    /*print out */
+    Printf("ApplicationClerk %d has recorded a completed application for Customer %d\n",
+        sizeof("ApplicationClerk %d has recorded a completed application for Customer %d\n"),
+        id*1000+AppClerks[id].currentCustomer);
 
     Wait(AppClerks[id].lock, AppClerks[id].cv);
     if (SenatorArrived) {
@@ -1111,10 +1143,10 @@ void fork() {
     Fork(startPicClerk, "picclerk", sizeof("picclerk"));
   }
   for (i = 0; i < NUM_PASSPORTCLERKS; ++i) {
-    Fork(startPassportClerk, "appclerk", sizeof("appclerk"));
+    Fork(startPassportClerk, "passportclerk", sizeof("passportclerk"));
   }
   for (i = 0; i < NUM_CASHIERS; ++i) {    
-    Fork(startCashier, "appclerk", sizeof("appclerk"));
+    Fork(startCashier, "cashiers", sizeof("cashiers"));
   }
   for (i = 0; i < NUM_CUSTOMERS; ++i) {
     Fork(startCustomer, "customer", sizeof("customer"));
