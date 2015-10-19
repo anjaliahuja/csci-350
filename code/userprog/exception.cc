@@ -1006,6 +1006,47 @@ void Exit_Syscall(int status){
 
 }
 
+//Rand syscall
+int Rand_Syscall(int range, int offset){
+  int num = (rand() % range) + offset;
+  return num;
+}
+
+void Printf_Syscall(unsigned int vaddr, int len, int num1, int num2){
+  char* buf;
+  copyin(vaddr, len, buf);
+
+  int lastIndex;
+  int count = 0;
+
+  int num_1 = num1 / 100000;
+  int num_2 = num1 % 100000;
+  int num_3 = num2 / 100000;
+  int num_4 = num2 % 100000;
+
+  for(int i = 0; i<len; i++){
+    if(buf[i] == '%'){
+      lastIndex = i;
+    } else if(bug[i] == 'd' && lastIndex == i-1){
+      count++;
+    }
+  }
+  if(count==0){
+      printf(buf);
+  } else if(count ==1){
+      printf(buf, num_1);
+  } else if(count == 2){
+      printf(buf, num_1, num_2);
+  } else if(count ==3){
+      printf(buf, num_1, num_2, num_3);
+  } else if(count == 4){
+      printf(buf, num_1, num_2, num_3, num_4);
+  }
+
+
+}
+
+
 //Implementation for CVs
 
 
@@ -1097,6 +1138,14 @@ void ExceptionHandler(ExceptionType which) {
     case SC_Exit:
         DEBUG('a', "Exit syscall.\n");
         Exit_Syscall(machine->ReadRegister(4));
+        break;
+    case SC_Rand:
+        DEBUG('a', "Random number syscall.\n");
+        rv = Rand_Syscall(machine->ReadRegister(4), machine->ReadRegister(5));
+        break;
+    case SC_Printf:
+        DEBUG('a', "Printf syscall.\n");
+        Printf_Syscall(machine->ReadRegister(4), machine->ReadRegister(5), machine->ReadRegister(6), machine->ReadRegister(7));
         break;
 
   }
