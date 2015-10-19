@@ -175,7 +175,7 @@ int findLine(char type, bool isSenator, int customer) {
       Customers[customer].money -= 500;
     } else {
       if (AppClerks[my_line].state == 1 || AppClerks[my_line].state == 2) {
-        queue_push(&AppClerks[my_line].bribeLine, customer);
+        queue_push(&AppClerks[my_line].line, customer);
         Printf("Customer %d has gotten in regular line for ApplicationClerk %d\n", 
           sizeof("Customer %d has gotten in regular line for ApplicationClerk %d\n"), 
           Customers[customer].ssn*1000+AppClerks[my_line].id);
@@ -215,7 +215,7 @@ int findLine(char type, bool isSenator, int customer) {
       Customers[customer].money -= 500;
     } else {
       if (PicClerks[my_line].state == 1 || PicClerks[my_line].state == 2) {
-        queue_push(&PicClerks[my_line].bribeLine, customer);
+        queue_push(&PicClerks[my_line].line, customer);
         Printf("Customer %d has gotten in regular line for PictureClerk %d\n", 
           sizeof("Customer %d has gotten in regular line for PictureClerk %d\n"), 
           Customers[customer].ssn*1000+PicClerks[my_line].id);
@@ -255,7 +255,7 @@ int findLine(char type, bool isSenator, int customer) {
       Customers[customer].money -= 500;
     } else {
       if (PassportClerks[my_line].state == 1 || PassportClerks[my_line].state == 2) {
-        queue_push(&PassportClerks[my_line].bribeLine, customer);
+        queue_push(&PassportClerks[my_line].line, customer);
         Printf("Customer %d has gotten in regular line for PassportClerk %d\n", 
           sizeof("Customer %d has gotten in regular line for PassportClerk %d\n"), 
           Customers[customer].ssn*1000+PassportClerks[my_line].id);
@@ -295,7 +295,7 @@ int findLine(char type, bool isSenator, int customer) {
       Customers[customer].money -= 500;
     } else {
       if (Cashiers[my_line].state == 1 || Cashiers[my_line].state == 2) {
-        queue_push(&Cashiers[my_line].bribeLine, customer);
+        queue_push(&Cashiers[my_line].line, customer);
         Printf("Customer %d has gotten in regular line for Cashier %d\n", 
           sizeof("Customer %d has gotten in regular line for Cashier %d\n"), 
           Customers[customer].ssn*1000+Cashiers[my_line].id);
@@ -477,8 +477,6 @@ void startCustomer() {
   id = numActiveCustomers;
   numActiveCustomers++;
   Release(DataLock);
-  /* data declaration */
-
 
   /*implementation */
   if (isSen) {
@@ -601,6 +599,9 @@ void startPicClerk() {
 
     } else if (queue_size(&PicClerks[id].bribeLine) != 0) {
       Signal(PicClerkLineLock, PicClerks[id].bribeLineCV);
+      Printf("PictureClerk %d has received $500 from Customer %d\n",
+        sizeof("PictureClerk %d has received $500 from Customer %d\n"),
+        id*1000+PicClerks[id].currentCustomer);
       PicClerkBribeMoney += 500;
       PicClerks[id].state = 1;
       PicClerks[id].currentCustomer = queue_pop(&PicClerks[id].bribeLine);
@@ -680,7 +681,9 @@ void startPassportClerk() {
 
     } else if (queue_size(&PassportClerks[id].bribeLine) != 0) {
       Signal(PassportClerkLineLock, PassportClerks[id].bribeLineCV);
-      /* print out */
+      Printf("PassportClerk %d has received $500 from Customer %d\n",
+        sizeof("PassportClerk %d has received $500 from Customer %d\n"),
+        id*1000+PassportClerks[id].currentCustomer);
       PassportClerkBribeMoney += 500;
       PassportClerks[id].state = 1;
       PassportClerks[id].currentCustomer = queue_pop(&PassportClerks[id].bribeLine);
@@ -759,22 +762,24 @@ void startCashier() {
 
     } else if (queue_size(&Cashiers[id].bribeLine) != 0) {
       Signal(CashierLineLock, Cashiers[id].bribeLineCV);
-      /* print out */
+      Printf("Cashier %d has received $500 from Customer %d\n",
+        sizeof("Cashier %d has received $500 from Customer %d\n"),
+        id*1000+Cashiers[id].currentCustomer);
       CashierMoney += 500;
       Cashiers[id].state = 1;
       Cashiers[id].currentCustomer = queue_pop(&Cashiers[id].bribeLine);
     } else if (queue_size(&Cashiers[id].line) != 0) {
       Signal(CashierLineLock, Cashiers[id].lineCV);
-      /* print out */
+      Printf("Cashier %d has signalled customer to come to their counter\n", sizeof("Cashier %d has signalled customer to come to their counter."), id);
       Cashiers[id].state = 1;
       Cashiers[id].currentCustomer = queue_pop(&Cashiers[id].line);
     } else {
       Acquire(Cashiers[id].lock);
       Cashiers[id].state = 2;
-      /*print out*/
+      Printf("Cashier_ %d is going on break\n", sizeof("Cashier_ %d is going on break\n"), id);
       Release(CashierLineLock);
       Wait(Cashiers[id].lock, Cashiers[id].cv);
-      /*print out*/
+      Printf("Cashier_ %d is coming off break\n", sizeof("Cashier_ %d is coming off break\n"), id);
       Signal(Cashiers[id].lock, Cashiers[id].cv);
       Cashiers[id].state = 0;
 
@@ -967,11 +972,13 @@ void startManager() {
     
     total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
     
+    /*
     Printf("Manager has has counted a total of %d for Application Clerks \n", sizeof("Manager has has counted a total of %d for Application Clerks \n"), AppClerkBribeMoney);
     Printf("Manager has has counted a total of %d for Picture Clerks \n", sizeof("Manager has has counted a total of %d for Picture Clerks \n"), PicClerkBribeMoney);
     Printf("Manager has has counted a total of %d for Passport Clerks \n", sizeof("Manager has has counted a total of %d for Passport Clerks \n"), PassportClerkBribeMoney);
     Printf("Manager has has counted a total of %d for Cashiers \n", sizeof("Manager has has counted a total of %d for Cashiers\n"), CashierMoney);
     Printf("Manager has has counted a total of %d for the Passport Office \n", sizeof("Manager has has counted a total of %d for the Passport Office \n"), total);
+    */
   }
   Exit(0);
 }
