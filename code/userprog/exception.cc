@@ -308,7 +308,7 @@ int DestroyCV_Syscall(int index) {
   kernelCV* kcv = (kernelCV*)CVTable->Get(index);
 
   if (kcv == NULL || kcv->condition == NULL) {
-    printf("Destroy CV: CV does not exist\n");
+    //printf("Destroy CV: CV does not exist\n");
     CVTableLock->Release();
     return -1;
   }
@@ -740,7 +740,7 @@ int DestroyLock_Syscall(int index) {
 
   // does lock actually exist at this index
   if (kl == NULL || kl->lock == NULL) {
-    printf("DestroyLock: Lock does not exist\n");
+    //printf("DestroyLock: Lock does not exist\n");
     lockTableLock->Release();
     return -1;
   }
