@@ -589,7 +589,6 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   kl->toBeDeleted = false;
 
   int index = lockTable->Put((void*)kl);
-  printf("Index in create lock: %d", index);
   // Error checking
   if (index == -1) {
     printf("CreateLock: No space left in lock table to create lock\n"); 
@@ -768,7 +767,6 @@ int DestroyLock_Syscall(int index) {
 }
 
 void internal_fork(int pc){
-  printf("currentThread in internal fork: %s \n", currentThread->getName());
   currentThread->space->InitRegisters();
 
   machine->WriteRegister(PCReg, pc);
@@ -834,7 +832,6 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
   delete[] stackRegister;
   t->space = currentThread->space;
 
-  printf("Thread name in fork: %s \n", t->getName());
   t->Fork((VoidFunctionPtr)internal_fork, pc);
   currentThread->Yield();
 

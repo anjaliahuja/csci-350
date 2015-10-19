@@ -8,366 +8,89 @@ Title:  Writeup for Project 1, Fall 2015 CSCI 350
 
 I. REQUIREMENTS:
 
-	This project required us to utilize thread syncrhonization in nachos to simulate the multiprocess execution streams that may take place at a passport office. To solve the issues of thread synchronization and the possible race conditions that could arise from the sharing of data and improper sequencing of events, we were required to implement Test & Lock methodology using the necessary conditions of mutual exclusion- ensuring that no 1 thread is in a critical section that another thread is currently in. To eliminate any chance of busy waiting, we disabled interrupts and utilized Test & Lock methodology to properly acquire and release shared data. Specifically, we had to ensure that all instances of customers, cashiers, clerks and the manager could share the correct locks, condition variables and monitor variables to pass a test suite of sequence variations and conditions.
 
 II. ASSUMPTIONS:
-	-Up to 5 of each type of clerk, 50 customers, 1 manager and 10 senators can be simulated and properly synchronized without the program crashing and with the correct sharing of locks, condition variables and monitor variables.
-	-Customers enter the passport office with a completed application
-	-Actions written in the assignment requirements are simulated through the proper implementation of waking up threads, acquiring/releasing locks and using print statements to simualte the exchange of data. 
-	-When a customer gets sent to the "back of the line", they must start over the process of looking for the shortest line.
-	-For PassportClerk & Cashier, there is no official verification of whether they went to the ApplicationClerk or PictureClerk.  Instead, there is a small random chance that the PassportClerk/Cashier tells them to go to the back of the line.  This is because the way our clerks were implemented were that Customers can not move onto the next clerk without a Signal from their current clerk that they can leave.  See https://piazza.com/class/idqhn1k3sfn267?cid=74#
-	-All Clerks and the Cashier have bribe lines.
-	- When a customer shows up to choose a line, it first looks through all lines to see if it can get into one of those lines that has a clerk not on break, if it can't find one of those lines then it goes to the first on break clerk.
-	-Customers can wait on lines that are on break.
-
-III. DESIGN
-	-First implemented acquire and release methods of lock to be used by each type of person in the passport office
-	-Wrote condition wait and signal to implement the sleep and wake of threads
-	-Using locks and condition variables prevents race conditions from occurring by only allowing one thread to access shared data in a critical section at a time. Lock keeps track of current thread owner and wait queue for other threads trying to acquire the lock. If the lock is currently in use and a thread tries to acquire it, it is added to the locks wait queue. Once the thread is no longer using the lock, it releases it and the next thread in the wait queue can acquire the lock.
-	-Wait and signal allows us to put threads to sleep or wake them up depending on what is needed by the customers in the bank. 
 	
-	-Designed classes for the customer, each type of clerk, cashier, and manager that contained the condition variables, line locks, monitor variables for line count
-	-Global variables and arrays are stored as monitor variables 
-
-	Main Function for Full Simulation
-	-Creates customers, clerks, and cashiers depending on user input.
-	-Then starts the threads (customer is started last).
-
-		Customer
-		-A customer is responsible for going through each type of clerk and a cashier.  Each clerk/cashier can be broken down into two parts.  Finding the shortest line and then performing the necessary action when it's the customer's turn.  
-		-The customer will start at either the ApplicationClerk or PictureClerk, move to the clerk they didn't start at and then finish off with the PassportClerk, then the Cashier.  After this is done, they leave.
-		-All finding the shortest line functions are the same.  Separate functions are created in order to find the shortest line at the appropriate clerk.
-			-The shortest line is found by going through each line's size for that type of clerk/cashier.
-			-The customer can then go to the bribe line, regular line, or be serviced immediately.  
-			-The customer has a 30% chance of being on the bribe line if and only if they have at least $600 and the clerk/cashier is currently busy.  They will then add themselves to the bribe line and wait for a signal from the clerk/cashier to come to the counter.  Once they approach the counter, they will have to give the clerk/cashier $500.
-			-If the customer is on the regular line, they will have to wait for a signal from the clerk/cashier to come to the counter.
-			-When the clerk/cashier is not currently servicing another customer, they can be serviced immediately.  In this case, the customer will go directly to the counter.
-			- During this time, the clerk/cashier's line lock is acquired so that the line cannot be modified while the customer is "making decisions".
-			-From here the customer will be serviced depending on which clerk/cashier they are at.
-		-ApplicationClerk - GetApplicationFiled
-			-Their ApplicationClerk's lock is acquired.  This lock is specific for their line.
-			-The Customer will first give their application to the ApplicationClerk (represented by giving the SSN).
-			-After, they wait for the the ApplicationClerk to do their job.
-			-Once the job is completed, they signal the clerk to let them know they are leaving.
-			-They release the lock so that the next Customer can acquire it.
-			-Customer leaves
-		-PictureClerk - GetPictureTaken
-			-Their PictureClerk's lock is acquired.  This lock is specific for their line.
-			-The Customer will first give their application to the PictureClerk (represented by giving the SSN).
-			-The Customer will wait for the PictureClerk to take the picture.
-			-After the picture is taken, the Customer will "decide" whether they like the picture or not.  There is a 50% chance they will not like the picture.
-				-Does not like the picture-They will inform the PictureClerk that they do not like the picture by setting PictureClerk::likePicture as false and then signalling.  The Customer waits for the clerk to acknowledge that they do not like the picture and signals the clerk that they are leaving.  The PictureClerk's lock is released.  The Customer gets back in line for the PictureClerk.
-				-Does like the picture-They will inform the PictureClerk that they do like the picture by setting PictureClerk::likePicture as true and then signalling.  The Customer then waits for their application to be complete.  After they are notified, they then signal the PictureClerk they are leaving.  The PictureClerk's lock is released and they leave.
-		-PassportClerk - GetPassport
-			-Their PassportClerk's lock is acquired.  This lock is specific for their line.
-			-The Customer will first give their application to the PassportClerk (represented by giving the SSN).
-			-The Customer will wait for the PassportClerk to determine whether they have gone to them too soon (random 5% chance).
-				-Too soon-The Customer will signal the PassportClerk that they are leaving and then be punished.  They release the PassportClerk's lock and go to the back of the line.
-				-Not too soon-The Customer will wait for the PassportClerk to record their passport.  They then signal the PassportClerk they are leaving.  The PassportClerk's lock is released and they leave.
-		-Cashier - PayCashier
-			-Their Cashier's lock is acquired.  This lock is specific for their line.
-			-The Customer will first give their application to the Cashier (represented by giving the SSN).
-			-The Customer will wait for the Cashier to determine whether they have gone to them too soon (random 5% chance).
-				-Too soon-The Customer will signal the Cashier that they are leaving and then be punished.  They release the Cashier's lock and go to the back of the line.
-				-Not too soon-The Customer will give the Cashier the application fee ($100).  They then wait for the Cashier to give them their passport.  The Customer informs the Cashier that their passport has been received.  The Customer waits for the Cashier to confirm that the passport has been received. The Cashier's lock is released and they leave.
-
-		ApplicationClerk
-			-The ApplicationClerk starts by checking whether there is anyone on the bribe line.  If so, they take the $500 bribe and then service the Customer.  If not, they check the regular line.  If there is someone on the regular line, they signal a Customer to their counter to service them.
-			-If there is no one on line, the ApplicationClerk will go on break and wait for a Manager to wake them up.  After they have woken up, they notify the Manager that they've been woken up.
-			During this time, the line's lock is Acquired so that the line cannot be modified.
-			-The ApplicationClerk acquires the lock for their specific line.
-			-The ApplicationClerk waits for the Customer's application (SSN).
-			-The ApplicationClerk files the application (takes some time).
-			-The ApplicationClerk then informs the Customer that their application has been filed.  They wait for the customer to leave.
-			-The ApplicationClerk's lock is released so they may begin to service another Customer.
-
-		PictureClerk
-			-The PictureClerk starts by checking whether there is anyone on the bribe line.  If so, they take the $500 bribe and then service the Customer.  If not, they check the regular line.  If there is someone on the regular line, they signal a Customer to their counter to service them.
-			-If there is no one on line, the PictureClerk will go on break and wait for a Manager to wake them up.  After they have woken up, they notify the Manager that they've been woken up.
-			During this time, the line's lock is Acquired so that the line cannot be modified.
-			-The PictureClerk acquires the lock for their specific line.
-			-The PictureClerk waits for the Customer's application (SSN).
-			-The PictureClerk then takes the photo of the Customer and waits to hear whether the Customer has liked the photo or not.
-			-If the Customer does not like the photo, they inform the Customer to go to the back to the line. 
-			-If the Customer does like the photo, the PictureClerk files the photo (takes some time).
-			-The PictureClerk then informs the Customer that their photo has been filed.  They wait for the customer to leave.
-			-The PictureClerk's lock is released so they may begin to service another Customer.
-
-		PassportClerk
-			-The PassportClerk starts by checking whether there is anyone on the bribe line.  If so, they take the $500 bribe and then service the Customer.  If not, they check the regular line.  If there is someone on the regular line, they signal a Customer to their counter to service them.
-			-If there is no one on line, the PassportClerk will go on break and wait for a Manager to wake them up.  After they have woken up, they notify the Manager that they've been woken up.
-			During this time, the line's lock is Acquired so that the line cannot be modified.
-			-The PassportClerk acquires the lock for their specific line.
-			-The PassportClerk waits for the Customer's application (SSN).
-			-The PassportClerk then determines whether the Customer has both their application and picture completed.  Since both will always be completed, this is decided by a 5% random chance that the PassportClerk will make a mistake and tell them they are both not completed.
-			-If the Customer did not "complete" both items, they inform the Customer to go to the back to the line. The Customer is punished and then goes to the back of the line.
-			-If the Customer did complete both items, the PassportClerk informs the customer that both items are completed and records their passport (takes some time).
-			-The PassportClerk then informs the Customer that their photo has been filed.  They wait for the customer to leave.
-			-The PassportClerk's lock is released so they may begin to service another Customer.
-
-		Cashier
-			-The Cashier starts by checking whether there is anyone on the bribe line.  If so, they take the $500 bribe and then service the Customer.  If not, they check the regular line.  If there is someone on the regular line, they signal a Customer to their counter to service them.
-			-If there is no one on line, the Cashier will go on break and wait for a Manager to wake them up.  After they have woken up, they notify the Manager that they've been woken up.
-			During this time, the line's lock is Acquired so that the line cannot be modified.
-			-The Cashier acquires the lock for their specific line.
-			-The Cashier waits for the Customer's application (SSN).
-			-The Cashier then determines whether the Customer has been verified by the PassportClerk.  Since the Customer will always be verified, this is decided by a 5% random chance that the Cashier will make a mistake and tell them they are not verified.
-			-If the Customer did not "get verified", they inform the Customer to go to the back to the line.  The Customer is punished and then goes to the back of the line.
-			-If the Customer did get verified, the Cashier informs the customer that they are verified and waits for their payment.
-			-After the Cashier is paid, they provide the Customer with their completed passport (takes some time).
-			-The Cashier then waits for the Customer to receive their completed passport.  They inform the Customer that they are free to leave.  They wait for the customer to leave.
-			-The Cashier's lock is released so they may begin to service another Customer.
-
-		Manager
-			- The manager is within a while loop to constantly check for certain things
-			- It loops through all the clerks of each individual type, checking the number of people in their line to see if there's at least 3 people
-			- If there are at least 3 people in that line, then it wakes up all the clerks of that particular type that are on break by signaling that particular clerk's lock to wake up.  The Manager will then wait for the clerk/cashier to inform him they have woken up.
-			- The manager will also look to see if there are any straggling customers in line. If all the clerks are on break and there are still people in line, then the manager will wake up that line so that the customers can finish their passport.
-			- It will also print out the amount of money that is contained by all the clerks and the total amount of money the office has made, these are stored in global variables that the clerks constantly update
-			- the manager will then yield 100 times as to not keep continuously printing out the money amounts
-
-		// Implemented but does not run 
-		Senator
-			-The Senator is a special kind of Customer.  It is randomly determined whether a Customer is a Senator at creation.  Customers that are Senators will have their isSenator bool set to true.
-			-Senators go through the same motions as Customers except that:
-				-The Senator will wait till a clerk/cashier is ready to address them.
-				-The Senator will signal each clerk/cashier that they have arrived
-				-The Senator waits for the clerk/cashier to inform them that everyone has left in their line.
-				-After each type of clerk/cashier has made sure every Customer has left, the Senator will then go through the ApplicationClerk, PictureClerk, PassportClerk, and Cashier normally.
-
-			Clerks/Cashier actions for Senator
-				-The clerk/cashier will check if a Senator has arrived.
-				-If so, they signal that they are ready and then wait for the Senator to inform them they have arrived.
-				-They will then inform their customers to leave the office for the senator.
-				-After the customers have left, they signal the Senator.  Then work continues as normal.
-
+III. DESIGN:
+	i. Part 1
+		Locks:
+			We use a lockTable in order to keep track of the locks we have in a process.  There is a lockTableLock that is used so that only one Syscall can access the lockTable at a time to modify it.  We acquire this lock at the beginning of the syscall and release it before the return.
+			We also created a kernelLock class that will contain the lock object itself, an address space, lockCounter, which is used to keep track of the number of threads using the lock, and an isToBeDeleted boolean that will be used in destroy/release.
+			CreateLock_Syscall: The first part of the function handles extracting the name for the lock.  There is also an error check to ensure that the table has locks available for creation.  After that a new lock is created. A kernelLock is also created with it's lock set to the new lock, the address space set to the currentThread's adress space, isToBeDeleted to false, and lockCounter to 0.  Then the kernelLock is placed in the lock table and the index is recorded.  If it's -1, that means there was no space left in the lock table to create the lock.  Next, the processTable is modified so that we can associate a process with this lock.  The index is then returned to the user program.
+			Acquire_Syscall: An index is passed into the Get function for the lockTable in order to find the proper lock to acquire.  If the lock is null, that means that the lock doesn't exist.  If the lock does not belong to the same process as thread creator, it will also throw an error.  If the lock can be acquired, then we increment the lockCounter and return the index.
+			Release_Syscall: An index is passed into the Get function for the lockTable in order to find the proper lock to release.  If the lock is null, that means that the lock doesn't exist.  If the lock does not belong to the same process as thread creator, it will also throw an error.  If the lock can be released, then we decrement the lockCounter.  Next we check whether or not the lock should be deleted if the kernelLock's isToBeDeleted was set to true and whether or not the lock has any other threads that have acquired it.  If so, the lock is deleted and the processTable must be updated to disassociate the process and the lock.  After, the index is returned.
+			DestroyLock_Syscall: An index is passed into the Get function for the lockTable in order to find the proper lock to destroy.  If the lock is null, that means that the lock doesn't exist.  If the lock does not belong to the same process as thread creator, it will also throw an error.  First we check if the lock is busy.  If it's not then the lock can be removed from the lockTable and then deleted.  If it is busy, then the kernelLock's isToBeDeleted is set to true, so that when the lock becomes free and has no threads using it, it will be destroyed (handled in release).  The processTable must be updated to disassociate the process and the lock.  After, the index is returned.
+		Conditions:
+			We use a CVTable in order to keep track of the CVs we have in a process.  There is a CVTableLock that is used so that only one Syscall can access the CVTable at a time to modify it.  We acquire this lock at the beginning of the syscall and release it before the return.
+			We also created a kernelCV class that will contain the CV object itself, an address space, cvCounter, which is used to keep track of the number of threads using the CV, and an isToBeDeleted boolean that will be used in destroy/wait.
+			CreateCV_Syscall: The first part of the function handles extracting the name for the lock.  There is also an error check to ensure that the table has CVs available for creation.  After that a new CV is created. A kernelCV is also created with it's CV set to the new CV, the address space set to the currentThread's adress space, isToBeDeleted to false, and cvCounter to 0.  Then the kernelCV is placed in the cv table and the index is recorded.  If it's -1, that means there was no space left in the cv table to create the cv.  Next, the processTable is modified so that we can associate a process with this cv.  
+			Wait_Syscall: An index is passed into the Get function for the lockTable in order to find the proper lock to use for wait.  If the lock is null, that means that the lock doesn't exist.  If the lock does not belong to the same process as thread creator, it will also throw an error.  The same checks occur for the index passed in for the CV.  Then we call wait on the kernelCV's condition.  After the cv wakes up, it will check whether it needs to be deleted or not using the toBeDeleted bool and checking how many other threads are waiting using the cvCounter. If so, the kernelCV will be removed from the CVTable and get deleted.  The process table gets updated to disassociate the cv with the process.
+			Signal_Syscall: An index is passed into the Get function for the lockTable in order to find the proper lock to use for wait.  If the lock is null, that means that the lock doesn't exist.  If the lock does not belong to the same process as thread creator, it will also throw an error.  The same checks occur for the index passed in for the CV.  Then signal is called on the kernelCV. The cvCounter gets decremented since one less thread is waiting and the index is returned.
+			Broadcast_Syscall: An index is passed into the Get function for the lockTable in order to find the proper lock to use for wait.  If the lock is null, that means that the lock doesn't exist.  If the lock does not belong to the same process as thread creator, it will also throw an error.  The same checks occur for the index passed in for the CV.  Then broadcast is called on the kernelCV. The cvCounter gets set to 0 since all threads waiting will be woken up and the index is returned.
+			DestroyCV_Syscall: An index is passed into the Get function for the CVTable in order to find the proper cv to destroy.  If the cv is null, that means that the cv doesn't exist.  If the cv does not belong to the same process as thread creator, it will also throw an error.  First we check if the cv has threads waiting on it.  If not then the cv can be removed from the cvTable and then deleted.  If it is busy, then the kernelCV's isToBeDeleted is set to true, so that when the cv has no waiting threads, it will be destroyed (handled in wait).  The processTable must be updated to disassociate the process and the cv.  After, the index is returned.
+	ii. Part 2
+		------ talk about processtable and processlock purpose--------
 
 IV. IMPLEMENTATION
 
 	i. Files Modified
-
-	../code/threads/threadtest.cc
 	../code/threads/synch.h
-	../code/threads/synch.cc 
-
+	../code/threads/synch.cc
+	../code/userprog/exception.cc
+	../code/threads/system.h
+	../code/threads/system.cc
+	../code/userprog/addrspace.h
+	../code/userprog/addrspace.cc
+	../code/userprog/syscall.h
+	../code/test/start.s
+	../code/test/testfiles.c
+	../code/threads/thread.h
+	../code/threads/threadtest.cc
+	../code/userprog/table.h
 
 	ii. Files added
 	GROUPNAME
 	WRITEUP
+	../code/test/testexit.c
+	../code/test/testexitprogram.c
 
 	iii. Data Structures added, file they were added to
-	In ../code/threads/synch.cc ....
-
-	In threadtest.cc....
-	class Lock
-		char* name;
-		char* state;
-		Thread* lockOwnerThread;
-		List *lockWaitQueue;
-	class Condition
-		char* name;
-		Lock* waitingLock;
-		List* waitConditionQueue;
-
-	//Application Clerk Line
-	Lock* AppClerkLineLock;
-	int AppClerkBribeMoney;
-
-	//Picture Clerk Line
-	Lock* PicClerkLineLock;
-	int PicClerkBribeMoney;
-
-	//Passport Clerk Line
-	Lock* PassportClerkLineLock;
-	int PassportClerkBribeMoney;
-
-	//Cashier Line
-	Lock* CashierLineLock;
-	// App money + bribe money
-	int CashierMoney;
-
-	Semaphore sem("sem", 0);
-
-	int NUM_APP_CLERKS;
-	int NUM_PIC_CLERKS;
-	int NUM_PASSPORT_CLERKS;
-	int NUM_CASHIERS;
-	int NUM_CUSTOMERS;
-
-	bool SenatorArrived;
-	Lock* SenatorLock;
-
-	bool test1;
-	bool test6;
-	bool test7;
-	int MONEY;
-
-	//classes
-	class Customer:
-		char* name;
-	    int ssn;
-	    bool app_clerk;
-	    bool pic_clerk;
-	    bool passport_clerk;
-	    bool cashier;
-	    bool sendToBackOfLine;
-	    int money;
-	    bool isSenator;
-
-	class AppClerk:
-		char* name;
-	    int id;
-	    int state;
-	    Lock* lock;
-	    Condition* cv;
-	    Condition* lineCV;
-	    Condition* bribeLineCV;
-	    Condition* senatorCV;
-
-	    Customer* currentCustomer;
-	    std::queue<Customer*>* line;
-	    std::queue<Customer*>* bribeLine;
-
-
-	class PicClerk:
-		char* name;
-	    int id;
-	    int state;
-	    bool likePicture;
-	    Lock* lock;
-	    Condition* cv;
-	    Condition* lineCV;
-	    Condition* bribeLineCV;
-	    Condition* senatorCV;
-	    bool setUpSenator;
-
-	    Customer* currentCustomer;
-	    std::queue<Customer*>* line;
-	    std::queue<Customer*>* bribeLine;
-
-	class PassportClerk:
-		char* name;
-	    int id;
-	    int state;
-	    int lineSize;
-	    int bribeLineSize;
-	    Lock* lock;
-	    Condition* cv;
-	    Condition* lineCV;
-	    Condition* bribeLineCV;
-
-	    Customer* currentCustomer;
-	    std::queue<Customer*>* line;
-	    std::queue<Customer*>* bribeLine;
-
-	class Cashier:
-		char* name;
-	    int id;
-	    int state;
-	    int lineSize;
-	    int bribeLineSize;
-	    Lock* lock;
-	    Condition* cv;
-	    Condition* lineCV;
-	    Condition* bribeLineCV;
-	    Condition* senatorCV;
-
-	    bool setUpSenator;
-
-	    Customer* currentCustomer;
-	    std::queue<Customer*>* line;
-	    std::queue<Customer*>* bribeLine;
-
-	class Manager:
-		char* name
-
-		
-
-	// Declaring class global variables.
-	// List of Clerks
-	AppClerk** AppClerks;
-	PicClerk** PicClerks;
-	PassportClerk** PassportClerks;
-	Cashier** Cashiers;
-	Manager* manager;
-
-	//List of Customers
-	Customer** Customers;
-
-
-
+	
 	iv. Data structures modified and file they were added to
 
-	In ../code/threads/synch.h ....
-
-	class Lock {
-		//Modified...
-		void Acquire();
-		void Release();
-	}
-
-	class Condition {
-		//Modified...
-		void Wait(Lock *conditionLock);
-		void Signal(Lock *conditionLock);
-		void Broadcase(Lock *conditionLock);
-	}
-
-
-
-
 	v. Functions added and in which file
-	In ../code/threads/threadtest.cc...
-
-	void CustomerStart();
-    int FindAppLine();
-    void GetApplicationFiled(int my_line);
-    int FindPicLine();
-    void GetPictureTaken(int my_line);
-    int FindPassportLine();
-    void GetPassport(int my_line);
-    int FindCashierLine();
-    void PayCashier(int my_line);
-    int getSSN()
-    void setSendToBackOfLine() 
-
-    void AppClerkStart();
-    void Acquire();
-    void Release();
-    int getState();
-    void setState(int s);
-    int getLineSize();
-    int getBribeLineSize();
-    Lock* getLock();
-    Condition* getCV();
-    Condition* getLineCV();
-    Condition* getBribeLineCV();
-    Condition* getSenatorCV();
-    char* getName();
-    void addToLine(Customer* customer);
-    void addToBribeLine(Customer* customer);
-    void setCurrentCustomer(Customer* customer);
-
-    void PicClerkStart();
-    void setLikePicture(bool Like);
-    void PassportClerkStart();
-   	void CashierStart();
-
-   	void ManagerStart();
-
 
 	vi. Functions modified and in which file.
 
-	In ../code/threads/synch.cc
 
-	void Lock::Acquire();
-	void Lock::Release();
-	Condition::Condition(char* debugName);
-	void Condition::Wait(Lock* conditionLock);
-	void Condition::Signal(Lock* conditionLock);
-	void Condition::Broadcast(Lock* conditionLock);
 
 V. TESTING
+	Part 1:
+	For testing locks and cvs, please run "nachos -x ../test/testfiles" in the userprog folder.  Most of tests are taken from the testsuite in project 1.  There are some additional tests to test destroy, index access, and several initializations of variables.  Here is a description of the different tests:
+		Test 1: 
+		First thread will acquire and release lock.
+		Second thread will try to release the lock without acquiring first, in doing so will throw an error.
+		Third thread will try to acquire a lock after it's been destroyed.  This will also throw an error.
+		Fourth thread will acquire a lock, destroy it, and acquire it again to show that it has not been destroyed yet.  Then the thread will release the lock, which will destroy it.  The thread will then try to acquire the lock after it's been destroyed which will throw an error.
+		The fifth thread will create two locks in a row and acquire them.  It will also access an index of -1 for acquire and release which will throw errors.
+		Test 2:
+		The first thread will signal a cv with nothing waiting.  This will throw an error
+		The second thread will wait without a signal.
+		The third thread will signal the waiting thread from thread 2.
+		The fourth thread will destroy the cv.  It will the signal the cv, which will throw an error.
+		The fifth thread will create 2 cvs and also pass in indices of -1 to wait, signal, and broadcast which will throw errors.
+		Test 3:
+		Test 3 will start 5 waiter threads that will wait.  It will then start a signaller thread that will signal the waiter threads.  Only one waiter will be released.
+		Test 4:
+		Test 4 will start 5 waiter threads that will wait.  It will then start a signaller thread that will broadcast the waiter threads.  All waiter threads will be released.
+		Test 5: 
+		The first thread will wait on a condition under lock1.
+		The second thread will signal a condition under lock2.  This will throw an error stating that the waiting lock is different from the lock passed in.
+
+
+	Part 2:
+
+	Part 3:
 	For testing purposes, please run "nachos -P2".  From there you can select tests 1 - 7 or the full simulation.  Each test will run with a set number of customers, clerks, and cashiers which will be printed out at the beginning of the test.
 	Each test will print out the print statements outlined in the output statement guidelines as well as any releveant "TEST_X:" statements (X being the test number).
 
@@ -489,4 +212,5 @@ VII. MISCELLANEOUS
 	BUGS
 		- As mentioned in Design and Testing, Senator is not fully functionally.  It is implemented only for Test 7 and does not run in the Full Simulation.  Senator gets about halfway through it's required tasks before it stops.
 		-There are a handful of cases where the program will segfault.  However, if you try running the same case again, it will work.  Not entirely sure how the segfault occurs (not able to reproduce the error very often).
+		- When running the tests for the locks and cvs (testfiles executable), some of the print statements will bleed into the next test.  This is primarily noticeable on tests 4 and 5.
 	
