@@ -1008,42 +1008,49 @@ void Exit_Syscall(int status){
 
 //Rand syscall
 int Rand_Syscall(int range, int offset){
-  int num = (rand() % range) + offset;
+  srand(time(0));
+  int num = 0;
+  num = (rand() % range)+offset;
   return num;
 }
 
-void Printf_Syscall(unsigned int vaddr, int len, int num1, int num2){
+void Printf_Syscall(unsigned int vaddr, int len, int num1){
   char* buf;
-  copyin(vaddr, len, buf);
-
+   if (!(buf = new char[len])) {
+    printf("Error allocating kernel buffer for Printf!\n");
+    return;
+  }
+  else {
+    if (copyin(vaddr, len, buf) == -1) {
+      printf("Bad pointer passed to printf: data not written\n");
+      delete [] buf;
+      return;
+    }
+  }
   int lastIndex;
   int count = 0;
-
-  int num_1 = num1 / 100000;
-  int num_2 = num1 % 100000;
-  int num_3 = num2 / 100000;
-  int num_4 = num2 % 100000;
 
   for(int i = 0; i<len; i++){
     if(buf[i] == '%'){
       lastIndex = i;
-    } else if(bug[i] == 'd' && lastIndex == i-1){
+    } else if(buf[i] == 'd' && lastIndex == i-1){
       count++;
     }
   }
-  if(count==0){
-      printf(buf);
-  } else if(count ==1){
-      printf(buf, num_1);
-  } else if(count == 2){
-      printf(buf, num_1, num_2);
-  } else if(count ==3){
-      printf(buf, num_1, num_2, num_3);
-  } else if(count == 4){
-      printf(buf, num_1, num_2, num_3, num_4);
-  }
+ if(count ==3 ){
+  printf(buf, num1/1000000, (num1%1000000)/1000, num1%1000);
+ }
+ else if(count == 2){
+  printf(buf, num1/1000, num1%1000);
+ }
+ else if(count == 1){
+  printf(buf, num1);
+ }
+ else{
+  printf("invalid printf \n");
+ }
 
-
+  delete [] buf;
 }
 
 
@@ -1145,7 +1152,7 @@ void ExceptionHandler(ExceptionType which) {
         break;
     case SC_Printf:
         DEBUG('a', "Printf syscall.\n");
-        Printf_Syscall(machine->ReadRegister(4), machine->ReadRegister(5), machine->ReadRegister(6), machine->ReadRegister(7));
+        Printf_Syscall(machine->ReadRegister(4), machine->ReadRegister(5), machine->ReadRegister(6));
         break;
 
   }

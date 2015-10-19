@@ -155,7 +155,7 @@ int Broadcast(int lock, int CV);
 
 int Rand(int range, int offset);
 
-void Printf(char* buf, int len, int num1, int num2);
+void Printf(char* buf, int len, int num1);
 
 #endif /* IN_ASM */
 
