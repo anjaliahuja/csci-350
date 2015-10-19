@@ -28,7 +28,7 @@ void startTest5();
 void t1_t1() {
   int i;
   Write("In t1_t1\n", sizeof("In t1_t1\n"), ConsoleOutput);
-
+  
 
   Acquire(t1_l1);
   Write("t1_t1 acquired t1_l1\n", sizeof("t1_t1 acquired t1_l1\n"), ConsoleOutput);
