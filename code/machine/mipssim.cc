@@ -31,7 +31,6 @@ void
 Machine::Run()
 {
     Instruction *instr = new Instruction;  // storage for decoded instruction
-
     if(DebugIsEnabled('m'))
         cout << "Starting thread \"" << currentThread->getName() << "\" at time " << hex << stats->totalTicks << endl;
     interrupt->setStatus(UserMode);
