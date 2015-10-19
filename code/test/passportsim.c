@@ -578,22 +578,17 @@ void startPicClerk() {
       PicClerks[id].currentCustomer = queue_pop(&PicClerks[id].bribeLine);
     } else if (queue_size(&PicClerks[id].line) != 0) {
       Signal(PicClerkLineLock, PicClerks[id].lineCV);
-      /*
-      std::cout << name << " has signalled a Customer to come to their counter" << std::endl;
-      */
+      Printf("Pic clerk %d has signalled customer %d to come to their counter\n", sizeof("Pic clerk %d has signalled customer %d to come to their counter\n"), id*1000+(PicClerks[id].currentCustomer));
+
       PicClerks[id].state = 1;
       PicClerks[id].currentCustomer = queue_pop(&PicClerks[id].bribeLine);
     } else if (!SenatorArrived) {
       PicClerks[id].state = 2;
-      /*
-      std::cout << name << " is going on break" << std::endl;
-      */
+      Printf("Pic clerk %d is going on break\n", sizeof("Pic clerk %d is going on break"), id);
       Acquire(PicClerks[id].lock);
       Release(PicClerkLineLock);
       Wait(PicClerks[id].lock, PicClerks[id].cv);
-      /*
-      std::cout << name << " is coming off break" << std::endl;
-      */
+      Printf("Pic clerk %d coming off break\n", sizeof("Pic clerk %d is coming off break\n"), id);
       Signal(PicClerks[id].lock, PicClerks[id].cv);
       Release(PicClerks[id].lock);
       PicClerks[id].state = 0;
@@ -605,33 +600,23 @@ void startPicClerk() {
 
     /* Wait for customer data */
     Wait(PicClerks[id].lock, PicClerks[id].cv);
-
-    /*
-    std::cout << name << " has received SSN " << currentCustomer->getSSN();
-    std::cout << " from " << currentCustomer->getName() << std::endl;
-    */
-
+    Printf("Pic clerk %d has received SSN %d from customer\n", sizeof("Pic clerk %d has received SSN %d from customer\n"), id*1000+(Customers[PicClerks[id].currentCustomer].ssn));
+   
     /* Do my job, customer now waiting */
     Signal(PicClerks[id].lock, PicClerks[id].cv);
-    /*
-    std::cout << name << " has taken a picture of " << currentCustomer->getName() << std::endl;
-    */
+    Printf("Pic clerk %d has taken picture of customer %d\n", sizeof("Pic clerk %d has taken picture of customer %d\n"), id*1000+ PicClerks[id].currentCustomer);
+   
 
     /* waiting for approval */
     Wait(PicClerks[id].lock, PicClerks[id].cv);
 
     if (!PicClerks[id].likePicture) {
-      /*
-      std::cout << name << " has been told that " << currentCustomer->getName();
-      std::cout << " does not like their picture" << std::endl;
-      */
+      Printf("Pic clerk %d has been told that customer %d does not like their picture.\n", sizeof("Pic clerk %d has been told that customer %d does not like their picture.\n"), id*1000+ PicClerks[id].currentCustomer);
       Signal(PicClerks[id].lock, PicClerks[id].cv);
     }
     else {
-      /*
-      std::cout << name << " has been told that " << currentCustomer->getName();
-      std::cout << " does like their picture" << std::endl;
-      */
+      Printf("Pic clerk %d has been told that customer %d does like their picture.\n", sizeof("Pic clerk %d has been told that customer %d does like their picture.\n"), id*1000+ PicClerks[id].currentCustomer);
+
 
       Release(PicClerks[id].lock);
       for(i =20; i<100; ++i){
@@ -673,17 +658,17 @@ void startPassportClerk() {
       PassportClerks[id].currentCustomer = queue_pop(&PassportClerks[id].bribeLine);
     } else if (queue_size(&PassportClerks[id].line) != 0) {
       Signal(PassportClerkLineLock, PassportClerks[id].lineCV);
-      /* print out */
+      Printf("Passport clerk %d has signalled customer to come to their counter\n", sizeof("Passport clerk %d has signalled customer to come to their counter."), id);
       PassportClerkBribeMoney += 500;
       PassportClerks[id].state = 1;
       PassportClerks[id].currentCustomer = queue_pop(&PassportClerks[id].line);
     } else {
       Acquire(PassportClerks[id].lock);
       PassportClerks[id].state = 2;
-      /*print out*/
+      Printf("Passport clerk %d is going on break\n", sizeof("Passport clerk %d is going on break\n"), id);
       Release(PassportClerkLineLock);
       Wait(PassportClerks[id].lock, PassportClerks[id].cv);
-      /*print out*/
+      Printf("Passport clerk %d is coming off break\n", sizeof("Passport clerk %d is coming off break\n"), id);
       Signal(PassportClerks[id].lock, PassportClerks[id].cv);
       PassportClerks[id].state = 0;
 
@@ -695,26 +680,19 @@ void startPassportClerk() {
 
     Wait(PassportClerks[id].lock, PassportClerks[id].cv);
 
-    /*
-    std::cout << name << " has received SSN " << currentCustomer->getSSN();
-    std::cout << " from " << currentCustomer->getName() << std::endl;
-    */
+    Printf("Passport clerk %d has received SSN from Customer %d\n", sizeof("Passport clerk %d has received SSN from Customer %d\n"), 
+      id*1000+(Customers[PassportClerks[id].currentCustomer].ssn));
 
     /* 5% chance that passport clerk makes a mistake.*/
     random = Rand(4, 0);
     if (random == 0) {
-      /*
-      std::cout << name << " has determined that " << currentCustomer->getName();
-      std::cout << " does not have both their application and picture completed" << std::endl;
-      */
+      Printf("Passport clerk %d has determined that Customer %d does not have both their application and picture completed\n", sizeof("Passport clerk %d has determined that Customer %d does not have both their application and picture completed\n"), id*1000+(Customers[PassportClerks[id].currentCustomer].ssn));
       Customers[PassportClerks[id].currentCustomer].sendToBackOfLine = true;
       Signal(PassportClerks[id].lock, PassportClerks[id].cv);
     }
     else {
-      /*
-      std::cout << name << " has determined that " << currentCustomer->getName();
-      std::cout << " has both their application and picture completed" << std::endl;
-      */
+      Printf("Passport clerk %d has determined that Customer %d has both their application and picture completed\n", 
+        sizeof("Passport clerk %d has determined that Customer %d has both their application and picture completed\n"), id*1000+(Customers[PassportClerks[id].currentCustomer].ssn));
       Signal(PassportClerks[id].lock, PassportClerks[id].cv);
       Release(PassportClerks[id].lock);
       for(i =20; i<100; ++i){
@@ -722,9 +700,8 @@ void startPassportClerk() {
       }
       Acquire(PassportClerks[id].lock);
       Signal(PassportClerks[id].lock, PassportClerks[id].cv);
-      /*
-      std::cout << name << " has recorded " << currentCustomer->getName() << " passport documentation" << std::endl;
-      */
+      Printf("Passport clerk %d has recorded Customer %d passport documentation\n", sizeof("Passport clerk %d has recorded Customer %d passport documentation\n"), id*1000+(Customers[PassportClerks[id].currentCustomer].ssn));
+      
     }
 
     Wait(PassportClerks[id].lock, PassportClerks[id].cv);
