@@ -165,7 +165,7 @@ int findLine(char type, bool isSenator, int customer) {
     }
 
     /* Bribe */
-    random = Rand()%10;
+    random = Rand(0, 9);
     if (Customers[customer].money >= 600 && AppClerks[my_line].state == 1 && random < 3) {
       queue_push(&AppClerks[my_line].bribeLine, customer);
       /*std::cout << this->name << " has gotten in bribe line for " << AppClerks[my_line]->getName() << std::endl;*/
@@ -248,9 +248,11 @@ void getPicTaken(int my_line, int customer) {
 
   /*
   std::cout << this->name << " does like their picture from " << PicClerks[my_line]->getName() << std::endl;
-  * Signal clerk and Wait to make sure that clerk acknowledges.
   */
 
+  /* 
+  Signal clerk and Wait to make sure that clerk acknowledges.
+  */
   Signal(PicClerks[my_line].lock, PicClerks[my_line].cv);
   Wait(PicClerks[my_line].lock, PicClerks[my_line].cv);
 
@@ -369,7 +371,7 @@ void startCustomer() {
   if (isSen) {
 
   } else {
-    task = Rand()%2;
+    task = Rand(0, 1);
     if (task == 0){
       my_line = findLine('a', isSen, id);
       getAppFiled(my_line, id);
@@ -390,6 +392,7 @@ void startCustomer() {
     /*print out*/
     numCustomers--;
   }
+  Exit(0);
 }
 
 void startAppClerk() {
@@ -453,6 +456,7 @@ void startAppClerk() {
     AppClerks[id].currentCustomer = -1;
     Release(AppClerks[id].lock);
   }
+  Exit(0);
 }
 
 void startPicClerk() {
@@ -547,6 +551,7 @@ void startPicClerk() {
     PicClerks[id].currentCustomer = -1;
     Release(PicClerks[id].lock);
   }
+  Exit(0);
 }
 
 void startPassportClerk() {
@@ -597,7 +602,7 @@ void startPassportClerk() {
     */
 
     /* 5% chance that passport clerk makes a mistake.*/
-    random = Rand()%20;
+    random = Rand(4, 0);
     if (random == 0) {
       /*
       std::cout << name << " has determined that " << currentCustomer->getName();
@@ -683,7 +688,7 @@ void startCashier() {
     */
 
     /* 5% chance that passport clerk makes a mistake.*/
-    random = Rand()%20;
+    random = Rand(4, 0);
     if (random == 0) {
       /*
       std::cout << name << " has received the $100 from " << currentCustomer->getName();
@@ -734,6 +739,7 @@ void startCashier() {
     Cashiers[id].currentCustomer = -1;
     Release(Cashiers[id].lock);
   }
+  Exit(0);
 }
 
 void managerWakeup(Clerk* clerk) {
@@ -872,6 +878,7 @@ void startManager() {
     std::cout << "Manager has counted a total of " << total << " for the Passport Office" << std::endl;
     */
   }
+  Exit(0);
 }
 
 void initGlobalData() {

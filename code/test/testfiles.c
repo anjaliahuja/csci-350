@@ -7,12 +7,9 @@
 int t1_l1, t1_l2, t1_l3, t2_l1, t3_l1, t4_l1, t5_l1, t5_l2;
 int t2_c1, t2_c2, t2_c3, t3_c1, t4_c1, t5_c1;
 
-<<<<<<< HEAD
 
 void t1_t4();
 void t1_t5();
-=======
->>>>>>> master
 void startTest2();
 void t2_t4();
 void startTest3();

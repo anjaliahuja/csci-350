@@ -1,5 +1,5 @@
 #include "syscall.h"
 
 int main () {
-	Exec("./passportsim");
+	Exec("../test/passportsim", sizeof("../test/passportsim"));
 }
