@@ -47,9 +47,6 @@ typedef struct {
   bool likePicture;
 } Clerk;
 
-typedef struct {
-  char* name;
-} Manager;
 
 /* People */
 Customer Customers[NUM_CUSTOMERS];
@@ -57,13 +54,13 @@ Clerk AppClerks[NUM_APPCLERKS];
 Clerk PicClerks[NUM_PICCLERKS];
 Clerk PassportClerks[NUM_PASSPORTCLERKS];
 Clerk Cashiers[NUM_CASHIERS];
-Manager manager;
 
 /* Locks */
 int AppClerkLineLock;
 int PicClerkLineLock;
 int PassportClerkLineLock;
 int CashierLineLock;
+int DataLock;
 
 /* Money */
 int AppClerkBribeMoney;
@@ -75,6 +72,30 @@ int CashierMoney;
 bool SenatorArrived;
 int SenatorLock;
 int numCustomers;
+
+int numActiveCustomers;
+int numActiveAppClerks;
+int numActivePicClerks;
+int numActivePassportClerks;
+int numActiveCashiers;
+
+/* Helper Functions */
+char cstring[100];
+char* numString(char* str, int length, int num) {
+  int i;
+  for (i=0; i < length; i++) {
+    cstring[i] = str[i];
+  }
+  if(num < 10) {
+    cstring[length] = (char)num;
+    cstring[length+1] = '\0';
+  } else {
+    cstring[length+1] = (char)(num%10);
+    cstring[length] = (char)(num/10);
+    cstring[length+2] = '\0';
+  }
+  return cstring;
+}
 
 /* Implementing a Queue */
 void queue_init(Queue* q) {
@@ -333,11 +354,16 @@ void payCashier(int my_line, int customer) {
 }
 
 /* Class functions */
-void startCustomer(int id) {
-  /* data declaration */
-  int task;
+void startCustomer() {
+  int task, id;
   int my_line = -1;
   bool isSen = Customers[id].isSenator;
+  Acquire(DataLock);
+  id = numActiveCustomers;
+  numActiveCustomers++;
+  Release(DataLock);
+  /* data declaration */
+
 
   /*implementation */
   if (isSen) {
@@ -366,8 +392,12 @@ void startCustomer(int id) {
   }
 }
 
-void startAppClerk(int id) {
-  int i;
+void startAppClerk() {
+  int i, id;
+  Acquire(DataLock);
+  id = numActiveAppClerks;
+  numActiveAppClerks++;
+  Release(DataLock);
 
   while(true) {
     if(numCustomers == 0) break;
@@ -425,8 +455,12 @@ void startAppClerk(int id) {
   }
 }
 
-void startPicClerk(int id) {
-  int i;
+void startPicClerk() {
+  int i, id;
+  Acquire(DataLock);
+  id = numActivePicClerks;
+  numActivePicClerks++;
+  Release(DataLock);
 
   while(true) {
     if (numCustomers == 0) break;
@@ -515,8 +549,12 @@ void startPicClerk(int id) {
   }
 }
 
-void startPassportClerk(int id) {
-  int i, random;
+void startPassportClerk() {
+  int i, id, random;
+  Acquire(DataLock);
+  id = numActivePassportClerks;
+  numActivePassportClerks++;
+  Release(DataLock);
 
   while(true) {
     if(numCustomers == 0) break;
@@ -598,8 +636,12 @@ void startPassportClerk(int id) {
   }
 }
 
-void startCashiers(int id) {
-  int i, random;
+void startCashier() {
+  int i, id, random;
+  Acquire(DataLock);
+  id = numActiveCashiers;
+  numActiveCashiers++;
+  Release(DataLock);
 
   while(true) {
     if(numCustomers == 0) break;
@@ -832,10 +874,157 @@ void startManager() {
   }
 }
 
-void init() {
+void initGlobalData() {
+  char* name;
 
+  /* Locks */
+  AppClerkLineLock = CreateLock("AppClerkLineLock", sizeof("AppClerkLineLock"));
+  PicClerkLineLock = CreateLock("PicClerkLineLock", sizeof("PicClerkLineLock"));
+  PassportClerkLineLock = CreateLock("PassportClerkLineLock", sizeof("PassportClerkLineLock"));
+  CashierLineLock = CreateLock("CashierLineLock", sizeof("CashierLineLock"));
+  DataLock = CreateLock("DataLock", sizeof("DataLock"));
+
+  /* Money */
+  AppClerkBribeMoney = 0;
+  PicClerkBribeMoney = 0;
+  PassportClerkBribeMoney = 0;
+  CashierMoney = 0;
+
+  /* Other values */
+  SenatorArrived = false;
+  SenatorLock = CreateLock("SenatorLock", sizeof("SenatorLock"));;
+  numCustomers = NUM_CUSTOMERS;
+
+  numActiveCustomers = 0;
+  numActiveAppClerks = 0;
+  numActivePicClerks = 0;
+  numActivePassportClerks = 0;
+  numActiveCashiers = 0;
+}
+
+void initCustomersData() {
+  int i;
+  for (i = 0; i < NUM_CUSTOMERS; i++) {
+    Customers[i].name = "customer_" + i;
+    Customers[i].ssn = i;
+    Customers[i].money = 0;
+    Customers[i].app_clerk = false;
+    Customers[i].pic_clerk = false;
+    Customers[i].passport_clerk = false;
+    Customers[i].cashier = false;
+    Customers[i].sendToBackOfLine = false;
+    Customers[i].isSenator = false;
+  }
+}
+
+void initClerksData() {
+  int i;
+  char* name;
+  for (i = 0; i < NUM_APPCLERKS; i++) {
+    AppClerks[i].name = "appclerk_" + i;
+    AppClerks[i].id = i;
+    AppClerks[i].state = 0;
+    name = numString("appclerk_lock_", sizeof("appclerk_lock_"), i);
+    AppClerks[i].lock = CreateLock(name, sizeof(name));
+    name = numString("appclerk_cv_", sizeof("appclerk_lock_"), i);
+    AppClerks[i].cv = CreateCV(name, sizeof(name));
+    name = numString("appclerk_lineCV_", sizeof("appclerk_lock_"), i);
+    AppClerks[i].cv = CreateCV(name, sizeof(name));
+    name = numString("appclerk_bribeLineCV_", sizeof("appclerk_lock_"), i);
+    AppClerks[i].cv = CreateCV(name, sizeof(name));
+    name = numString("appclerk_SenatorCV_", sizeof("appclerk_lock_"), i);
+    AppClerks[i].cv = CreateCV(name, sizeof(name));
+
+    queue_init(&AppClerks[i].line);
+    queue_init(&AppClerks[i].bribeLine);
+    AppClerks[i].likePicture = false;
+  }
+  for (i = 0; i < NUM_PICCLERKS; i++) {
+    PicClerks[i].name = "Picclerk_" + i;
+    PicClerks[i].id = i;
+    PicClerks[i].state = 0;
+    name = numString("Picclerk_lock_", sizeof("Picclerk_lock_"), i);
+    PicClerks[i].lock = CreateLock(name, sizeof(name));
+    name = numString("Picclerk_cv_", sizeof("Picclerk_lock_"), i);
+    PicClerks[i].cv = CreateCV(name, sizeof(name));
+    name = numString("Picclerk_lineCV_", sizeof("Picclerk_lock_"), i);
+    PicClerks[i].cv = CreateCV(name, sizeof(name));
+    name = numString("Picclerk_bribeLineCV_", sizeof("Picclerk_lock_"), i);
+    PicClerks[i].cv = CreateCV(name, sizeof(name));
+    name = numString("Picclerk_SenatorCV_", sizeof("Picclerk_lock_"), i);
+    PicClerks[i].cv = CreateCV(name, sizeof(name));
+
+    queue_init(&PicClerks[i].line);
+    queue_init(&PicClerks[i].bribeLine);
+    PicClerks[i].likePicture = false;
+  }
+  for (i = 0; i < NUM_PASSPORTCLERKS; i++) {
+    PassportClerks[i].name = "Passportclerk_" + i;
+    PassportClerks[i].id = i;
+    PassportClerks[i].state = 0;
+    name = numString("Passportclerk_lock_", sizeof("Passportclerk_lock_"), i);
+    PassportClerks[i].lock = CreateLock(name, sizeof(name));
+    name = numString("Passportclerk_cv_", sizeof("Passportclerk_lock_"), i);
+    PassportClerks[i].cv = CreateCV(name, sizeof(name));
+    name = numString("Passportclerk_lineCV_", sizeof("Passportclerk_lock_"), i);
+    PassportClerks[i].cv = CreateCV(name, sizeof(name));
+    name = numString("Passportclerk_bribeLineCV_", sizeof("Passportclerk_lock_"), i);
+    PassportClerks[i].cv = CreateCV(name, sizeof(name));
+    name = numString("Passportclerk_SenatorCV_", sizeof("Passportclerk_lock_"), i);
+    PassportClerks[i].cv = CreateCV(name, sizeof(name));
+
+    queue_init(&PassportClerks[i].line);
+    queue_init(&PassportClerks[i].bribeLine);
+    PassportClerks[i].likePicture = false;
+  }
+  for (i = 0; i < NUM_CASHIERS; i++) {
+    Cashiers[i].name = "Cashier_" + i;
+    Cashiers[i].id = i;
+    Cashiers[i].state = 0;
+    name = numString("Cashier_lock_", sizeof("Cashier_lock_"), i);
+    Cashiers[i].lock = CreateLock(name, sizeof(name));
+    name = numString("Cashier_cv_", sizeof("Cashier_lock_"), i);
+    Cashiers[i].cv = CreateCV(name, sizeof(name));
+    name = numString("Cashier_lineCV_", sizeof("Cashier_lock_"), i);
+    Cashiers[i].cv = CreateCV(name, sizeof(name));
+    name = numString("Cashier_bribeLineCV_", sizeof("Cashier_lock_"), i);
+    Cashiers[i].cv = CreateCV(name, sizeof(name));
+    name = numString("Cashier_SenatorCV_", sizeof("Cashier_lock_"), i);
+    Cashiers[i].cv = CreateCV(name, sizeof(name));
+
+    queue_init(&Cashiers[i].line);
+    queue_init(&Cashiers[i].bribeLine);
+    Cashiers[i].likePicture = false;
+  }
+}
+
+void init() {
+  initGlobalData();
+  initClerksData();
+  initCustomersData();
 } 
+
+void fork() {
+  int i;
+  for (i = 0; i < NUM_APPCLERKS; ++i) {
+    Fork(startAppClerk, "appclerk", sizeof("appclerk"));
+  }
+  for (i = 0; i < NUM_PICCLERKS; ++i) {
+    Fork(startPicClerk, "picclerk", sizeof("picclerk"));
+  }
+  for (i = 0; i < NUM_PASSPORTCLERKS; ++i) {
+    Fork(startPassportClerk, "appclerk", sizeof("appclerk"));
+  }
+  for (i = 0; i < NUM_APPCLERKS; ++i) {
+    Fork(startCashier, "appclerk", sizeof("appclerk"));
+  }
+  for (i = 0; i < NUM_CUSTOMERS; ++i) {
+    Fork(startCustomer, "customer", sizeof("customer"));
+  }
+  Fork(startManager, "manager", sizeof("manager"));
+}
 
 int main() {
   init();
+  fork();
 }
