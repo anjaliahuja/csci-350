@@ -197,7 +197,7 @@ int findLine(char type, bool isSenator, int customer) {
 
     /* Picking a line */
     Acquire(PicClerkLineLock);
-    for(i = 0; i < NUM_PicCLERKS; i++) {
+    for(i = 0; i < NUM_PICCLERKS; i++) {
       if(queue_size(&PicClerks[i].line) < line_size) {
         line_size = queue_size(&PicClerks[i].line);
         my_line = i;
@@ -233,7 +233,7 @@ int findLine(char type, bool isSenator, int customer) {
 
     /* Picking a line */
     Acquire(PassportClerkLineLock);
-    for(i = 0; i < NUM_PassportCLERKS; i++) {
+    for(i = 0; i < NUM_PASSPORTCLERKS; i++) {
       if(queue_size(&PassportClerks[i].line) < line_size) {
         line_size = queue_size(&PassportClerks[i].line);
         my_line = i;
@@ -269,7 +269,7 @@ int findLine(char type, bool isSenator, int customer) {
 
     /* Picking a line */
     Acquire(CashierLineLock);
-    for(i = 0; i < NUM_CashierS; i++) {
+    for(i = 0; i < NUM_CASHIERS; i++) {
       if(queue_size(&Cashiers[i].line) < line_size) {
         line_size = queue_size(&Cashiers[i].line);
         my_line = i;
@@ -413,9 +413,7 @@ void payCashier(int my_line, int customer) {
   Acquire(Cashiers[my_line].lock);
   Signal(Cashiers[my_line].lock, Cashiers[my_line].cv);
 
-  /*
-  std::cout << this->name << " has given SSN " << ssn << " to " << Cashiers[my_line]->getName() << std::endl;
-  */
+  Printf("Customer_%d has given SSN %d to Cashier_%d \n", sizeof("Customer_%d has given SSN %d to Cashier_%d \n"), (customer+Customers[customer].ssn*1000+my_line*1000000));
 
   /* Wait to determine whether they go back in line */
   Wait(Cashiers[my_line].lock, Cashiers[my_line].cv);
