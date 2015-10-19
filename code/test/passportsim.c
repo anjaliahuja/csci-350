@@ -165,7 +165,7 @@ int findLine(char type, bool isSenator, int customer) {
     }
 
     /* Bribe */
-    random = Rand(0, 9);
+    random = Rand(9, 0);
     if (Customers[customer].money >= 600 && AppClerks[my_line].state == 1 && random < 3) {
       queue_push(&AppClerks[my_line].bribeLine, customer);
       /*std::cout << this->name << " has gotten in bribe line for " << AppClerks[my_line]->getName() << std::endl;*/
@@ -185,13 +185,114 @@ int findLine(char type, bool isSenator, int customer) {
     Release(AppClerkLineLock);
 
     return my_line;
-
   } else if (type == 'p') {
+    if(isSenator) {
+      PicClerks[0].state = 0;
+      PicClerks[0].currentCustomer = customer;
+    }
 
+    /* Picking a line */
+    Acquire(PicClerkLineLock);
+    for(i = 0; i < NUM_PicCLERKS; i++) {
+      if(queue_size(&PicClerks[i].line) < line_size) {
+        line_size = queue_size(&PicClerks[i].line);
+        my_line = i;
+      }
+    }
+
+    /* Bribe */
+    random = Rand(9, 0);
+    if (Customers[customer].money >= 600 && PicClerks[my_line].state == 1 && random < 3) {
+      queue_push(&PicClerks[my_line].bribeLine, customer);
+      /*std::cout << this->name << " has gotten in bribe line for " << PicClerks[my_line]->getName() << std::endl;*/
+      Wait(PicClerkLineLock, PicClerks[my_line].bribeLineCV);
+      Customers[customer].money -= 500;
+    } else {
+      if (PicClerks[my_line].state == 1 || PicClerks[my_line].state == 2) {
+        queue_push(&PicClerks[my_line].bribeLine, customer);
+        /*std::cout << this->name << " has gotten in regular line for " << PicClerks[my_line]->getName() << std::endl;*/
+        Wait(PicClerkLineLock, PicClerks[my_line].lineCV);
+      } else {
+        PicClerks[my_line].currentCustomer = customer;
+      }
+    }
+
+    PicClerks[my_line].state = 1;
+    Release(PicClerkLineLock);
+
+    return my_line;
   } else if (type == 's') {
+    if(isSenator) {
+      PassportClerks[0].state = 0;
+      PassportClerks[0].currentCustomer = customer;
+    }
 
+    /* Picking a line */
+    Acquire(PassportClerkLineLock);
+    for(i = 0; i < NUM_PassportCLERKS; i++) {
+      if(queue_size(&PassportClerks[i].line) < line_size) {
+        line_size = queue_size(&PassportClerks[i].line);
+        my_line = i;
+      }
+    }
+
+    /* Bribe */
+    random = Rand(9, 0);
+    if (Customers[customer].money >= 600 && PassportClerks[my_line].state == 1 && random < 3) {
+      queue_push(&PassportClerks[my_line].bribeLine, customer);
+      /*std::cout << this->name << " has gotten in bribe line for " << PassportClerks[my_line]->getName() << std::endl;*/
+      Wait(PassportClerkLineLock, PassportClerks[my_line].bribeLineCV);
+      Customers[customer].money -= 500;
+    } else {
+      if (PassportClerks[my_line].state == 1 || PassportClerks[my_line].state == 2) {
+        queue_push(&PassportClerks[my_line].bribeLine, customer);
+        /*std::cout << this->name << " has gotten in regular line for " << PassportClerks[my_line]->getName() << std::endl;*/
+        Wait(PassportClerkLineLock, PassportClerks[my_line].lineCV);
+      } else {
+        PassportClerks[my_line].currentCustomer = customer;
+      }
+    }
+
+    PassportClerks[my_line].state = 1;
+    Release(PassportClerkLineLock);
+
+    return my_line;
   } else if (type == 'c') {
+    if(isSenator) {
+      Cashiers[0].state = 0;
+      Cashiers[0].currentCustomer = customer;
+    }
 
+    /* Picking a line */
+    Acquire(CashierLineLock);
+    for(i = 0; i < NUM_CashierS; i++) {
+      if(queue_size(&Cashiers[i].line) < line_size) {
+        line_size = queue_size(&Cashiers[i].line);
+        my_line = i;
+      }
+    }
+
+    /* Bribe */
+    random = Rand(9, 0);
+    if (Customers[customer].money >= 600 && Cashiers[my_line].state == 1 && random < 3) {
+      queue_push(&Cashiers[my_line].bribeLine, customer);
+      /*std::cout << this->name << " has gotten in bribe line for " << Cashiers[my_line]->getName() << std::endl;*/
+      Wait(CashierLineLock, Cashiers[my_line].bribeLineCV);
+      Customers[customer].money -= 500;
+    } else {
+      if (Cashiers[my_line].state == 1 || Cashiers[my_line].state == 2) {
+        queue_push(&Cashiers[my_line].bribeLine, customer);
+        /*std::cout << this->name << " has gotten in regular line for " << Cashiers[my_line]->getName() << std::endl;*/
+        Wait(CashierLineLock, Cashiers[my_line].lineCV);
+      } else {
+        Cashiers[my_line].currentCustomer = customer;
+      }
+    }
+
+    Cashiers[my_line].state = 1;
+    Release(CashierLineLock);
+
+    return my_line;
   }
 }
 
@@ -371,7 +472,7 @@ void startCustomer() {
   if (isSen) {
 
   } else {
-    task = Rand(0, 1);
+    task = Rand(1, 0);
     if (task == 0){
       my_line = findLine('a', isSen, id);
       getAppFiled(my_line, id);
@@ -927,6 +1028,11 @@ void initCustomersData() {
 void initClerksData() {
   int i;
   char* name;
+
+  int lineCV;
+  int bribeLineCV;
+  int senatorCV;
+
   for (i = 0; i < NUM_APPCLERKS; i++) {
     AppClerks[i].name = "appclerk_" + i;
     AppClerks[i].id = i;
@@ -936,11 +1042,11 @@ void initClerksData() {
     name = numString("appclerk_cv_", sizeof("appclerk_lock_"), i);
     AppClerks[i].cv = CreateCV(name, sizeof(name));
     name = numString("appclerk_lineCV_", sizeof("appclerk_lock_"), i);
-    AppClerks[i].cv = CreateCV(name, sizeof(name));
+    AppClerks[i].lineCV = CreateCV(name, sizeof(name));
     name = numString("appclerk_bribeLineCV_", sizeof("appclerk_lock_"), i);
-    AppClerks[i].cv = CreateCV(name, sizeof(name));
+    AppClerks[i].bribeLineCV = CreateCV(name, sizeof(name));
     name = numString("appclerk_SenatorCV_", sizeof("appclerk_lock_"), i);
-    AppClerks[i].cv = CreateCV(name, sizeof(name));
+    AppClerks[i].senatorCV = CreateCV(name, sizeof(name));
 
     queue_init(&AppClerks[i].line);
     queue_init(&AppClerks[i].bribeLine);
@@ -955,11 +1061,11 @@ void initClerksData() {
     name = numString("Picclerk_cv_", sizeof("Picclerk_lock_"), i);
     PicClerks[i].cv = CreateCV(name, sizeof(name));
     name = numString("Picclerk_lineCV_", sizeof("Picclerk_lock_"), i);
-    PicClerks[i].cv = CreateCV(name, sizeof(name));
+    PicClerks[i].lineCV = CreateCV(name, sizeof(name));
     name = numString("Picclerk_bribeLineCV_", sizeof("Picclerk_lock_"), i);
-    PicClerks[i].cv = CreateCV(name, sizeof(name));
+    PicClerks[i].bribeLineCV = CreateCV(name, sizeof(name));
     name = numString("Picclerk_SenatorCV_", sizeof("Picclerk_lock_"), i);
-    PicClerks[i].cv = CreateCV(name, sizeof(name));
+    PicClerks[i].senatorCV = CreateCV(name, sizeof(name));
 
     queue_init(&PicClerks[i].line);
     queue_init(&PicClerks[i].bribeLine);
@@ -974,11 +1080,11 @@ void initClerksData() {
     name = numString("Passportclerk_cv_", sizeof("Passportclerk_lock_"), i);
     PassportClerks[i].cv = CreateCV(name, sizeof(name));
     name = numString("Passportclerk_lineCV_", sizeof("Passportclerk_lock_"), i);
-    PassportClerks[i].cv = CreateCV(name, sizeof(name));
+    PassportClerks[i].lineCV = CreateCV(name, sizeof(name));
     name = numString("Passportclerk_bribeLineCV_", sizeof("Passportclerk_lock_"), i);
-    PassportClerks[i].cv = CreateCV(name, sizeof(name));
+    PassportClerks[i].bribeLineCV = CreateCV(name, sizeof(name));
     name = numString("Passportclerk_SenatorCV_", sizeof("Passportclerk_lock_"), i);
-    PassportClerks[i].cv = CreateCV(name, sizeof(name));
+    PassportClerks[i].senatorCV = CreateCV(name, sizeof(name));
 
     queue_init(&PassportClerks[i].line);
     queue_init(&PassportClerks[i].bribeLine);
@@ -993,11 +1099,11 @@ void initClerksData() {
     name = numString("Cashier_cv_", sizeof("Cashier_lock_"), i);
     Cashiers[i].cv = CreateCV(name, sizeof(name));
     name = numString("Cashier_lineCV_", sizeof("Cashier_lock_"), i);
-    Cashiers[i].cv = CreateCV(name, sizeof(name));
+    Cashiers[i].lineCV = CreateCV(name, sizeof(name));
     name = numString("Cashier_bribeLineCV_", sizeof("Cashier_lock_"), i);
-    Cashiers[i].cv = CreateCV(name, sizeof(name));
+    Cashiers[i].bribeLineCV = CreateCV(name, sizeof(name));
     name = numString("Cashier_SenatorCV_", sizeof("Cashier_lock_"), i);
-    Cashiers[i].cv = CreateCV(name, sizeof(name));
+    Cashiers[i].senatorCV = CreateCV(name, sizeof(name));
 
     queue_init(&Cashiers[i].line);
     queue_init(&Cashiers[i].bribeLine);
@@ -1022,7 +1128,7 @@ void fork() {
   for (i = 0; i < NUM_PASSPORTCLERKS; ++i) {
     Fork(startPassportClerk, "appclerk", sizeof("appclerk"));
   }
-  for (i = 0; i < NUM_APPCLERKS; ++i) {
+  for (i = 0; i < NUM_CASHIERS; ++i) {    
     Fork(startCashier, "appclerk", sizeof("appclerk"));
   }
   for (i = 0; i < NUM_CUSTOMERS; ++i) {
