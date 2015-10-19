@@ -168,13 +168,17 @@ int findLine(char type, bool isSenator, int customer) {
     random = Rand(9, 0);
     if (Customers[customer].money >= 600 && AppClerks[my_line].state == 1 && random < 3) {
       queue_push(&AppClerks[my_line].bribeLine, customer);
-      /*std::cout << this->name << " has gotten in bribe line for " << AppClerks[my_line]->getName() << std::endl;*/
+      Printf("Customer %d has gotten in bribe line for ApplicationClerk %d", 
+        sizeof("Customer %d has gotten in bribe line for ApplicationClerk %d"),
+        Customers[customer].ssn*1000+AppClerks[my_line].id);
       Wait(AppClerkLineLock, AppClerks[my_line].bribeLineCV);
       Customers[customer].money -= 500;
     } else {
       if (AppClerks[my_line].state == 1 || AppClerks[my_line].state == 2) {
         queue_push(&AppClerks[my_line].bribeLine, customer);
-        /*std::cout << this->name << " has gotten in regular line for " << AppClerks[my_line]->getName() << std::endl;*/
+        Printf("Customer %d has gotten in regular line for ApplicationClerk %d", 
+          sizeof("Customer %d has gotten in regular line for ApplicationClerk %d"), 
+          Customers[customer].ssn*1000+AppClerks[my_line].id);
         Wait(AppClerkLineLock, AppClerks[my_line].lineCV);
       } else {
         AppClerks[my_line].currentCustomer = customer;
@@ -1126,10 +1130,10 @@ void fork() {
     Fork(startPicClerk, "picclerk", sizeof("picclerk"));
   }
   for (i = 0; i < NUM_PASSPORTCLERKS; ++i) {
-    Fork(startPassportClerk, "appclerk", sizeof("appclerk"));
+    Fork(startPassportClerk, "passportclerk", sizeof("passportclerk"));
   }
   for (i = 0; i < NUM_CASHIERS; ++i) {    
-    Fork(startCashier, "appclerk", sizeof("appclerk"));
+    Fork(startCashier, "cashiers", sizeof("cashiers"));
   }
   for (i = 0; i < NUM_CUSTOMERS; ++i) {
     Fork(startCustomer, "customer", sizeof("customer"));
