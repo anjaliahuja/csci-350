@@ -4,7 +4,7 @@ typedef int bool;
 enum bool {false, true};
 
 #define NULL 0
-#define NUM_CUSTOMERS 10
+#define NUM_CUSTOMERS 5
 #define NUM_APPCLERKS 2
 #define NUM_PICCLERKS 2
 #define NUM_PASSPORTCLERKS 2
@@ -845,10 +845,31 @@ void startCashier() {
   Exit(0);
 }
 
-void managerWakeup(Clerk* clerk) {
+void managerWakeupAppClerk(Clerk* clerk) {
   Acquire(clerk->lock);
   Signal(clerk->lock, clerk->cv);
-  Printf("Manager has woken up Clerk_%d \n", sizeof("Manager has woken up Clerk_%d \n"), (clerk->id));
+  Printf("Manager has woken up ApplicationClerk %d \n", sizeof("Manager has woken up ApplicationClerk %d \n"), (clerk->id));
+  Wait(clerk->lock, clerk->cv);
+  Release(clerk->lock);
+}
+void managerWakeupPicClerk(Clerk* clerk) {
+  Acquire(clerk->lock);
+  Signal(clerk->lock, clerk->cv);
+  Printf("Manager has woken up PictureClerk %d \n", sizeof("Manager has woken up PictureClerk %d \n"), (clerk->id));
+  Wait(clerk->lock, clerk->cv);
+  Release(clerk->lock);
+}
+void managerWakeupPassportClerk(Clerk* clerk) {
+  Acquire(clerk->lock);
+  Signal(clerk->lock, clerk->cv);
+  Printf("Manager has woken up PassportClerk %d \n", sizeof("Manager has woken up PassportClerk %d \n"), (clerk->id));
+  Wait(clerk->lock, clerk->cv);
+  Release(clerk->lock);
+}
+void managerWakeupCashier(Clerk* clerk) {
+  Acquire(clerk->lock);
+  Signal(clerk->lock, clerk->cv);
+  Printf("Manager has woken up Cashier %d \n", sizeof("Manager has woken up Cashier %d \n"), (clerk->id));
   Wait(clerk->lock, clerk->cv);
   Release(clerk->lock);
 }
@@ -859,10 +880,11 @@ void startManager() {
     for(i = 0; i < NUM_APPCLERKS; i++) {
     /*If the clerk is on break, aka their state is 2 and their line has more than 3 people
     Wake up the thread*/
-    if(queue_size(&AppClerks[i].line) > 2 || (SenatorArrived)) {
+    if(queue_size(&AppClerks[i].line) > 2 || SenatorArrived) {
         for(j = 0; j < NUM_APPCLERKS; j++) {
-          if(AppClerks[j].state == 2) {
-            managerWakeup(&AppClerks[j]);
+          if(AppClerks[j].state == 2 || 
+            (i == NUM_APPCLERKS && queue_size(&AppClerks[j].line) > 0 && AppClerks[j].state == 2)) {
+            managerWakeupAppClerk(&AppClerks[j]);
           }
         }
         break;
@@ -871,7 +893,7 @@ void startManager() {
       if (i == NUM_APPCLERKS-1) {
         for(j = 0; j < NUM_APPCLERKS; j++) {
           if (queue_size(&AppClerks[j].line) > 0 && AppClerks[j].state == 2) {
-            managerWakeup(&AppClerks[j]);
+            managerWakeupAppClerk(&AppClerks[j]);
           }
         }
       }
@@ -881,7 +903,7 @@ void startManager() {
      if(queue_size(&PicClerks[i].line) > 2 || (SenatorArrived)) {
           for(j = 0; j < NUM_PICCLERKS; j++) {
             if(PicClerks[j].state == 2) {
-              managerWakeup(&PicClerks[j]);
+              managerWakeupPicClerk(&PicClerks[j]);
             }
           }
           break;
@@ -890,7 +912,7 @@ void startManager() {
       if (i == NUM_PICCLERKS-1) {
         for(j = 0; j < NUM_PICCLERKS; j++) {
           if (queue_size(&PicClerks[j].line) > 0 && PicClerks[j] .state == 2) {
-              managerWakeup(&PicClerks[j]);
+              managerWakeupPicClerk(&PicClerks[j]);
           }
         }
       }
@@ -900,7 +922,7 @@ void startManager() {
      if(queue_size(&PassportClerks[i].line) > 2 || (SenatorArrived)) {
         for(j = 0; j < NUM_PASSPORTCLERKS; j++) {
           if(PassportClerks[j].state == 2) {
-            managerWakeup(&PassportClerks[j]);
+            managerWakeupPassportClerk(&PassportClerks[j]);
           }
         }
         break;
@@ -909,7 +931,7 @@ void startManager() {
       if (i == NUM_PASSPORTCLERKS-1) {
         for(j = 0; j < NUM_PASSPORTCLERKS; j++) {
           if (queue_size(&PassportClerks[j].line) > 0 && PassportClerks[j].state == 2) {
-            managerWakeup(&PassportClerks[j]);
+            managerWakeupPassportClerk(&PassportClerks[j]);
           }
         }
       }
@@ -919,7 +941,7 @@ void startManager() {
       if(queue_size(&Cashiers[i].line) > 2 || (SenatorArrived)) {
         for(j = 0; j < NUM_CASHIERS; j++) {
           if(Cashiers[j].state == 2) {
-            managerWakeup(&Cashiers[j]);
+            managerWakeupCashier(&Cashiers[j]);
           }
         }
         break;
@@ -928,7 +950,7 @@ void startManager() {
       if (i == NUM_CASHIERS-1) {
         for(j = 0; j < NUM_CASHIERS; j++) {
           if (queue_size(&Cashiers[j].line) > 0 && Cashiers[j].state== 2) {
-            managerWakeup(&Cashiers[j]);
+            managerWakeupCashier(&Cashiers[j]);
           }
         }
       }
@@ -949,22 +971,22 @@ void startManager() {
     if (numCustomers == 0) {
       for(j = 0; j < NUM_APPCLERKS; j++) {
           if(AppClerks[j].state == 2) {
-            managerWakeup(&AppClerks[j]);
+            managerWakeupAppClerk(&AppClerks[j]);
           }
         }
       for(j = 0; j < NUM_PICCLERKS; j++) {
           if (PicClerks[j] .state == 2) {
-            managerWakeup(&PicClerks[j]);
+            managerWakeupPicClerk(&PicClerks[j]);
           }
         }
       for(j = 0; j < NUM_PASSPORTCLERKS; j++) {
           if (PassportClerks[j].state == 2) {
-            managerWakeup(&PassportClerks[j]);
+            managerWakeupPassportClerk(&PassportClerks[j]);
           }
         }
       for(j = 0; j < NUM_CASHIERS; j++) {
           if (Cashiers[j] . state == 2) {
-            managerWakeup(&Cashiers[j]);
+            managerWakeupCashier(&Cashiers[j]);
           }
         }
       break;
