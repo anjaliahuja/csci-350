@@ -330,17 +330,14 @@ void getPicTaken(int my_line, int customer) {
   Acquire(PicClerks[my_line].lock);
 
   Signal(PicClerks[my_line].lock, PicClerks[my_line].cv);
-  /* Print out
-  std::cout << this->name << " has given SSN " << ssn << " to " << PicClerks[my_line]->getName() << std::endl;
-  */
+  Printf("Customer %d has given SSN %d to Pic Clerk %d", sizeof("Customer %d has given SSN %d to Pic Clerk %d\n"), customer*1000000+customer*1000+PicClerks[my_line].id);
 
   /* Waits for pic clerk to take picture */
   Wait(PicClerks[my_line].lock, PicClerks[my_line].cv);
   /* dislikePicture = Rand () % 100 + 1;*/ /*chooses percentage between 1-99*/
   if (dislikePicture > 50)  {
-    /*
-      std::cout << this->name << " does not like their picture from " << PicClerks[my_line]->getName() << std::endl;
-    */ 
+    Printf("Customer %d does not like their picture from PicClerk %d\n", sizeof("Customer %d does not like their picture from PicClerk %d\n"), customer*1000+PicClerks[my_line].id);
+
       PicClerks[my_line].likePicture = false;
       Signal(PicClerks[my_line].lock, PicClerks[my_line].cv);
       /* Has to get back in a line.
@@ -365,9 +362,8 @@ void getPicTaken(int my_line, int customer) {
 
   PicClerks[my_line].likePicture = true;
 
-  /*
-  std::cout << this->name << " does like their picture from " << PicClerks[my_line]->getName() << std::endl;
-  */
+ Printf("Customer %d likes their picture from PicClerk %d\n", sizeof("Customer %d likes their picture from PicClerk %d\n"), customer*1000+PicClerks[my_line].id);
+
 
   /* 
   Signal clerk and Wait to make sure that clerk acknowledges.
@@ -386,18 +382,14 @@ void getPassport(int my_line, int customer) {
   Acquire(PassportClerks[my_line].lock);
   Signal(PassportClerks[my_line].lock, PassportClerks[my_line].cv);
 
-  /* Print out
-  std::cout << this->name << " has given SSN " << ssn << " to " << PassportClerks[my_line]->getName() << std::endl;
-  */
-
+  Printf("Customer %d has given SSN %d to PassportClerk %d\n", sizeof("Customer %d has given SSN %d to PassportClerk %d\n"), customer*1000000+customer*1000+PassportClerks[my_line].id);
+ 
   /* Wait to determine whether they go back in line */
   Wait(PassportClerks[my_line].lock, PassportClerks[my_line].cv);
 
   if(Customers[customer].sendToBackOfLine){
-    /* send customer to back of line after yield
-    std::cout << this->name << " has gone to " << PassportClerks[my_line]->getName() << " too soon. ";
-    std::cout << "They are going to the back of the line." << std::endl;
-    */
+    Printf("Customer %d has gone to PassportClerk %d too soon. They are going to back of line\n", sizeof("Customer %d has gone to PassportClerk %d too soon. They are going to back of line\n"), customer*1000+PassportClerks[my_line].id);
+   
 
     /* Signal clerk that I'm leaving */
     Signal(PassportClerks[my_line].lock, PassportClerks[my_line].cv);
@@ -533,7 +525,6 @@ void startAppClerk() {
       Printf("ApplicationClerk %d has signalled a Customer to come to their counter\n",
         sizeof("ApplicationClerk %d has signalled a Customer to come to their counter\n"),
         id);
-      AppClerkBribeMoney += 500;
       AppClerks[id].state = 1;
       AppClerks[id].currentCustomer = queue_pop(&AppClerks[id].line);
     } else {
@@ -608,9 +599,8 @@ void startPicClerk() {
     } else if (queue_size(&PicClerks[id].line) != 0) {
       Signal(PicClerkLineLock, PicClerks[id].lineCV);
       Printf("Pic clerk %d has signalled customer %d to come to their counter\n", sizeof("Pic clerk %d has signalled customer %d to come to their counter\n"), id*1000+(PicClerks[id].currentCustomer));
-
       PicClerks[id].state = 1;
-      PicClerks[id].currentCustomer = queue_pop(&PicClerks[id].bribeLine);
+      PicClerks[id].currentCustomer = queue_pop(&PicClerks[id].line);
     } else if (!SenatorArrived) {
       PicClerks[id].state = 2;
       Printf("Pic clerk %d is going on break\n", sizeof("Pic clerk %d is going on break"), id);
@@ -629,7 +619,7 @@ void startPicClerk() {
 
     /* Wait for customer data */
     Wait(PicClerks[id].lock, PicClerks[id].cv);
-    Printf("Pic clerk %d has received SSN %d from customer\n", sizeof("Pic clerk %d has received SSN %d from customer\n"), id*1000+(Customers[PicClerks[id].currentCustomer].ssn));
+    Printf("Pic clerk %d has received SSN %d from customer %d\n", sizeof("Pic clerk %d has received SSN %d from customer %d\n"), id*1000000+(Customers[PicClerks[id].currentCustomer].ssn)*1000+PicClerks[id].currentCustomer);
    
     /* Do my job, customer now waiting */
     Signal(PicClerks[id].lock, PicClerks[id].cv);
