@@ -1029,7 +1029,7 @@ void initCustomersData() {
   for (i = 0; i < NUM_CUSTOMERS; i++) {
     Customers[i].name = "customer_" + i;
     Customers[i].ssn = i;
-    Customers[i].money = 0;
+    Customers[i].money = Rand(0, 4)*500+100;
     Customers[i].app_clerk = false;
     Customers[i].pic_clerk = false;
     Customers[i].passport_clerk = false;
