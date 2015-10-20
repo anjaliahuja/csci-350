@@ -97,7 +97,7 @@ passporttest1: passporttest1.o start.o
 passporttest3.o: passporttest3.c
 	$(CC) $(CFLAGS) -c passporttest3.c
 passporttest3: passporttest3.o start.o
-	$(LD) $(LDFLAGS) start.o passporttest4.o -o passporttest4.coff
+	$(LD) $(LDFLAGS) start.o passporttest3.o -o passporttest3.coff
 	../bin/coff2noff passporttest3.coff passporttest3
 
 passporttest4.o: passporttest4.c

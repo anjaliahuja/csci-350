@@ -4,11 +4,11 @@ typedef int bool;
 enum bool {false, true};
 
 #define NULL 0
-#define NUM_CUSTOMERS 5
-#define NUM_APPCLERKS 2
+#define NUM_CUSTOMERS 3
+#define NUM_APPCLERKS 0
 #define NUM_PICCLERKS 0
 #define NUM_PASSPORTCLERKS 0
-#define NUM_CASHIERS 0
+#define NUM_CASHIERS 1
 
 typedef struct {
   int array[NUM_CUSTOMERS + 5];
@@ -470,11 +470,33 @@ void startCustomer() {
   numActiveCustomers++;
   Release(DataLock);
 
-  my_line = findLine('a', isSen, id);
-  getAppFiled(my_line, id);
+  /*implementation */
+  if (isSen) {
 
-  numCustomers--;
+  } else {
+    task = Rand(1, 0);
+    /*if (task == 0){
+      my_line = findLine('a', isSen, id);
+      getAppFiled(my_line, id);
+      my_line = findLine('p', isSen, id);
+      getPicTaken(my_line, id);
+    } else if (task == 1) {
+      my_line = findLine('p', isSen, id);
+      getPicTaken(my_line, id);
+      my_line = findLine('a', isSen, id);
+      getAppFiled(my_line, id);
+    }
 
+    my_line = findLine('s', isSen, id);
+    getPassport(my_line, id);*/
+    my_line = findLine('c', isSen, id);
+    payCashier(my_line, id);
+
+    Printf("Customer %d is leaving the Passport Office\n", 
+      sizeof("Customer %d is leaving the Passport Office\n"), 
+      id);
+    numCustomers--;
+  }
   Exit(0);
 }
 
@@ -502,9 +524,9 @@ void startAppClerk() {
       Signal(AppClerkLineLock, AppClerks[id].lineCV);
       AppClerks[id].state = 1;
       AppClerks[id].currentCustomer = queue_pop(&AppClerks[id].line);
-      Printf("ApplicationClerk %d has signalled a Customer to come to their counter\n",
-        sizeof("ApplicationClerk %d has signalled a Customer to come to their counter\n"),
-        id);
+      Printf("ApplicationClerk %d has signalled a Customer %d to come to their counter\n",
+        sizeof("ApplicationClerk %d has signalled a Customer %d to come to their counter\n"),
+        id + 1000*AppClerks[id].currentCustomer);
     } else {
       Acquire(AppClerks[id].lock);
       AppClerks[id].state = 2;
@@ -738,9 +760,9 @@ void startCashier() {
       Cashiers[id].currentCustomer = queue_pop(&Cashiers[id].bribeLine);
     } else if (queue_size(&Cashiers[id].line) != 0) {
       Signal(CashierLineLock, Cashiers[id].lineCV);
-      Printf("Cashier %d has signalled customer to come to their counter\n", sizeof("Cashier %d has signalled customer to come to their counter."), id);
-      Cashiers[id].state = 1;
       Cashiers[id].currentCustomer = queue_pop(&Cashiers[id].line);
+      Printf("Cashier %d has signalled customer %d to come to their counter\n", sizeof("Cashier %d has signalled customer %d to come to their counter."), id + 1000*Cashiers[id].currentCustomer);
+      Cashiers[id].state = 1;
     } else {
       Acquire(Cashiers[id].lock);
       Cashiers[id].state = 2;
@@ -963,13 +985,11 @@ void startManager() {
     
     total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
     
-    /*
     Printf("Manager has has counted a total of %d for Application Clerks \n", sizeof("Manager has has counted a total of %d for Application Clerks \n"), AppClerkBribeMoney);
     Printf("Manager has has counted a total of %d for Picture Clerks \n", sizeof("Manager has has counted a total of %d for Picture Clerks \n"), PicClerkBribeMoney);
     Printf("Manager has has counted a total of %d for Passport Clerks \n", sizeof("Manager has has counted a total of %d for Passport Clerks \n"), PassportClerkBribeMoney);
     Printf("Manager has has counted a total of %d for Cashiers \n", sizeof("Manager has has counted a total of %d for Cashiers\n"), CashierMoney);
     Printf("Manager has has counted a total of %d for the Passport Office \n", sizeof("Manager has has counted a total of %d for the Passport Office \n"), total);
-    */
   }
   Exit(0);
 }
@@ -1114,6 +1134,15 @@ void fork() {
   for (i = 0; i < NUM_APPCLERKS; ++i) {
     Fork(startAppClerk, "appclerk", sizeof("appclerk"));
   }
+  for (i = 0; i < NUM_PICCLERKS; ++i) {
+    Fork(startPicClerk, "picclerk", sizeof("picclerk"));
+  }
+  for (i = 0; i < NUM_PASSPORTCLERKS; ++i) {
+    Fork(startPassportClerk, "passportclerk", sizeof("passportclerk"));
+  }
+  for (i = 0; i < NUM_CASHIERS; ++i) {    
+    Fork(startCashier, "cashiers", sizeof("cashiers"));
+  }
   for (i = 0; i < NUM_CUSTOMERS; ++i) {
     Fork(startCustomer, "customer", sizeof("customer"));
   }
@@ -1121,9 +1150,6 @@ void fork() {
 }
 
 int main() {
-  Write(" TEST_1: Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
-\n", sizeof(" TEST_1: Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
-\n"), ConsoleOutput);
   init();
   fork();
 }
