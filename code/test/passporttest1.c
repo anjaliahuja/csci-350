@@ -1123,7 +1123,7 @@ void fork() {
 int main() {
   Write(" TEST_1: Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
 \n", sizeof(" TEST_1: Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
-\n"));
+\n"), ConsoleOutput);
   init();
   fork();
 }

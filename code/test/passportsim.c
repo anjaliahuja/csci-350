@@ -4,11 +4,11 @@ typedef int bool;
 enum bool {false, true};
 
 #define NULL 0
-#define NUM_CUSTOMERS 5
-#define NUM_APPCLERKS 2
-#define NUM_PICCLERKS 2
-#define NUM_PASSPORTCLERKS 2
-#define NUM_CASHIERS 2
+#define NUM_CUSTOMERS 1
+#define NUM_APPCLERKS 1
+#define NUM_PICCLERKS 1
+#define NUM_PASSPORTCLERKS 1
+#define NUM_CASHIERS 1
 
 typedef struct {
   int array[NUM_CUSTOMERS + 5];

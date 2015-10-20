@@ -597,8 +597,9 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   }
 
   //Update process table
+  printf("acquiring\n");
   processLock->Acquire();
-
+  printf("acquired\n");
   int processID = -1;
   kernelProcess* process;
   for(int i =0; i<NumProcesses; i++){
@@ -980,12 +981,14 @@ void Exit_Syscall(int status){
       
       //Delete CVs
       for(int i =0; i<NumCVs; i++){
-        DestroyCV_Syscall(i);
+        if ( (kernelCV*)CVTable->Get(i) != NULL)
+          DestroyCV_Syscall(i);
         }
 
       //Delete Locks
         for(int i =0; i<NumLocks; i++){
-          DestroyLock_Syscall(i);
+          if ( (kernelLock*)lockTable->Get(i) != NULL)
+              DestroyLock_Syscall(i);
             }
           
 
