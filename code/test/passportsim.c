@@ -330,7 +330,7 @@ void getPicTaken(int my_line, int customer) {
   Acquire(PicClerks[my_line].lock);
 
   Signal(PicClerks[my_line].lock, PicClerks[my_line].cv);
-  Printf("Customer %d has given SSN %d to Pic Clerk %d", sizeof("Customer %d has given SSN %d to Pic Clerk %d\n"), customer*1000000+customer*1000+PicClerks[my_line].id);
+  Printf("Customer %d has given SSN %d to Pic Clerk %d\n", sizeof("Customer %d has given SSN %d to Pic Clerk %d\n"), customer*1000000+customer*1000+PicClerks[my_line].id);
 
   /* Waits for pic clerk to take picture */
   Wait(PicClerks[my_line].lock, PicClerks[my_line].cv);
@@ -590,17 +590,18 @@ void startPicClerk() {
 
     } else if (queue_size(&PicClerks[id].bribeLine) != 0) {
       Signal(PicClerkLineLock, PicClerks[id].bribeLineCV);
-      Printf("PictureClerk %d has received $500 from Customer %d\n",
-        sizeof("PictureClerk %d has received $500 from Customer %d\n"),
-        id*1000+PicClerks[id].currentCustomer);
       PicClerkBribeMoney += 500;
       PicClerks[id].state = 1;
       PicClerks[id].currentCustomer = queue_pop(&PicClerks[id].bribeLine);
+      Printf("PictureClerk %d has received $500 from Customer %d\n",
+        sizeof("PictureClerk %d has received $500 from Customer %d\n"),
+        id*1000+PicClerks[id].currentCustomer);
     } else if (queue_size(&PicClerks[id].line) != 0) {
       Signal(PicClerkLineLock, PicClerks[id].lineCV);
-      Printf("Pic clerk %d has signalled customer %d to come to their counter\n", sizeof("Pic clerk %d has signalled customer %d to come to their counter\n"), id*1000+(PicClerks[id].currentCustomer));
       PicClerks[id].state = 1;
       PicClerks[id].currentCustomer = queue_pop(&PicClerks[id].line);
+      Printf("Pic clerk %d has signalled customer %d to come to their counter\n", sizeof("Pic clerk %d has signalled customer %d to come to their counter\n"), id*1000+(PicClerks[id].currentCustomer));
+
     } else if (!SenatorArrived) {
       PicClerks[id].state = 2;
       Printf("Pic clerk %d is going on break\n", sizeof("Pic clerk %d is going on break"), id);
@@ -680,7 +681,6 @@ void startPassportClerk() {
     } else if (queue_size(&PassportClerks[id].line) != 0) {
       Signal(PassportClerkLineLock, PassportClerks[id].lineCV);
       Printf("Passport clerk %d has signalled customer to come to their counter\n", sizeof("Passport clerk %d has signalled customer to come to their counter."), id);
-      PassportClerkBribeMoney += 500;
       PassportClerks[id].state = 1;
       PassportClerks[id].currentCustomer = queue_pop(&PassportClerks[id].line);
     } else {
