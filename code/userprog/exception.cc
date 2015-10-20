@@ -931,7 +931,6 @@ void Exit_Syscall(int status){
   //Reclaim 8 pages 
 
   if(process->numThreads > 1){
-    printf("Exit case 1: Exit called but not last thread");
     DEBUG('e', "Exit case 1: not last thread in process");
     availMem->Acquire();
     int pageNum = currentThread->stackVP;
@@ -948,7 +947,6 @@ void Exit_Syscall(int status){
 
   //Case 2: last executing thread in last process (ready queue is empty)
   else if(lastProcess && process->numThreads == 1){
-    printf("Exit case 2: last thread in last process");
     DEBUG('e', "Exit case 2: last thread in last process");
     availMem->Acquire();
     for(unsigned int i =0; i<currentThread->space->numPages; i++){
@@ -968,7 +966,6 @@ void Exit_Syscall(int status){
 
   //Case 3: Last thread in process but not last process, need to reclaim all locks, cvs, stack memory
   else if(!lastProcess && process->numThreads == 1){
-    printf("Exit case 3: last thread in process but not last process");
       //Delete CVs
       DEBUG('e', "Case 3: last thread in process but not last process, need to reclaim memory");
       availMem->Acquire();
