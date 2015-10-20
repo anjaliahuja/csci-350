@@ -87,10 +87,24 @@ testprint.o: testprint.c
 testprint: testprint.o start.o
 	$(LD) $(LDFLAGS) start.o testprint.o -o testprint.coff
 	../bin/coff2noff testprint.coff testprint
+
 passporttest1.o: passporttest1.c
 	$(CC) $(CFLAGS) -c passporttest1.c
 passporttest1: passporttest1.o start.o
 	$(LD) $(LDFLAGS) start.o passporttest1.o -o passporttest1.coff
 	../bin/coff2noff passporttest1.coff passporttest1
+	
+passporttest3.o: passporttest3.c
+	$(CC) $(CFLAGS) -c passporttest3.c
+passporttest3: passporttest3.o start.o
+	$(LD) $(LDFLAGS) start.o passporttest4.o -o passporttest4.coff
+	../bin/coff2noff passporttest3.coff passporttest3
+
+passporttest4.o: passporttest4.c
+	$(CC) $(CFLAGS) -c passporttest4.c
+passporttest4: passporttest4.o start.o
+	$(LD) $(LDFLAGS) start.o passporttest4.o -o passporttest4.coff
+	../bin/coff2noff passporttest4.coff passporttest4
+
 clean:
 	rm -f *.o *.coff matmult testfiles testexit testexitprogram testprint
