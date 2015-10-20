@@ -522,11 +522,11 @@ void startAppClerk() {
         id*1000+AppClerks[id].currentCustomer);
     } else if (queue_size(&AppClerks[id].line) != 0) {
       Signal(AppClerkLineLock, AppClerks[id].lineCV);
+      AppClerks[id].state = 1;
+      AppClerks[id].currentCustomer = queue_pop(&AppClerks[id].line);
       Printf("ApplicationClerk %d has signalled a Customer to come to their counter\n",
         sizeof("ApplicationClerk %d has signalled a Customer to come to their counter\n"),
         id);
-      AppClerks[id].state = 1;
-      AppClerks[id].currentCustomer = queue_pop(&AppClerks[id].line);
     } else {
       Acquire(AppClerks[id].lock);
       AppClerks[id].state = 2;
@@ -598,9 +598,9 @@ void startPicClerk() {
       PicClerks[id].currentCustomer = queue_pop(&PicClerks[id].bribeLine);
     } else if (queue_size(&PicClerks[id].line) != 0) {
       Signal(PicClerkLineLock, PicClerks[id].lineCV);
-      Printf("Pic clerk %d has signalled customer %d to come to their counter\n", sizeof("Pic clerk %d has signalled customer %d to come to their counter\n"), id*1000+(PicClerks[id].currentCustomer));
       PicClerks[id].state = 1;
       PicClerks[id].currentCustomer = queue_pop(&PicClerks[id].line);
+      Printf("Pic clerk %d has signalled customer %d to come to their counter\n", sizeof("Pic clerk %d has signalled customer %d to come to their counter\n"), id*1000+(PicClerks[id].currentCustomer));
     } else if (!SenatorArrived) {
       PicClerks[id].state = 2;
       Printf("Pic clerk %d is going on break\n", sizeof("Pic clerk %d is going on break"), id);
@@ -810,6 +810,7 @@ void startCashier() {
       }
       Acquire(Cashiers[id].lock);
       Printf("Cashier_%d has provided Customer_%d their completed passport \n", sizeof("Cashier_%d has provided Customer_%d their completed passport \n"), (id+Cashiers[id].currentCustomer*1000));
+      Signal(Cashiers[id].lock, Cashiers[id].cv);
       Wait(Cashiers[id].lock, Cashiers[id].cv);
       /*
       std::cout << name << " has recorded that " << currentCustomer->getName();
