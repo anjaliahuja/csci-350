@@ -961,6 +961,7 @@ void Exit_Syscall(int status){
     currentThread->Finish();
     processLock->Release();
     interrupt->Halt();
+    return;
   }
 
   //Case 3: Last thread in process but not last process, need to reclaim all locks, cvs, stack memory
