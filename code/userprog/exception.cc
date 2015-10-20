@@ -597,9 +597,7 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   }
 
   //Update process table
-  printf("acquiring\n");
   processLock->Acquire();
-  printf("acquired\n");
   int processID = -1;
   kernelProcess* process;
   for(int i =0; i<NumProcesses; i++){
@@ -779,9 +777,7 @@ void internal_fork(int pc){
 
   currentThread->space->RestoreState();
 
-
   machine->Run();
-
 }
 
 void Fork_Syscall(int pc, unsigned int vaddr, int len){
@@ -834,9 +830,6 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
   t->space = currentThread->space;
 
   t->Fork((VoidFunctionPtr)internal_fork, pc);
-  currentThread->Yield();
-
-  delete [] buf;
 }
 
 void internal_exec(int pc){
@@ -891,9 +884,6 @@ void Exec_Syscall(unsigned int vaddr, int len){
   t->Fork((VoidFunctionPtr)internal_exec,0);  
 
   delete exec;
-  delete [] file;
-
-
 }
 
 
@@ -988,9 +978,9 @@ void Exit_Syscall(int status){
     //Delete Locks
     for(int i =0; i<NumLocks; i++){
       if ( process->locks[i] == true)
-          DestroyLock_Syscall(i);
+        DestroyLock_Syscall(i);
     }
-    
+
     processTable->Remove(processID);
     delete process;
   }
