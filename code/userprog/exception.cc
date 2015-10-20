@@ -967,36 +967,33 @@ void Exit_Syscall(int status){
 
   //Case 3: Last thread in process but not last process, need to reclaim all locks, cvs, stack memory
   else if(!lastProcess && process->numThreads == 1){
-      //Delete CVs
-      DEBUG('e', "Case 3: last thread in process but not last process, need to reclaim memory");
-      availMem->Acquire();
-        for(unsigned int i=0; i< currentThread->space->numPages; i++){
-          if(currentThread->space->pageTable[i].valid){
-            bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
-            currentThread->space->pageTable[i].valid= FALSE;
-          }
-        }
-      currentThread->space->AvailPages(); //testing exit
-      availMem->Release();
-      
-      //Delete CVs
-      for(int i =0; i<NumCVs; i++){
-        if ( (kernelCV*)CVTable->Get(i) != NULL)
-          DestroyCV_Syscall(i);
-        }
-
-      //Delete Locks
-        for(int i =0; i<NumLocks; i++){
-          if ( (kernelLock*)lockTable->Get(i) != NULL)
-              DestroyLock_Syscall(i);
-            }
-          
-
-
-        processTable->Remove(processID);
-        delete process;
-
+    //Delete CVs
+    DEBUG('e', "Case 3: last thread in process but not last process, need to reclaim memory");
+    availMem->Acquire();
+    for(unsigned int i=0; i< currentThread->space->numPages; i++){
+      if(currentThread->space->pageTable[i].valid){
+        bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
+        currentThread->space->pageTable[i].valid= FALSE;
       }
+    }
+    currentThread->space->AvailPages(); //testing exit
+    availMem->Release();
+    
+    //Delete CVs
+    for(int i =0; i<NumCVs; i++){
+      if ( process->cvs[i] == true)
+        DestroyCV_Syscall(i);
+    }
+
+    //Delete Locks
+    for(int i =0; i<NumLocks; i++){
+      if ( process->locks[i] == true)
+          DestroyLock_Syscall(i);
+    }
+    
+    processTable->Remove(processID);
+    delete process;
+  }
    
   else{
     printf("Invalid case");
