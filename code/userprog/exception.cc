@@ -1006,9 +1006,7 @@ void Exit_Syscall(int status){
 
 //Rand syscall
 int Rand_Syscall(int range, int offset){
-  srand(time(0));
-  int num = 0;
-  num = (rand() % range)+offset;
+  int num = (rand() % range)+offset;
   return num;
 }
 
@@ -1058,6 +1056,7 @@ void Printf_Syscall(unsigned int vaddr, int len, int num1){
 void ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2); // Which syscall?
     int rv=0;   // the return value from a syscall
+
 
     if ( which == SyscallException ) {
   switch (type) {
