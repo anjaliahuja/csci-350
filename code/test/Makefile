@@ -31,7 +31,7 @@ CPP = $(GCCDIR)cpp
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR)
 
-all: halt matmult sort testfiles passportsim passportstart testexit testexitprogram testprint passporttest1 passporttest2 passporttest3 passporttest4 lock_cv_test1 lock_cv_test2 lock_cv_test3 lock_cv_test4 lock_cv_test5
+all: halt matmult sort testfiles passportsim passportstart testexit testexitprogram testprint passporttest1 passporttest2 passporttest3 passporttest4 passporttest5 lock_cv_test1 lock_cv_test2 lock_cv_test3 lock_cv_test4 lock_cv_test5
 
 
 start.o: start.s ../userprog/syscall.h
@@ -139,6 +139,12 @@ passporttest4.o: passporttest4.c
 passporttest4: passporttest4.o start.o
 	$(LD) $(LDFLAGS) start.o passporttest4.o -o passporttest4.coff
 	../bin/coff2noff passporttest4.coff passporttest4
+
+passporttest5.o: passporttest5.c
+	$(CC) $(CFLAGS) -c passporttest5.c
+passporttest5: passporttest5.o start.o
+	$(LD) $(LDFLAGS) start.o passporttest5.o -o passporttest5.coff
+	../bin/coff2noff passporttest5.coff passporttest5
 
 
 clean:

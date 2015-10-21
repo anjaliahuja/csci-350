@@ -268,28 +268,6 @@ int CreateCV_Syscall(int vaddr, int size) {
   }
 
 //Update process table
-    processLock->Acquire();
-
-    int processID = -1;
-    kernelProcess* process;
-    for(int i =0; i<NumProcesses; i++){
-      process = (kernelProcess*) processTable->Get(i);
-      if(process == NULL){
-        continue;
-      }
-      if(process->addressSpace == currentThread->space){
-        processID = i;
-        break;
-      }
-    }
-    if(processID == -1){
-      printf("Invalid process identifier in create lock");
-      processLock->Release();
-      CVTableLock->Release();
-      return -1;
-    }
-    process->cvs[index] = true;
-    processLock->Release();
 
     CVTableLock->Release();
     return index;
@@ -297,8 +275,7 @@ int CreateCV_Syscall(int vaddr, int size) {
 
 int DestroyCV_Syscall(int index) {
   CVTableLock->Acquire();
-  DEBUG('a', "Destroying a CV\n");
-  //Error checking
+ 
   if (index < 0 || index > NumCVs) {
     printf("Destroy CV: Invalid Index\n");
     CVTableLock->Release();
@@ -324,31 +301,6 @@ int DestroyCV_Syscall(int index) {
     kcv = (kernelCV*) CVTable->Remove(index);
     delete kcv->condition;
     delete kcv;
-
-    //Update process table
-  processLock->Acquire();
-
-  int processID = -1;
-  kernelProcess* process;
-  for(int i =0; i<NumProcesses; i++){
-    process = (kernelProcess*) processTable->Get(i);
-    if(process == NULL){
-      continue;
-    }
-    if(process->addressSpace == currentThread->space){
-      processID = i;
-      break;
-    }
-  }
-  if(processID == -1){
-    printf("Invalid process identifier in create lock");
-    processLock->Release();
-    CVTableLock->Release();
-    return -1;
-  }
-  process->cvs[index] = false;
-  processLock->Release();
-
   } else {
     kcv->toBeDeleted = true;
   }
@@ -420,27 +372,6 @@ int Wait_Syscall(int lockIndex, int CVIndex) {
     kcv = (kernelCV*) CVTable->Remove(CVIndex);
     delete kcv->condition;
     delete kcv;
-
-    int processID = -1;
-  kernelProcess* process;
-  for(int i =0; i<NumProcesses; i++){
-    process = (kernelProcess*) processTable->Get(i);
-    if(process == NULL){
-      continue;
-    }
-    if(process->addressSpace == currentThread->space){
-      processID = i;
-      break;
-    }
-  }
-  if(processID == -1){
-    printf("Invalid process identifier in create lock");
-    processLock->Release();
-    CVTableLock->Release();
-    return -1;
-  }
-  process->cvs[CVIndex] = false;
-  processLock->Release();
   }
 
   CVTableLock->Release();
@@ -449,9 +380,7 @@ int Wait_Syscall(int lockIndex, int CVIndex) {
 
 int Signal_Syscall(int lockIndex, int CVIndex) {
   CVTableLock->Acquire();
-  //Error checking
-  DEBUG('a', "Signal CV: Lock index %d amd CV index %d are in wait\n", lockIndex, CVIndex);
-
+ 
   //Error checking
   //validating lock
   if (lockIndex < 0 || lockIndex > NumLocks) {
@@ -597,29 +526,6 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
     return -1;
   }
 
-  //Update process table
-  processLock->Acquire();
-  int processID = -1;
-  kernelProcess* process;
-  for(int i =0; i<NumProcesses; i++){
-    process = (kernelProcess*) processTable->Get(i);
-    if(process == NULL){
-      continue;
-    }
-    if(process->addressSpace == currentThread->space){
-      processID = i;
-      break;
-    }
-  }
-  if(processID == -1){
-    printf("Invalid process identifier in create lock");
-    processLock->Release();
-    lockTableLock->Release();
-    return -1;
-  }
-  process->locks[index] = true;
-  processLock->Release();
-
   lockTableLock->Release();
 
   return index;
@@ -698,28 +604,6 @@ int Release_Syscall(int index) {
     kl = (kernelLock*) lockTable->Remove(index); 
     delete kl->lock;
     delete kl;
-
-    processLock->Acquire();
-      int processID = -1;
-      kernelProcess* process;
-      for (int i=0; i < NumProcesses; i++) {
-        process = (kernelProcess*) processTable->Get(i);
-        if (process == NULL) {
-          continue;
-        }
-        if (process->addressSpace == currentThread->space) {
-          processID = i;
-          break;
-        }
-      }
-      if (processID == -1) {
-        printf("Error: invalid process identifier (ReleaseLock_Syscall)\n");
-        processLock->Release();
-        lockTableLock->Release();
-        return -1;
-      }
-      process->locks[index] = false;
-      processLock->Release();
   }
 
   lockTableLock->Release();
@@ -969,30 +853,30 @@ void Exit_Syscall(int status){
     }
     availMem->Release();
     
-    //Delete CVs
     for(int i =0; i<NumCVs; i++){
-      if ( process->cvs[i] == true)
+      kernelCV* kcv = (kernelCV*)CVTable->Get(i);
+      if (kcv->addressSpace == currentThread->space && kcv->toBeDeleted == true){
         DestroyCV_Syscall(i);
+      }
     }
 
-    //Delete Locks
     for(int i =0; i<NumLocks; i++){
-      if ( process->locks[i] == true)
+        kernelLock* lock = (kernelLock*)lockTable->Get(i);
+      if (lock->addressSpace == currentThread->space && lock->toBeDeleted == true){
         DestroyLock_Syscall(i);
+      }
     }
 
     processTable->Remove(processID);
     delete process;
   }
-   
-  else{
-    printf("Invalid case");
-  }
-
-  processLock->Release();
+   processLock->Release();
   currentThread->Finish();
+   }
 
-}
+ 
+
+
 
 //Rand syscall
 int Rand_Syscall(int range, int offset){
@@ -1000,7 +884,7 @@ int Rand_Syscall(int range, int offset){
   return num;
 }
 
-void Printf_Syscall(unsigned int vaddr, int len, int num1){
+void Printf_Syscall(unsigned int vaddr, int len, int number){
   char* string;
    if (!(string = new char[len])) {
     printf("Error allocating kernel buffer for Printf!\n");
@@ -1028,13 +912,13 @@ void Printf_Syscall(unsigned int vaddr, int len, int num1){
   int second = 1000;
 
  if(numDigits ==3 ){
-  printf(string, num1/third, (num1%third)/second, num1%second);
+  printf(string, number/third, (number%third)/second, number%second);
  }
  else if(numDigits == 2){
-  printf(string, num1/second, num1%second);
+  printf(string, number/second, number%second);
  }
  else if(numDigits == 1){
-  printf(string, num1);
+  printf(string, number);
  }
  else{
   printf("invalid printf \n");
