@@ -216,32 +216,10 @@ V. TESTING
 		Manager has has counted a total of 10000 for the Passport Office 
 
 
-	TEST_7: The behavior of Customers is proper when Senators arrive. This is
-  	before, during, and after
-  	-Although Senator was not implemented completely, some of the functionality is there.  There are 4 customers and 1 senator.
-  	See: 
-	  	Manager has woken up ApplicationClerk 0
-		ApplicationClerk 0 is coming off break
-		Manager has woken up PictureClerk 0
-		PictureClerk 0 is coming off break
-		Customer 0 is going outside the Passport Office because there is a Senator present
-		Customer 1 is going outside the Passport Office because there is a Senator present
-		Customer 2 is going outside the Passport Office because there is a Senator present
-		Manager has woken up PassportClerk 0
-		PassportClerk 0 is coming off break
-		Manager has woken up Cashier 0
-		Cashier 0 is coming off break
-		Cashier 0 is going on break
-		Senator 0 has given SSN 32295170 to ApplicationClerk 0
-		ApplicationClerk 0 has received SSN 32295170 from Senator 0
-		ApplicationClerk 0 has recorded a completed application for Senator 0
-		Senator 0 has given SSN 32295170 to PictureClerk 0
-		PictureClerk 0 has received SSN 32295170 from Senator 0
-		PictureClerk 0 has taken a picture of Senator 0
-		Senator 0 does not like their picture from PictureClerk 0
-		PictureClerk 0 has been told that Senator 0 does not like their picture
-		Manager has woken up Cashier 0
-	-When a Senator arrives all Customers leave.  The Senator then goes through the motions similar to a regular Customer.  However, in our test, they do not finish going to the Cashier and leaving.
+	TEST_7:
+	--
+		Not fully implemented
+
 
 
 
