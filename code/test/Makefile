@@ -67,11 +67,6 @@ passportsim.o: passportsim.c
 passportsim: passportsim.o start.o
 	$(LD) $(LDFLAGS) start.o passportsim.o -o passportsim.coff
 	../bin/coff2noff passportsim.coff passportsim
-passportstart.o: passportstart.c
-	$(CC) $(CFLAGS) -c passportstart.c
-passportstart: passportstart.o start.o
-	$(LD) $(LDFLAGS) start.o passportstart.o -o passportstart.coff
-	../bin/coff2noff passportstart.coff passportstart
 testexit.o: testexit.c
 	$(CC) $(CFLAGS) -c testexit.c
 testexit: testexit.o start.o
