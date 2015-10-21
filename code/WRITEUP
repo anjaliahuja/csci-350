@@ -194,7 +194,8 @@ V. TESTING
 		...
 
 	TEST_6: Total sales never suffers from a race condition
-	-There are 7 Customers and 2 of each type of Clerk and Cashier.  A global MONEY variable will increment the appropriate amount (500 or 100) whenever a Customer spends money.  This is then compared to the summation of AppClerkBribeMoney, PicClerkBribeMoney, PassportClerkBribeMoney, and CashierMoney.  If they are equal the test will pass.
+	-There are 7 Customers and 2 of each type of Clerk and Cashier.  Each Clerk has a global BribeMoney variable and the cashier has a global Money variable.  The printout statements will illustrate that a lock is acquired everytime a transaction occurs and released after the transaction.  Since a lock is being used during this time, only one clerk/cashier cannot update the global money variable at a time.  The total sales is calculated by adding the three BribeMoney variables and the cashier's Money variable.  Since the manager is the only thread that will be adding these variables up, it will not suffer from outside manipulation.  I also increased the probability that a customer would bribe a clerk/cashier from 30% to 60% in order to demonstrate the test results.
+	See:
 
 	TEST_7: The behavior of Customers is proper when Senators arrive. This is
   	before, during, and after

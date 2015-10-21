@@ -5,8 +5,8 @@ enum bool {false, true};
 
 #define NULL 0
 
-#define NUM_CUSTOMERS 30
-#define NUM_APPCLERKS 2
+#define NUM_CUSTOMERS 6
+#define NUM_APPCLERKS 4
 #define NUM_PICCLERKS 2
 #define NUM_PASSPORTCLERKS 2
 #define NUM_CASHIERS 2
@@ -586,8 +586,6 @@ void startPicClerk() {
   while(true) {
     if (numCustomers == 0) break;
     Acquire(PicClerkLineLock);
-    Write("Stop", sizeof("Stop"), ConsoleOutput);
-
 
     if (SenatorArrived /*&& !setUpSenator*/) {
 
@@ -785,12 +783,12 @@ void startCashier() {
 
     Wait(Cashiers[id].lock, Cashiers[id].cv);
 
-    Printf("Cashier_%d has received SSN from Customer_%d \n", sizeof("Cashier_%d has received SSN from Customer_%d \n"), (id+Cashiers[id].currentCustomer*1000));
+    Printf("Cashier_%d has received SSN from Customer_%d \n", sizeof("Cashier_%d has received SSN from Customer_%d \n"), (id*1000+Cashiers[id].currentCustomer));
 
     /* 5% chance that passport clerk makes a mistake.*/
     random = Rand(4, 0);
     if (random == 0) {
-      Printf("Cashier_%d has received $100 from Customer_%d \n", sizeof("Cashier_%d has received $100 from Customer_%d \n"), (id+Cashiers[id].currentCustomer*1000));
+      Printf("Cashier_%d has received $100 from Customer_%d \n", sizeof("Cashier_%d has received $100 from Customer_%d \n"), (id*1000+Cashiers[id].currentCustomer));
       Write(" before certification. They are to go to the back of the line \n", sizeof(" before certification. They are to go to the back of the line \n"), ConsoleOutput);
 
       Customers[Cashiers[id].currentCustomer].sendToBackOfLine = true;
@@ -799,13 +797,13 @@ void startCashier() {
     else {
       Signal(Cashiers[id].lock, Cashiers[id].cv);
 
-      Printf("Cashier_%d has verified that Customer_%d \n", sizeof("Cashier_%d has has verified that Customer_%d \n"), (id+Cashiers[id].currentCustomer*1000));
+      Printf("Cashier_%d has verified that Customer_%d \n", sizeof("Cashier_%d has has verified that Customer_%d \n"), (id*1000+Cashiers[id].currentCustomer));
       Write(" has been certified by a PassportClerk \n", sizeof(" has been certified by a PassportClerk \n"), ConsoleOutput);
 
       Wait(Cashiers[id].lock, Cashiers[id].cv);
       CashierMoney += 100;
 
-      Printf("Cashier_%d has received the $100 from Customer_%d \n", sizeof("Cashier_%d has received the $100 from Customer_%d \n"), (id+Cashiers[id].currentCustomer*1000));
+      Printf("Cashier_%d has received the $100 from Customer_%d \n", sizeof("Cashier_%d has received the $100 from Customer_%d \n"), (id*1000+Cashiers[id].currentCustomer));
       Write(" after certification \n", sizeof(" after certification \n"), ConsoleOutput);
 
       Release(Cashiers[id].lock);
@@ -813,14 +811,14 @@ void startCashier() {
           Yield();
       }
       Acquire(Cashiers[id].lock);
-      Printf("Cashier_%d has provided Customer_%d their completed passport \n", sizeof("Cashier_%d has provided Customer_%d their completed passport \n"), (id+Cashiers[id].currentCustomer*1000));
+      Printf("Cashier_%d has provided Customer_%d their completed passport \n", sizeof("Cashier_%d has provided Customer_%d their completed passport \n"), (id*1000+Cashiers[id].currentCustomer));
       Signal(Cashiers[id].lock, Cashiers[id].cv);
       Wait(Cashiers[id].lock, Cashiers[id].cv);
       /*
       std::cout << name << " has recorded that " << currentCustomer->getName();
       std::cout << " has been given their completed passport" << std::endl;
       */
-      Printf("Cashier_%d has recoreded that Customer_%d \n", sizeof("Cashier_%d has recoreded that Customer_%d \n"), (id+Cashiers[id].currentCustomer*1000));
+      Printf("Cashier_%d has recoreded that Customer_%d \n", sizeof("Cashier_%d has recoreded that Customer_%d \n"), (id*1000+Cashiers[id].currentCustomer));
       Write(" has been given their completed passport \n", sizeof(" has been given their completed passport \n"), ConsoleOutput);
 
       Signal(Cashiers[id].lock, Cashiers[id].cv);
@@ -951,7 +949,7 @@ void startManager() {
       }
     }
 
-    for(i = 0; i < 1000; i++) {
+    for(i = 0; i < 100; i++) {
       Yield();
     }
 
@@ -1162,6 +1160,13 @@ void fork() {
 }
 
 int main() {
+  Write("FULL_SIMULATION\n", sizeof("FULL_SIMULATION\n"), ConsoleOutput);
+  Printf("Number of Customers = %d\n", sizeof("Number of Customers = %d\n"), NUM_CUSTOMERS);
+  Printf("Number of ApplicationClerks = %d\n", sizeof("Number of ApplicationClerks = %d\n"), NUM_APPCLERKS);
+  Printf("Number of PictureClerks = %d\n", sizeof("Number of PictureClerks = %d\n"), NUM_PICCLERKS);
+  Printf("Number of Cashiers = %d\n", sizeof("Number of Cashiers = %d\n"), NUM_CASHIERS);
+  Write("Number of Senators = 0\n\n", sizeof("Number of Senators = 0"), ConsoleOutput);
+
   init();
   fork();
 }
