@@ -419,14 +419,16 @@ void payCashier(int my_line, int customer) {
   Acquire(Cashiers[my_line].lock);
   Signal(Cashiers[my_line].lock, Cashiers[my_line].cv);
 
-  Printf("Customer_%d has given SSN %d to Cashier_%d \n", sizeof("Customer_%d has given SSN %d to Cashier_%d \n"), (customer+Customers[customer].ssn*1000+my_line*1000000));
+  Printf("Customer_%d has given SSN %d to Cashier_%d \n", sizeof("Customer_%d has given SSN %d to Cashier_%d \n"), (customer*1000000+Customers[customer].ssn*1000+my_line));
+
+  Customers[customer].sendToBackOfLine = false;
 
   /* Wait to determine whether they go back in line */
   Wait(Cashiers[my_line].lock, Cashiers[my_line].cv);
 
   if(Customers[customer].sendToBackOfLine){
     /* send customer to back of line after yield */
-    Printf("Customer_%d has gone to Cashier_%d too soon \n", sizeof("Customer_%d has gone to Cashier_%d too soon \n"), (customer+my_line*1000));
+    Printf("Customer_%d has gone to Cashier_%d too soon \n", sizeof("Customer_%d has gone to Cashier_%d too soon \n"), (customer*1000+my_line));
     Write("They are going to the back of the line \n", sizeof("They are going to the back of the line \n"), ConsoleOutput);
 
     /* Signal cashier that I'm leaving */
@@ -446,7 +448,7 @@ void payCashier(int my_line, int customer) {
   Customers[customer].money -= 100;
   /*if (test6) MONEY += 100;*/
   
-  Printf("Customer_%d has given Cashier_%d $100 \n", sizeof("Customer_%d has given Cashier_%d $100 \n"), (customer+my_line*1000));
+  Printf("Customer_%d has given Cashier_%d $100 \n", sizeof("Customer_%d has given Cashier_%d $100 \n"), (customer*1000+my_line));
 
   /* waits for cashier to give me passport */
   Wait(Cashiers[my_line].lock, Cashiers[my_line].cv);
@@ -760,9 +762,11 @@ void startCashier() {
       Cashiers[id].currentCustomer = queue_pop(&Cashiers[id].bribeLine);
     } else if (queue_size(&Cashiers[id].line) != 0) {
       Signal(CashierLineLock, Cashiers[id].lineCV);
-      Printf("Cashier %d has signalled customer to come to their counter\n", sizeof("Cashier %d has signalled customer to come to their counter."), id);
-      Cashiers[id].state = 1;
       Cashiers[id].currentCustomer = queue_pop(&Cashiers[id].line);
+      Printf("Cashier %d has signalled customer %d to come to their counter\n", 
+        sizeof("Cashier %d has signalled customer %d to come to their counter."), 
+        id*1000+Cashiers[id].currentCustomer);
+      Cashiers[id].state = 1;
     } else {
       Acquire(Cashiers[id].lock);
       Cashiers[id].state = 2;
@@ -781,12 +785,12 @@ void startCashier() {
 
     Wait(Cashiers[id].lock, Cashiers[id].cv);
 
-    Printf("Cashier_%d has received SSN from Customer_%d \n", sizeof("Cashier_%d has received SSN from Customer_%d \n"), (id+Cashiers[id].currentCustomer*1000));
+    Printf("Cashier_%d has received SSN from Customer_%d \n", sizeof("Cashier_%d has received SSN from Customer_%d \n"), (id*1000+Cashiers[id].currentCustomer));
 
     /* 5% chance that passport clerk makes a mistake.*/
     random = Rand(4, 0);
     if (random == 0) {
-      Printf("Cashier_%d has received $100 from Customer_%d \n", sizeof("Cashier_%d has received $100 from Customer_%d \n"), (id+Cashiers[id].currentCustomer*1000));
+      Printf("Cashier_%d has received $100 from Customer_%d \n", sizeof("Cashier_%d has received $100 from Customer_%d \n"), (id*1000+Cashiers[id].currentCustomer));
       Write(" before certification. They are to go to the back of the line \n", sizeof(" before certification. They are to go to the back of the line \n"), ConsoleOutput);
 
       Customers[Cashiers[id].currentCustomer].sendToBackOfLine = true;
@@ -795,13 +799,13 @@ void startCashier() {
     else {
       Signal(Cashiers[id].lock, Cashiers[id].cv);
 
-      Printf("Cashier_%d has verified that Customer_%d \n", sizeof("Cashier_%d has has verified that Customer_%d \n"), (id+Cashiers[id].currentCustomer*1000));
+      Printf("Cashier_%d has verified that Customer_%d \n", sizeof("Cashier_%d has has verified that Customer_%d \n"), (id*1000+Cashiers[id].currentCustomer));
       Write(" has been certified by a PassportClerk \n", sizeof(" has been certified by a PassportClerk \n"), ConsoleOutput);
 
       Wait(Cashiers[id].lock, Cashiers[id].cv);
       CashierMoney += 100;
 
-      Printf("Cashier_%d has received the $100 from Customer_%d \n", sizeof("Cashier_%d has received the $100 from Customer_%d \n"), (id+Cashiers[id].currentCustomer*1000));
+      Printf("Cashier_%d has received the $100 from Customer_%d \n", sizeof("Cashier_%d has received the $100 from Customer_%d \n"), (id*1000+Cashiers[id].currentCustomer));
       Write(" after certification \n", sizeof(" after certification \n"), ConsoleOutput);
 
       Release(Cashiers[id].lock);
@@ -809,14 +813,14 @@ void startCashier() {
           Yield();
       }
       Acquire(Cashiers[id].lock);
-      Printf("Cashier_%d has provided Customer_%d their completed passport \n", sizeof("Cashier_%d has provided Customer_%d their completed passport \n"), (id+Cashiers[id].currentCustomer*1000));
+      Printf("Cashier_%d has provided Customer_%d their completed passport \n", sizeof("Cashier_%d has provided Customer_%d their completed passport \n"), (id*1000+Cashiers[id].currentCustomer));
       Signal(Cashiers[id].lock, Cashiers[id].cv);
       Wait(Cashiers[id].lock, Cashiers[id].cv);
       /*
       std::cout << name << " has recorded that " << currentCustomer->getName();
       std::cout << " has been given their completed passport" << std::endl;
       */
-      Printf("Cashier_%d has recoreded that Customer_%d \n", sizeof("Cashier_%d has recoreded that Customer_%d \n"), (id+Cashiers[id].currentCustomer*1000));
+      Printf("Cashier_%d has recoreded that Customer_%d \n", sizeof("Cashier_%d has recoreded that Customer_%d \n"), (id*1000+Cashiers[id].currentCustomer));
       Write(" has been given their completed passport \n", sizeof(" has been given their completed passport \n"), ConsoleOutput);
 
       Signal(Cashiers[id].lock, Cashiers[id].cv);
