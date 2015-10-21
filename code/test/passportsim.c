@@ -60,7 +60,6 @@ int AppClerkLineLock;
 int PicClerkLineLock;
 int PassportClerkLineLock;
 int CashierLineLock;
-int DataLock;
 
 /* Money */
 int AppClerkBribeMoney;
@@ -465,10 +464,8 @@ void startCustomer() {
   int task, id;
   int my_line = -1;
   bool isSen = Customers[id].isSenator;
-  Acquire(DataLock);
   id = numActiveCustomers;
   numActiveCustomers++;
-  Release(DataLock);
 
   /*implementation */
   if (isSen) {
@@ -502,10 +499,8 @@ void startCustomer() {
 
 void startAppClerk() {
   int i, id;
-  Acquire(DataLock);
   id = numActiveAppClerks;
   numActiveAppClerks++;
-  Release(DataLock);
 
   while(true) {
     if(numCustomers == 0) break;
@@ -577,11 +572,9 @@ void startAppClerk() {
 
 void startPicClerk() {
   int i, id;
-  Acquire(DataLock);
   id = numActivePicClerks;
   numActivePicClerks++;
-  Release(DataLock);
-
+  Write("hello\n", 6, ConsoleOutput);
   while(true) {
     if (numCustomers == 0) break;
     Acquire(PicClerkLineLock);
@@ -659,10 +652,8 @@ void startPicClerk() {
 
 void startPassportClerk() {
   int i, id, random;
-  Acquire(DataLock);
   id = numActivePassportClerks;
   numActivePassportClerks++;
-  Release(DataLock);
 
   while(true) {
     if(numCustomers == 0) break;
@@ -740,10 +731,8 @@ void startPassportClerk() {
 
 void startCashier() {
   int i, id, random;
-  Acquire(DataLock);
   id = numActiveCashiers;
   numActiveCashiers++;
-  Release(DataLock);
 
   while(true) {
     if(numCustomers == 0) break;
@@ -1003,7 +992,6 @@ void initGlobalData() {
   PicClerkLineLock = CreateLock("PicClerkLineLock", sizeof("PicClerkLineLock"));
   PassportClerkLineLock = CreateLock("PassportClerkLineLock", sizeof("PassportClerkLineLock"));
   CashierLineLock = CreateLock("CashierLineLock", sizeof("CashierLineLock"));
-  DataLock = CreateLock("DataLock", sizeof("DataLock"));
 
   /* Money */
   AppClerkBribeMoney = 0;
