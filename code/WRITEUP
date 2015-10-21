@@ -75,15 +75,15 @@ IV. IMPLEMENTATION
 	../code/test/testexit.c
 	../code/test/testexitprogram.c
 	../code/test/testprint.c
-	../code/test/airportstart.c
-	../code/test/airportsim.c
-	../code/test/airporttest1.c
-	../code/test/airporttest2.c
-	../code/test/airporttest3.c
-	../code/test/airporttest4.c
-	../code/test/airporttest5.c
-	../code/test/airporttest6.c
-	../code/test/airporttest7.c
+	../code/test/passportstart.c
+	../code/test/passportsim.c
+	../code/test/passporttest1.c
+	../code/test/passporttest2.c
+	../code/test/passporttest3.c
+	../code/test/passporttest4.c
+	../code/test/passporttest5.c
+	../code/test/passporttest6.c
+	../code/test/passporttest7.c
 
 	iii. Data Structures added, file they were added to
 	
