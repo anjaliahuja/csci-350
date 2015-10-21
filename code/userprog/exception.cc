@@ -628,12 +628,6 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
 int Acquire_Syscall(int index) {
  lockTableLock->Acquire();
 
-  if(index==-1){
-    printf("Lock has index of -1, don't acquire.\n");
-    lockTableLock->Release();
-    return -1;
-  }
- 
   if (index < 0 || index > NumLocks) {
     printf("Acquire: Invalid index\n");
     lockTableLock->Release();
@@ -669,11 +663,6 @@ int Release_Syscall(int index) {
 
   // Error checking
   // index falls within range of table size
-  if(index==-1){
-    printf("Lock has index of -1, don't acquire.\n");
-    lockTableLock->Release();
-    return -1;
-  }
   if (index < 0 || index > NumLocks) {
     printf("Release: Invalid index\n");
     lockTableLock->Release();

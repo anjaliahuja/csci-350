@@ -6,10 +6,10 @@ enum bool {false, true};
 #define NULL 0
 
 #define NUM_CUSTOMERS 30
-#define NUM_APPCLERKS 5
-#define NUM_PICCLERKS 5
-#define NUM_PASSPORTCLERKS 5
-#define NUM_CASHIERS 5
+#define NUM_APPCLERKS 2
+#define NUM_PICCLERKS 2
+#define NUM_PASSPORTCLERKS 2
+#define NUM_CASHIERS 2
 
 typedef struct {
   int array[NUM_CUSTOMERS + 5];

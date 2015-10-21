@@ -31,7 +31,7 @@ CPP = $(GCCDIR)cpp
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR)
 
-all: halt matmult sort testfiles passportsim passportstart testexit testexitprogram testprint passporttest1 passporttest2
+all: halt matmult sort testfiles passportsim passportstart testexit testexitprogram testprint passporttest1 passporttest2 lock_cv_test1 lock_cv_test2 lock_cv_test3 lock_cv_test4 lock_cv_test5
 
 start.o: start.s ../userprog/syscall.h
 	$(CPP) $(CPPFLAGS) start.s > strt.s
@@ -97,5 +97,30 @@ passporttest2.o: passporttest2.c
 passporttest2: passporttest2.o start.o
 	$(LD) $(LDFLAGS) start.o passporttest2.o -o passporttest2.coff
 	../bin/coff2noff passporttest2.coff passporttest2
+lock_cv_test1.o: lock_cv_test1.c
+	$(CC) $(CFLAGS) -c lock_cv_test1.c
+lock_cv_test1: lock_cv_test1.o start.o
+	$(LD) $(LDFLAGS) start.o lock_cv_test1.o -o lock_cv_test1.coff
+	../bin/coff2noff lock_cv_test1.coff lock_cv_test1
+lock_cv_test2.o: lock_cv_test2.c
+	$(CC) $(CFLAGS) -c lock_cv_test2.c
+lock_cv_test2: lock_cv_test2.o start.o
+	$(LD) $(LDFLAGS) start.o lock_cv_test2.o -o lock_cv_test2.coff
+	../bin/coff2noff lock_cv_test2.coff lock_cv_test2
+lock_cv_test3.o: lock_cv_test3.c
+	$(CC) $(CFLAGS) -c lock_cv_test3.c
+lock_cv_test3: lock_cv_test3.o start.o
+	$(LD) $(LDFLAGS) start.o lock_cv_test3.o -o lock_cv_test3.coff
+	../bin/coff2noff lock_cv_test3.coff lock_cv_test3
+lock_cv_test4.o: lock_cv_test4.c
+	$(CC) $(CFLAGS) -c lock_cv_test4.c
+lock_cv_test4: lock_cv_test4.o start.o
+	$(LD) $(LDFLAGS) start.o lock_cv_test4.o -o lock_cv_test4.coff
+	../bin/coff2noff lock_cv_test4.coff lock_cv_test4
+lock_cv_test5.o: lock_cv_test5.c
+	$(CC) $(CFLAGS) -c lock_cv_test5.c
+lock_cv_test5: lock_cv_test5.o start.o
+	$(LD) $(LDFLAGS) start.o lock_cv_test5.o -o lock_cv_test5.coff
+	../bin/coff2noff lock_cv_test5.coff lock_cv_test5
 clean:
 	rm -f *.o *.coff matmult testfiles testexit testexitprogram testprint passporttest1 passporttest2
