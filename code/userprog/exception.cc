@@ -1001,42 +1001,46 @@ int Rand_Syscall(int range, int offset){
 }
 
 void Printf_Syscall(unsigned int vaddr, int len, int num1){
-  char* buf;
-   if (!(buf = new char[len])) {
+  char* string;
+   if (!(string = new char[len])) {
     printf("Error allocating kernel buffer for Printf!\n");
     return;
   }
   else {
-    if (copyin(vaddr, len, buf) == -1) {
+    if (copyin(vaddr, len, string) == -1) {
       printf("Bad pointer passed to printf: data not written\n");
-      delete [] buf;
+      delete [] string;
       return;
     }
   }
-  int lastIndex;
-  int count = 0;
+  int digits;
+  int numDigits = 0;
 
   for(int i = 0; i<len; i++){
-    if(buf[i] == '%'){
-      lastIndex = i;
-    } else if(buf[i] == 'd' && lastIndex == i-1){
-      count++;
+    if(string[i] == '%'){
+      digits = i;
+    } else if(string[i] == 'd' && digits == i-1){
+      numDigits++;
     }
   }
- if(count ==3 ){
-  printf(buf, num1/1000000, (num1%1000000)/1000, num1%1000);
+
+  int third = 1000000;
+  int second = 1000;
+
+ if(numDigits ==3 ){
+  printf(string, num1/third, (num1%third)/second, num1%second);
  }
- else if(count == 2){
-  printf(buf, num1/1000, num1%1000);
+ else if(numDigits == 2){
+  printf(string, num1/second, num1%second);
  }
- else if(count == 1){
-  printf(buf, num1);
+ else if(numDigits == 1){
+  printf(string, num1);
  }
  else{
   printf("invalid printf \n");
  }
 
-  delete [] buf;
+  delete [] string;
 }
 
 

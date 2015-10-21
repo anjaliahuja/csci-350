@@ -86,10 +86,76 @@ IV. IMPLEMENTATION
 	../code/test/airporttest7.c
 
 	iii. Data Structures added, file they were added to
-	
+	In ../code/threads/system.h
+
+		struct kernelLock {
+			Lock* lock;
+			AddrSpace* addressSpace;
+			bool toBeDeleted;
+			int lockCounter;
+		};
+
+		struct kernelCV{
+			Condition* condition;
+			AddrSpace* addressSpace;
+			bool toBeDeleted;
+			int cvCounter;
+		};
+
+		struct kernelProcess{
+			kernelProcess(){
+				addressSpace = currentThread->space; 
+				numThreads = 0;
+				locks = new bool [NumLocks];
+				for(int i =0; i<NumLocks; i++){
+					locks[i] = false;
+				}
+				cvs = new bool[NumCVs];
+				for(int i = 0; i< NumCVs; i++){
+					cvs[i] = false;
+				}
+			}
+			~kernelProcess(){
+				delete [] locks;
+				delete [] cvs;
+			}
+
+			AddrSpace* addressSpace;
+			int numThreads;
+			bool* locks;
+			bool* cvs;
+		};
+
 	iv. Data structures modified and file they were added to
+		class AddressSpace{
+			//Modified Address Space Constructor
+			//Init Registers
+			//Allocate Stack
+		}
 
 	v. Functions added and in which file
+	In addrspace.cc:
+	int* AddrSpace::AllocateStack();
+
+	In exception.cc:
+	int CreateCV_Syscall(int vaddr, int size);
+	int DestroyCV_Syscall(int index);
+	int Wait_Syscall(int lockINdex, int CVIndex);
+	int Signal_Syscall(int lockIndex, int CVIndex);
+	int Broadcast_Syscall(int lockIndex, int CVIndex);
+	int CreateLock_Syscall(unsigned int vaddr, int len);
+	int Acquire_Syscall(int index);
+	int Release_Syscall(int index);
+	int DestroyLock_Syscall(int index);
+	void internal_fork(int pc);
+	void Fork_Syscall(int pc, unsigned int vaddr, int len);
+	void internal_exec(int pc);
+	void Exec_Syscall(unsigned int vaddr, int len);
+	void Yield_Syscall();
+	void Exit_Syscall(int status);
+	int Rand_Syscall(int range, int offset);
+	void Printf_Syscall(unsigned int vaddr, int len, int num1);
+	
 
 	vi. Functions modified and in which file.
 
