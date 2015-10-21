@@ -1,5 +1,5 @@
 Title:  Writeup for Project 2, Fall 2015 CSCI 350
- Date:  09/20/2015
+ Date:  10/20/2015
  Group:
  Anjali Ahuja 	ahujaa@usc.edu
  Anne Kao 		annekao@usc.edu
@@ -162,24 +162,28 @@ V. TESTING
 	Customer has left their area
 	-There are 3 Customers and 1 Cashier.  The print statements of the output guidelines should give indication of whether the test passes or not.
 	See: 
-		Cashier 0 has provided Customer 0 their completed passport
-		Cashier 0 has recorded that Customer 0 has been given their completed passport
+		...
+		Cashier_0 has provided Customer_0 their completed passport
+		Cashier_0 has recoreded that Customer_0 has been given their completed passport
 		Customer 0 is leaving the Passport Office
-		Cashier 0 has signalled a Customer to come to their counter
+		Cashier 0 has signalled a customer to come to their counter
+		Customer_1 has given SSN 1 to Cashier_0
+		...
 	As the test requires: "Customer 0 is leaving the Passport Office" comes after "Cashier 0 has recorded that Customer 0 has been given their completed passport".  Only when the Customer has left the passport office does the "Cashier 0 signal a Customer to come to their counter"
 
 	TEST_4: Clerks go on break when they have no one waiting in their line
 	- There are 1 AppClerks and 1 Customers, thus the moment the test begins the AppClerk should go on break immediately. The manager will wake up that customer and allow the application clerk to process that customer. Then when the customer moves on the app clerk should immediately go back on break because there are no more customers in line.
 	See:
-		appClerk_0 is going on break
-		Customer 0 has gotten in regular line for appClerk_0
-		Manager has woken up appClerk_0
-		appClerk_0 has woken up
-		appClerk_0 has signalled a Customer to come to their counter
-		Customer 0 has given SSN 0 to appClerk_0
-		appClerk_0 has received SSN 0 from Customer 0
-		appClerk_0 has recorded a completed application for Customer 0
-		appClerk_0 is going on break
+		...
+		Customer 0 has gotten in regular line for ApplicationClerk 0
+		Manager has woken up ApplicationClerk 0
+		ApplicationClerk 0 is coming off break
+		ApplicationClerk 0 has signalled a Customer to come to their counter
+		Customer 0 has given SSN 0 to ApplicationClerk 0
+		ApplicationClerk 0 has received SSN 0 from Customer 0
+		ApplicationClerk 0 has recorded a completed application for Customer 0
+		ApplicationClerk 0 is going on break
+		...
 
 
 
