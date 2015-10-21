@@ -933,7 +933,6 @@ void Exit_Syscall(int status){
       currentThread->space->pageTable[pageNum].valid = FALSE;
       pageNum--;
     }
-    currentThread->space->AvailPages(); // for testing exit
     availMem->Release(); 
     process->numThreads--;
     DEBUG('e', "Exit thread case 1\n");
@@ -949,7 +948,6 @@ void Exit_Syscall(int status){
         currentThread->space->pageTable[i].valid = FALSE;
       }
     }
-    currentThread->space->AvailPages();//testing exit
     availMem->Release();
 
     currentThread->Finish();
@@ -969,7 +967,6 @@ void Exit_Syscall(int status){
         currentThread->space->pageTable[i].valid= FALSE;
       }
     }
-    currentThread->space->AvailPages(); //testing exit
     availMem->Release();
     
     //Delete CVs
