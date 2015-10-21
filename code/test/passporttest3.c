@@ -517,11 +517,11 @@ void startManager() {
     
     total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
     
-    Printf("Manager has has counted a total of %d for Application Clerks \n", sizeof("Manager has has counted a total of %d for Application Clerks \n"), AppClerkBribeMoney);
-    Printf("Manager has has counted a total of %d for Picture Clerks \n", sizeof("Manager has has counted a total of %d for Picture Clerks \n"), PicClerkBribeMoney);
-    Printf("Manager has has counted a total of %d for Passport Clerks \n", sizeof("Manager has has counted a total of %d for Passport Clerks \n"), PassportClerkBribeMoney);
-    Printf("Manager has has counted a total of %d for Cashiers \n", sizeof("Manager has has counted a total of %d for Cashiers\n"), CashierMoney);
-    Printf("Manager has has counted a total of %d for the Passport Office \n", sizeof("Manager has has counted a total of %d for the Passport Office \n"), total);
+    Printf("Manager has counted a total of %d for Application Clerks \n", sizeof("Manager has counted a total of %d for Application Clerks \n"), AppClerkBribeMoney);
+    Printf("Manager has counted a total of %d for Picture Clerks \n", sizeof("Manager has counted a total of %d for Picture Clerks \n"), PicClerkBribeMoney);
+    Printf("Manager has counted a total of %d for Passport Clerks \n", sizeof("Manager has counted a total of %d for Passport Clerks \n"), PassportClerkBribeMoney);
+    Printf("Manager has counted a total of %d for Cashiers \n", sizeof("Manager has counted a total of %d for Cashiers\n"), CashierMoney);
+    Printf("Manager has counted a total of %d for the Passport Office \n", sizeof("Manager has counted a total of %d for the Passport Office \n"), total);
   }
   Exit(0);
 }
