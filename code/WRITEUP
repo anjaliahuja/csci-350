@@ -34,7 +34,21 @@ III. DESIGN:
 			The Fork sys call takes in a user program's function pointer, creates a new thread and allocates 8 new stack pages for that thread. All threads in the same process have the same address space, tracked using the process table. To allocate a new thread, the address space is matched with the address space of the processor, and the numThreads variable for that process is incremented. A process lock is used to update the process table and prevent race conitions when multiple threads are being forked in the same process.
 
 		Exec:
-			E
+			Exec takes in a filename and size and executes a new process. To do this, it first makes a new address space for the process, then forks a new thread to start that process. When the process is created, it is added to the process table and the thread forked is added to that process in the table. 
+
+		Exit: 
+			Exit has 3 cases. 
+			Case 1 checks if the thread has called exit in the process but its not the last thread in the process. In this case, 8 pages of stack are freed for that process and numThreads for the process is decremented.
+			Case 2 checks if the thread is the last executing thread in the last process, so the ready queue would be empty. If this is the case, the exit syscall clears the pageTable pages that have a valid bit set to true, then calls interruptHalt to stop all processes. 
+			Case 3 checks if the thread is the last thread in process but not the last process running. If this is the case, exit reclaims all memory, claiming stack pages, Cvs and Locks used by that process. To do this, it calls the DestroyCV_Syscall and the DestroyLock_Syscall so that each lock and cv is checked before it is deleted. The end of exit calls currentThread->Finish. 
+
+		Other syscalls implemented:
+
+		Printf: 
+			The printf syscall takes in a virtual address, length and int, then parses the inputs to print out a string with up to 3, 3 digit numbers. It checks for %d, similar to a regular printf statement, then parses out the ints by doing decimal shifts of 3 bits for the input. 
+
+		Rand:
+			The rand syscall works just like a C++ rand syscall, taking in 2 inputs, a range and offset and returning the random number in range + offset entered. 
 
 		------ talk about processtable and processlock purpose--------
 
@@ -60,6 +74,16 @@ IV. IMPLEMENTATION
 	WRITEUP
 	../code/test/testexit.c
 	../code/test/testexitprogram.c
+	../code/test/testprint.c
+	../code/test/airportstart.c
+	../code/test/airportsim.c
+	../code/test/airporttest1.c
+	../code/test/airporttest2.c
+	../code/test/airporttest3.c
+	../code/test/airporttest4.c
+	../code/test/airporttest5.c
+	../code/test/airporttest6.c
+	../code/test/airporttest7.c
 
 	iii. Data Structures added, file they were added to
 	
@@ -96,6 +120,10 @@ V. TESTING
 
 
 	Part 2:
+		Testing fork and exec:
+			To test Fork and Exec, run command: nachos -x ../test/testexit
+			This forks three threads from the testexit process, t1, t2 and t3, and executes 2 new processes that each fork 3 threads, g1, g2 and g3. A write statement should print out for each fork in all 3 processes and 2 printouts from the main of the 2 new executed processes. If all printouts are there, it works! If exit works properly, the program should be halted when the second g3 is printed. This means the last thread in the last executing process has been finished, so the program should halt and all memory will be reclaimed. 
+		
 
 	Part 3:
 	For testing purposes, please run "nachos -P2".  From there you can select tests 1 - 7 or the full simulation.  Each test will run with a set number of customers, clerks, and cashiers which will be printed out at the beginning of the test.

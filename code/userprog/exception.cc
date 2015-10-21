@@ -663,6 +663,11 @@ int Release_Syscall(int index) {
 
   // Error checking
   // index falls within range of table size
+  if(index==-1){
+    printf("Lock has index of -1, don't acquire.\n");
+    lockTableLock->Release();
+    return -1;
+  }
   if (index < 0 || index > NumLocks) {
     printf("Release: Invalid index\n");
     lockTableLock->Release();
