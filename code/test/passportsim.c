@@ -4,11 +4,11 @@ typedef int bool;
 enum bool {false, true};
 
 #define NULL 0
-#define NUM_CUSTOMERS 1
-#define NUM_APPCLERKS 1
-#define NUM_PICCLERKS 1
-#define NUM_PASSPORTCLERKS 1
-#define NUM_CASHIERS 1
+#define NUM_CUSTOMERS 6
+#define NUM_APPCLERKS 4
+#define NUM_PICCLERKS 2
+#define NUM_PASSPORTCLERKS 2
+#define NUM_CASHIERS 2
 
 typedef struct {
   int array[NUM_CUSTOMERS + 5];
@@ -505,9 +505,9 @@ void startAppClerk() {
   while(true) {
     if(numCustomers == 0) break;
     Acquire(AppClerkLineLock);
-    if (SenatorArrived) {
+    /*if (SenatorArrived) {
 
-    } else if (queue_size(&AppClerks[id].bribeLine) != 0) {
+    } */if (queue_size(&AppClerks[id].bribeLine) != 0) {
       Signal(AppClerkLineLock, AppClerks[id].bribeLineCV);
       AppClerkBribeMoney += 500;
       AppClerks[id].state = 1;
@@ -578,6 +578,8 @@ void startPicClerk() {
   while(true) {
     if (numCustomers == 0) break;
     Acquire(PicClerkLineLock);
+    Write("Stop", sizeof("Stop"), ConsoleOutput);
+
 
     if (SenatorArrived /*&& !setUpSenator*/) {
 
@@ -969,17 +971,18 @@ void startManager() {
             managerWakeupCashier(&Cashiers[j]);
           }
         }
-      break;
-    }
-    
-    total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
-    /*
+
     Printf("Manager has has counted a total of %d for Application Clerks \n", sizeof("Manager has has counted a total of %d for Application Clerks \n"), AppClerkBribeMoney);
     Printf("Manager has has counted a total of %d for Picture Clerks \n", sizeof("Manager has has counted a total of %d for Picture Clerks \n"), PicClerkBribeMoney);
     Printf("Manager has has counted a total of %d for Passport Clerks \n", sizeof("Manager has has counted a total of %d for Passport Clerks \n"), PassportClerkBribeMoney);
     Printf("Manager has has counted a total of %d for Cashiers \n", sizeof("Manager has has counted a total of %d for Cashiers\n"), CashierMoney);
     Printf("Manager has has counted a total of %d for the Passport Office \n", sizeof("Manager has has counted a total of %d for the Passport Office \n"), total);
-    */
+    
+      break;
+    }
+    
+    total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
+  
   }
   Exit(0);
 }

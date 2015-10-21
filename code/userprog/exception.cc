@@ -587,6 +587,7 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   kl->lock = lock;
   kl->addressSpace = currentThread->space;
   kl->toBeDeleted = false;
+  kl->lockCounter = 0;
 
   int index = lockTable->Put((void*)kl);
   // Error checking
@@ -625,13 +626,17 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
 }
 
 int Acquire_Syscall(int index) {
-  lockTableLock->Acquire();
+ // lockTableLock->Acquire();
 
-  // Error checking
-  // index falls within range of table size
+  if(index==-1){
+    printf("Lock has index of -1, don't acquire.\n");
+    lockTableLock->Release();
+    return -1;
+  }
+ 
   if (index < 0 || index > NumLocks) {
     printf("Acquire: Invalid index\n");
-    lockTableLock->Release();
+    //lockTableLock->Release();
     return -1;
   }
 
@@ -640,14 +645,14 @@ int Acquire_Syscall(int index) {
   // does lock actually exist at this index
   if (kl == NULL || kl->lock == NULL) {
     printf("Acquire: Lock does not exist\n");
-    lockTableLock->Release();
+    //lockTableLock->Release();
     return -1;
   }
 
   // does thread belong to same process as thread creator
   if (kl->addressSpace != currentThread->space) {
     printf("Acquire: Lock belongs to a different process\n");
-    lockTableLock->Release();
+    //lockTableLock->Release();
     return -1;
   }
 
@@ -655,7 +660,7 @@ int Acquire_Syscall(int index) {
   if(kl->lock->Acquire())
     kl->lockCounter++; 
 
-  lockTableLock->Release();
+  //lockTableLock->Release();
   return index;
 }
 
@@ -664,6 +669,11 @@ int Release_Syscall(int index) {
 
   // Error checking
   // index falls within range of table size
+  if(index==-1){
+    printf("Lock has index of -1, don't acquire.\n");
+    lockTableLock->Release();
+    return -1;
+  }
   if (index < 0 || index > NumLocks) {
     printf("Release: Invalid index\n");
     lockTableLock->Release();
