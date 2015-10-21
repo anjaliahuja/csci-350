@@ -116,7 +116,7 @@ Lock::~Lock() {
 bool Lock::Acquire() {
   // Disable interrupts.
   IntStatus oldLevel = interrupt->SetLevel(IntOff); 
-
+  
   // If thread already owns lock, throw error.
   if (this->isHeldByCurrentThread()) {
     (void) interrupt->SetLevel(oldLevel);

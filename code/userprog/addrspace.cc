@@ -289,3 +289,22 @@ int* AddrSpace::AllocateStack(){
 
 }
 
+void AddrSpace::AvailPages()
+{
+    DEBUG('e', "Available VP in address space %x\n", this);
+    unsigned int i =0;
+    for(i; i<numPages; i++){
+        if(pageTable[i].valid == true) {
+            DEBUG('e', "%d ", i);
+        }
+        else {
+            DEBUG('e', "A ");
+        }
+        if (i%8 == 0){
+            DEBUG('e', "\n");
+        }
+    }
+    if( i%8 ==1){
+        DEBUG('e', "\n");
+    }
+}

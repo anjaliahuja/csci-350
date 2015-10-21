@@ -97,7 +97,7 @@ IV. IMPLEMENTATION
 
 V. TESTING
 	Part 1:
-	For testing locks and cvs, please run "nachos -x ../test/testfiles" in the userprog folder.  Most of tests are taken from the testsuite in project 1.  There are some additional tests to test destroy, index access, and several initializations of variables.  Here is a description of the different tests:
+	For testing locks and cvs, please run "nachos -x ../test/lock_cv_test*" (* indicating which test number it is) in the userprog folder.  Most of tests are taken from the testsuite in project 1.  There are some additional tests to test destroy, index access, and several initializations of variables.  Here is a description of the different tests:
 		Test 1: 
 		First thread will acquire and release lock.
 		Second thread will try to release the lock without acquiring first, in doing so will throw an error.
