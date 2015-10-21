@@ -23,12 +23,19 @@ int main(){
 	/*Executes two new processes*/
 	Exec("../test/testexitprogram", sizeof("../test/testexitprogram"));
 	Exec("../test/testexitprogram", sizeof("../test/testexitprogram"));
-	
+
+
+
 
 	/*Forks 3 threads*/
 	Fork(t1, "name", sizeof("name"));	
 	Fork(t2, "name", sizeof("name"));
 	Fork(t3, "name", sizeof("name"));
+
+	
+
+
+
 
 
 

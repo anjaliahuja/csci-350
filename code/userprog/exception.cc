@@ -626,11 +626,11 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
 }
 
 int Acquire_Syscall(int index) {
- // lockTableLock->Acquire();
+  //lockTableLock->Acquire();
 
   if(index==-1){
     printf("Lock has index of -1, don't acquire.\n");
-    lockTableLock->Release();
+    //lockTableLock->Release();
     return -1;
   }
  
