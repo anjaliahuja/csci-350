@@ -152,4 +152,4 @@ passporttest6: passporttest6.o start.o
 
 
 clean:
-	rm -f *.o *.coff matmult testfiles testexit testexitprogram testprint passporttest1 passporttest2
+	rm -f *.o *.coff matmult testfiles testexit testexitprogram testprint passporttest1 passporttest2 passporttest3 passporttest4 passporttest5 passporttest6 passportsim

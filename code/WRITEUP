@@ -128,24 +128,14 @@ IV. IMPLEMENTATION
 			kernelProcess(){
 				addressSpace = currentThread->space; 
 				numThreads = 0;
-				locks = new bool [NumLocks];
-				for(int i =0; i<NumLocks; i++){
-					locks[i] = false;
-				}
-				cvs = new bool[NumCVs];
-				for(int i = 0; i< NumCVs; i++){
-					cvs[i] = false;
-				}
 			}
 			~kernelProcess(){
-				delete [] locks;
-				delete [] cvs;
+				
 			}
 
 			AddrSpace* addressSpace;
 			int numThreads;
-			bool* locks;
-			bool* cvs;
+			
 		};
 
 	iv. Data structures modified and file they were added to
@@ -342,11 +332,14 @@ V. TESTING
 VI. DISCUSSION: 
 
 	i. Experiment expectation 
+	Syscalls written in exception.cc should allow full simulation from project 1 to run correctly using -rs values and with various numbers of customers and clerks. All tests from project 1 should be converted to C and be run with the same output print statements that were run in project 1.
+	ii. Experiment result
+	Full simulation, locks/cv tests and full simulation tests all work correctly. Only thing that is missing is senator right now as we didn't implement that in project 1. 
 
 	
 	
 
 VII. MISCELLANEOUS 
-	BUGS
+	
 		
 	
