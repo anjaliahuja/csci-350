@@ -289,9 +289,9 @@ void startCashier() {
     } else if (queue_size(&Cashiers[id].line) != 0) {
       Signal(CashierLineLock, Cashiers[id].lineCV);
       Cashiers[id].currentCustomer = queue_pop(&Cashiers[id].line);
-      Printf("Cashier %d has signalled customer %d to come to their counter\n", 
-        sizeof("Cashier %d has signalled customer %d to come to their counter."), 
-        id*1000+Cashiers[id].currentCustomer);
+      Printf("Cashier %d has signalled a customer to come to their counter\n", 
+        sizeof("Cashier %d has signalled a customer to come to their counter."), 
+        id);
       Cashiers[id].state = 1;
     } else {
       Acquire(Cashiers[id].lock);

@@ -510,6 +510,7 @@ void startAppClerk() {
   Release(DataLock);
 
   while(true) {
+    if(numCustomers == 0) break;
     Acquire(AppClerkLineLock);
     if (SenatorArrived) {
 
@@ -534,7 +535,6 @@ void startAppClerk() {
       Printf("ApplicationClerk %d is going on break\n",
         sizeof("ApplicationClerk %d is going on break\n"),
         id);
-      if(numCustomers == 0) break;
       Release(AppClerkLineLock);
       Wait(AppClerks[id].lock, AppClerks[id].cv);
       Printf("ApplicationClerk %d is coming off break\n",
@@ -585,6 +585,8 @@ void startPicClerk() {
   Release(DataLock);
 
   while(true) {
+    if(numCustomers == 0) break;
+
     Acquire(PicClerkLineLock);
 
     if (SenatorArrived /*&& !setUpSenator*/) {
@@ -605,7 +607,6 @@ void startPicClerk() {
     } else if (!SenatorArrived) {
       PicClerks[id].state = 2;
       Printf("Pic clerk %d is going on break\n", sizeof("Pic clerk %d is going on break"), id);
-      if(numCustomers == 0) break;
       Acquire(PicClerks[id].lock);
       Release(PicClerkLineLock);
       Wait(PicClerks[id].lock, PicClerks[id].cv);
@@ -688,7 +689,6 @@ void startPassportClerk() {
       Acquire(PassportClerks[id].lock);
       PassportClerks[id].state = 2;
       Printf("Passport clerk %d is going on break\n", sizeof("Passport clerk %d is going on break\n"), id);
-      if(numCustomers == 0) break;
       Release(PassportClerkLineLock);
       Wait(PassportClerks[id].lock, PassportClerks[id].cv);
       Printf("Passport clerk %d is coming off break\n", sizeof("Passport clerk %d is coming off break\n"), id);
@@ -749,6 +749,7 @@ void startCashier() {
   Release(DataLock);
 
   while(true) {
+    if(numCustomers == 0) break;
     Acquire(CashierLineLock);
     if (SenatorArrived) {
 
@@ -771,7 +772,6 @@ void startCashier() {
       Acquire(Cashiers[id].lock);
       Cashiers[id].state = 2;
       Printf("Cashier_ %d is going on break\n", sizeof("Cashier_ %d is going on break\n"), id);
-      if(numCustomers == 0) break;
       Release(CashierLineLock);
       Wait(Cashiers[id].lock, Cashiers[id].cv);
       Printf("Cashier_ %d is coming off break\n", sizeof("Cashier_ %d is coming off break\n"), id);
@@ -965,7 +965,7 @@ void startManager() {
     if (test1) continue;*/
 
     /* no more customers */
-    /*if (numCustomers == 0) {
+    if (numCustomers == 0) {
       for(j = 0; j < NUM_APPCLERKS; j++) {
           if(AppClerks[j].state == 2) {
             managerWakeupAppClerk(&AppClerks[j]);
@@ -987,7 +987,7 @@ void startManager() {
           }
         }
       break;
-    }*/
+    }
     
     total = AppClerkBribeMoney + PicClerkBribeMoney + PassportClerkBribeMoney + CashierMoney;
     
