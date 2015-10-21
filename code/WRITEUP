@@ -7,9 +7,28 @@ Title:  Writeup for Project 2, Fall 2015 CSCI 350
 
 
 I. REQUIREMENTS:
+	+ Part 1: 
+	Implement system calls and exception handling for acquire, release, wait, signal, broadcast. As well as- CreateLock, DestroyLock, CreateCondition, DestroyCondition, and Exit Fork and Yield. 
+	Implement process table to maintain mapping of processes, threads to the correct correspnding address spae.
+	Implement a testsuite of user programs to demonstrate correctness of system calls.
+	+ Part 2:
+	Implement multiprogramming and complete implementation of Exec and Fork System calls. Design a test that shows correct implementation of exec and fork.
+	+ Part 3:
+	Run project 1 passport simulation using new syscalls that were written
 
 
 II. ASSUMPTIONS:
+	+ Sys calls will allow project 1 to function in the following way:
+	-Up to 5 of each type of clerk, 50 customers, 1 manager and 10 senators can be simulated and properly synchronized without the program crashing and with the correct sharing of locks, condition variables and monitor variables.
+	-Customers enter the passport office with a completed application
+	-Actions written in the assignment requirements are simulated through the proper implementation of waking up threads, acquiring/releasing locks and using print statements to simualte the exchange of data. 
+	-When a customer gets sent to the "back of the line", they must start over the process of looking for the shortest line.
+	-For PassportClerk & Cashier, there is no official verification of whether they went to the ApplicationClerk or PictureClerk.  Instead, there is a small random chance that the PassportClerk/Cashier tells them to go to the back of the line.  This is because the way our clerks were implemented were that Customers can not move onto the next clerk without a Signal from their current clerk that they can leave. 
+	-All Clerks and the Cashier have bribe lines.
+	- When a customer shows up to choose a line, it first looks through all lines to see if it can get into one of those lines that has a clerk not on break, if it can't find one of those lines then it goes to the first on break clerk.
+	-Customers can wait on lines that are on break.
+
+
 	
 III. DESIGN:
 	i. Part 1
