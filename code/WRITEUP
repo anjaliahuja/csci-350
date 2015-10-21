@@ -31,7 +31,7 @@ III. DESIGN:
 	ii. Part 2
 
 		Fork:
-			The Fork sys call takes in a user program's function pointer, creates a new thread and allocates 8 new stack pages for that thread. All threads in the same process have the same address space, tracked using the process table. To allocate a new thread, the address space is matched with the address space of the processor, and the numThreads variable for that process is incremented. A process lock is used to update the process table and prevent race conitions when multiple threads are being forked in the same process.
+			The Fork sys call takes in a user program's function pointer, creates a new thread and allocates 8 new stack pages for that thread by calling AllocateStack in the addres space class. AllocateStack function does the page table translation, copying all values to a new page table that has 8 more pages than the old page table. The stack registers are returned that has the start of stack and last VP of stack for the thread forked, which is then passed to internal_fork to actually fork the thread. All threads in the same process have the same address space, tracked using the process table. To allocate a new thread, the address space is matched with the address space of the processor, and the numThreads variable for that process is incremented. A process lock is used to update the process table and prevent race conitions when multiple threads are being forked in the same process.
 
 		Exec:
 			Exec takes in a filename and size and executes a new process. To do this, it first makes a new address space for the process, then forks a new thread to start that process. When the process is created, it is added to the process table and the thread forked is added to that process in the table. 
@@ -50,7 +50,8 @@ III. DESIGN:
 		Rand:
 			The rand syscall works just like a C++ rand syscall, taking in 2 inputs, a range and offset and returning the random number in range + offset entered. 
 
-		------ talk about processtable and processlock purpose--------
+
+		To keep track of process tables, we used a processTable and processLock. Each time exec was called, the process table was updated with the new process and a thread was added to that process. Every time a syscall is called, the process is found in the process table and the variables associated with it are modified. Before modifying the variables, we use the processLock to prevent race conditions. The process struct has a set of bools of CVs and Locks to check whether they are being used, a counter for threads and counters for numLocks and numCVs. When exit is called, the proper variables are modified and updated for the correct process in the process table. 
 
 IV. IMPLEMENTATION
 
@@ -68,6 +69,8 @@ IV. IMPLEMENTATION
 	../code/threads/thread.h
 	../code/threads/threadtest.cc
 	../code/userprog/table.h
+	../code/machine/machine.h
+	../code/Makefile
 
 	ii. Files added
 	GROUPNAME
@@ -75,23 +78,108 @@ IV. IMPLEMENTATION
 	../code/test/testexit.c
 	../code/test/testexitprogram.c
 	../code/test/testprint.c
-	../code/test/airportstart.c
-	../code/test/airportsim.c
-	../code/test/airporttest1.c
-	../code/test/airporttest2.c
-	../code/test/airporttest3.c
-	../code/test/airporttest4.c
-	../code/test/airporttest5.c
-	../code/test/airporttest6.c
-	../code/test/airporttest7.c
+	../code/test/passportstart.c
+	../code/test/passportsim.c
+	../code/test/passporttest1.c
+	../code/test/passporttest2.c
+	../code/test/passporttest3.c
+	../code/test/passporttest4.c
+	../code/test/passporttest5.c
+	../code/test/passporttest6.c
+	../code/test/lock_cv_test1.c
+	../code/test/lock_cv_test2.c
+	../code/test/lock_cv_test3.c
+	../code/test/lock_cv_test4.c
+	../code/test/lock_cv_test5.c
 
 	iii. Data Structures added, file they were added to
-	
+	In ../code/threads/system.h
+		extern Lock* availMem; 
+		extern BitMap* bitMap; 
+
+		#define NumLocks 10000
+		#define NumCVs 10000
+		#define NumProcesses 20
+
+		extern Table* lockTable;
+		extern Lock* lockTableLock;
+
+		extern Table* CVTable;
+		extern Lock* CVTableLock;
+
+		extern Table* processTable;
+		extern Lock* processLock;
+
+		struct kernelLock {
+			Lock* lock;
+			AddrSpace* addressSpace;
+			bool toBeDeleted;
+			int lockCounter;
+		};
+
+		struct kernelCV{
+			Condition* condition;
+			AddrSpace* addressSpace;
+			bool toBeDeleted;
+			int cvCounter;
+		};
+
+		struct kernelProcess{
+			kernelProcess(){
+				addressSpace = currentThread->space; 
+				numThreads = 0;
+			}
+			~kernelProcess(){
+				
+			}
+
+			AddrSpace* addressSpace;
+			int numThreads;
+			
+		};
+
 	iv. Data structures modified and file they were added to
+		class AddressSpace{
+			//Modified Address Space Constructor
+			//Init Registers
+			//Allocate Stack
+		}
 
 	v. Functions added and in which file
+	In addrspace.cc:
+	int* AddrSpace::AllocateStack();
+
+	In exception.cc:
+	int CreateCV_Syscall(int vaddr, int size);
+	int DestroyCV_Syscall(int index);
+	int Wait_Syscall(int lockINdex, int CVIndex);
+	int Signal_Syscall(int lockIndex, int CVIndex);
+	int Broadcast_Syscall(int lockIndex, int CVIndex);
+	int CreateLock_Syscall(unsigned int vaddr, int len);
+	int Acquire_Syscall(int index);
+	int Release_Syscall(int index);
+	int DestroyLock_Syscall(int index);
+	void internal_fork(int pc);
+	void Fork_Syscall(int pc, unsigned int vaddr, int len);
+	void internal_exec(int pc);
+	void Exec_Syscall(unsigned int vaddr, int len);
+	void Yield_Syscall();
+	void Exit_Syscall(int status);
+	int Rand_Syscall(int range, int offset);
+	void Printf_Syscall(unsigned int vaddr, int len, int num1);
+
 
 	vi. Functions modified and in which file.
+	In addrspace.cc:
+	AddrSpace::AddrSpace(OpenFile* executable) : fileTable(MaxOpenFiles);
+	AddrSpace::InitRegisters();
+
+	In exception.cc:
+	void ExceptionHandler(ExceptionType which);
+
+	In progtest.cc
+	void StartProcess(char* filename);
+
 
 
 
@@ -244,24 +332,14 @@ V. TESTING
 VI. DISCUSSION: 
 
 	i. Experiment expectation 
-
-	-Up to 50 customers, 5 clerks of each type, 10 senators and a manager can be fully synchronized and run in proper sequence for a full simulation
-	-Locks are properly acquired and released for the correct interations between customers and clerks and cashiers to take place
-	-All tests and full simulation work correctly
-	
-
+	Syscalls written in exception.cc should allow full simulation from project 1 to run correctly using -rs values and with various numbers of customers and clerks. All tests from project 1 should be converted to C and be run with the same output print statements that were run in project 1.
 	ii. Experiment result
-	-Tests 1-6 work. Senator is partially functioning, runs into a bug after customer goes through first few clerks but does not reach the end. Test 7 is still runnable and this is explained in the testing section.
-	Our program can handle up to 50 customers and 5 types of each clerk/cashier as well as a manger.
+	Full simulation, locks/cv tests and full simulation tests all work correctly. Only thing that is missing is senator right now as we didn't implement that in project 1. 
 
-	iii. Explanation (Explain how your project proves what its supposed to prove)
-	-Customers, clerks, cashier and manager all interact correctly and are synchronized to allow customers to go through passport office in any order and receive their passport. 
-
+	
 	
 
 VII. MISCELLANEOUS 
-	BUGS
-		- As mentioned in Design and Testing, Senator is not fully functionally.  It is implemented only for Test 7 and does not run in the Full Simulation.  Senator gets about halfway through it's required tasks before it stops.
-		-There are a handful of cases where the program will segfault.  However, if you try running the same case again, it will work.  Not entirely sure how the segfault occurs (not able to reproduce the error very often).
-		- When running the tests for the locks and cvs (testfiles executable), some of the print statements will bleed into the next test.  This is primarily noticeable on tests 4 and 5.
+	
+		
 	
