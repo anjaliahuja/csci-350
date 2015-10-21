@@ -135,6 +135,12 @@ passporttest4: passporttest4.o start.o
 	$(LD) $(LDFLAGS) start.o passporttest4.o -o passporttest4.coff
 	../bin/coff2noff passporttest4.coff passporttest4
 
+passporttest6.o: passporttest6.c
+	$(CC) $(CFLAGS) -c passporttest6.c
+passporttest6: passporttest6.o start.o
+	$(LD) $(LDFLAGS) start.o passporttest6.o -o passporttest6.coff
+	../bin/coff2noff passporttest6.coff passporttest6
+
 
 clean:
 	rm -f *.o *.coff matmult testfiles testexit testexitprogram testprint passporttest1 passporttest2

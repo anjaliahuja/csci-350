@@ -44,7 +44,6 @@ class AddrSpace {
     void Fork_Syscall(int pc, unsigned int vaddr, int size);
     void Exec_Syscall(unsigned int vaddr, int size);
     void Exit_Syscall(int status);
-    void AvailPages();// for debugging
 
     int* AllocateStack(); 
     unsigned int numPages;      // Number of pages in the virtual 

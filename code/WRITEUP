@@ -126,7 +126,7 @@ V. TESTING
 		
 
 	Part 3:
-	For testing purposes, please run "nachos -P2".  From there you can select tests 1 - 7 or the full simulation.  Each test will run with a set number of customers, clerks, and cashiers which will be printed out at the beginning of the test.
+	For testing purposes, please run "nachos -x ../test/passporttest*" (* indicating which test number it is).  From there you can select tests 1 - 7 or the full simulation.  Each test will run with a set number of customers, clerks, and cashiers which will be printed out at the beginning of the test.
 	Each test will print out the print statements outlined in the output statement guidelines as well as any releveant "TEST_X:" statements (X being the test number).
 
 	Disclaimer: Not all tests will say "Test X PASSED".  Depending on the test it may be required to view the print statements and read the below documentation to verify the test has passed.
@@ -198,7 +198,23 @@ V. TESTING
 		...
 
 	TEST_6: Total sales never suffers from a race condition
-	-There are 7 Customers and 2 of each type of Clerk and Cashier.  A global MONEY variable will increment the appropriate amount (500 or 100) whenever a Customer spends money.  This is then compared to the summation of AppClerkBribeMoney, PicClerkBribeMoney, PassportClerkBribeMoney, and CashierMoney.  If they are equal the test will pass.
+	-There are 20 Customers and 2 of each type of Clerk and Cashier.  Each Clerk has a global BribeMoney variable and the cashier has a global Money variable.  The printout statements will illustrate that a lock is acquired everytime a transaction occurs and released after the transaction.  Since a lock is being used during this time, only one clerk/cashier cannot update the global money variable at a time.  The total sales is calculated by adding the three BribeMoney variables and the cashier's Money variable.  Since the manager is the only thread that will be adding these variables up, it will not suffer from outside manipulation.  I also increased the probability that a customer would bribe a clerk/cashier from 30% to 60% in order to demonstrate the test results.
+	See:
+	BribeMoney
+		TEST_6: PictureClerk 1 acquired their line lock
+		PictureClerk 1 has received $500 from Customer 17
+		PictureClerk 0 has received SSN 2 from customer 2
+	Cashier
+		TEST_6: Cashier 0 acquired their line lock
+		Cashier 0 has signalled customer to come to their counter
+		Customer_1 has given Cashier_6 $100
+	Total
+		Manager has has counted a total of 0 for Application Clerks 
+		Manager has has counted a total of 2500 for Picture Clerks 
+		Manager has has counted a total of 2500 for Passport Clerks 
+		Manager has has counted a total of 5000 for Cashiers 
+		Manager has has counted a total of 10000 for the Passport Office 
+
 
 	TEST_7: The behavior of Customers is proper when Senators arrive. This is
   	before, during, and after
