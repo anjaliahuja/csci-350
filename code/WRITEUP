@@ -126,7 +126,7 @@ V. TESTING
 		
 
 	Part 3:
-	For testing purposes, please run "nachos -P2".  From there you can select tests 1 - 7 or the full simulation.  Each test will run with a set number of customers, clerks, and cashiers which will be printed out at the beginning of the test.
+	For testing purposes, please run "nachos -x ../test/passporttest*" (* indicating which test number it is).  From there you can select tests 1 - 7 or the full simulation.  Each test will run with a set number of customers, clerks, and cashiers which will be printed out at the beginning of the test.
 	Each test will print out the print statements outlined in the output statement guidelines as well as any releveant "TEST_X:" statements (X being the test number).
 
 	Disclaimer: Not all tests will say "Test X PASSED".  Depending on the test it may be required to view the print statements and read the below documentation to verify the test has passed.
