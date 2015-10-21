@@ -587,6 +587,7 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   kl->lock = lock;
   kl->addressSpace = currentThread->space;
   kl->toBeDeleted = false;
+  kl->lockCounter = 0;
 
   int index = lockTable->Put((void*)kl);
   // Error checking
@@ -598,7 +599,6 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
 
   //Update process table
   processLock->Acquire();
-
   int processID = -1;
   kernelProcess* process;
   for(int i =0; i<NumProcesses; i++){
@@ -626,13 +626,17 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
 }
 
 int Acquire_Syscall(int index) {
-  lockTableLock->Acquire();
+  //lockTableLock->Acquire();
 
-  // Error checking
-  // index falls within range of table size
+  if(index==-1){
+    printf("Lock has index of -1, don't acquire.\n");
+    //lockTableLock->Release();
+    return -1;
+  }
+ 
   if (index < 0 || index > NumLocks) {
     printf("Acquire: Invalid index\n");
-    lockTableLock->Release();
+    //lockTableLock->Release();
     return -1;
   }
 
@@ -641,14 +645,14 @@ int Acquire_Syscall(int index) {
   // does lock actually exist at this index
   if (kl == NULL || kl->lock == NULL) {
     printf("Acquire: Lock does not exist\n");
-    lockTableLock->Release();
+    //lockTableLock->Release();
     return -1;
   }
 
   // does thread belong to same process as thread creator
   if (kl->addressSpace != currentThread->space) {
     printf("Acquire: Lock belongs to a different process\n");
-    lockTableLock->Release();
+    //lockTableLock->Release();
     return -1;
   }
 
@@ -656,7 +660,7 @@ int Acquire_Syscall(int index) {
   if(kl->lock->Acquire())
     kl->lockCounter++; 
 
-  lockTableLock->Release();
+  //lockTableLock->Release();
   return index;
 }
 
@@ -665,6 +669,11 @@ int Release_Syscall(int index) {
 
   // Error checking
   // index falls within range of table size
+  if(index==-1){
+    printf("Lock has index of -1, don't acquire.\n");
+    lockTableLock->Release();
+    return -1;
+  }
   if (index < 0 || index > NumLocks) {
     printf("Release: Invalid index\n");
     lockTableLock->Release();
@@ -778,9 +787,7 @@ void internal_fork(int pc){
 
   currentThread->space->RestoreState();
 
-
   machine->Run();
-
 }
 
 void Fork_Syscall(int pc, unsigned int vaddr, int len){
@@ -833,9 +840,6 @@ void Fork_Syscall(int pc, unsigned int vaddr, int len){
   t->space = currentThread->space;
 
   t->Fork((VoidFunctionPtr)internal_fork, pc);
-  currentThread->Yield();
-
-  delete [] buf;
 }
 
 void internal_exec(int pc){
@@ -890,9 +894,6 @@ void Exec_Syscall(unsigned int vaddr, int len){
   t->Fork((VoidFunctionPtr)internal_exec,0);  
 
   delete exec;
-  delete [] file;
-
-
 }
 
 
@@ -966,34 +967,33 @@ void Exit_Syscall(int status){
 
   //Case 3: Last thread in process but not last process, need to reclaim all locks, cvs, stack memory
   else if(!lastProcess && process->numThreads == 1){
-      //Delete CVs
-      DEBUG('e', "Case 3: last thread in process but not last process, need to reclaim memory");
-      availMem->Acquire();
-        for(unsigned int i=0; i< currentThread->space->numPages; i++){
-          if(currentThread->space->pageTable[i].valid){
-            bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
-            currentThread->space->pageTable[i].valid= FALSE;
-          }
-        }
-      currentThread->space->AvailPages(); //testing exit
-      availMem->Release();
-      
-      //Delete CVs
-      for(int i =0; i<NumCVs; i++){
-        DestroyCV_Syscall(i);
-        }
-
-      //Delete Locks
-        for(int i =0; i<NumLocks; i++){
-          DestroyLock_Syscall(i);
-            }
-          
-
-
-        processTable->Remove(processID);
-        delete process;
-
+    //Delete CVs
+    DEBUG('e', "Case 3: last thread in process but not last process, need to reclaim memory");
+    availMem->Acquire();
+    for(unsigned int i=0; i< currentThread->space->numPages; i++){
+      if(currentThread->space->pageTable[i].valid){
+        bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
+        currentThread->space->pageTable[i].valid= FALSE;
       }
+    }
+    currentThread->space->AvailPages(); //testing exit
+    availMem->Release();
+    
+    //Delete CVs
+    for(int i =0; i<NumCVs; i++){
+      if ( process->cvs[i] == true)
+        DestroyCV_Syscall(i);
+    }
+
+    //Delete Locks
+    for(int i =0; i<NumLocks; i++){
+      if ( process->locks[i] == true)
+        DestroyLock_Syscall(i);
+    }
+
+    processTable->Remove(processID);
+    delete process;
+  }
    
   else{
     printf("Invalid case");

@@ -140,13 +140,7 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
                         // to leave room for the stack
     size = numPages * PageSize;
 
-    ASSERT(numPages <= NumPhysPages);       // check we're not trying
-                        // to run anything too big --
-                        // at least until we have
-                        // virtual memory
-
-    DEBUG('a', "Initializing address space, num pages %d, size %d\n", 
-                    numPages, size);
+    ASSERT(numPages <= NumPhysPages);       
 // first, set up the translation 
     pageTable = new TranslationEntry[numPages];
     for (i = 0; i < numPages; i++) {
@@ -162,9 +156,6 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
     
 
     for(i=0; i<numPages; i++){
-        DEBUG('a', "Initializing code segment, at 0x%x, size %d\n",    
-            pageTable[i].physicalPage*PageSize, PageSize);
-
         executable->ReadAt(
             &(machine->mainMemory[pageTable[i].physicalPage * PageSize]),
             PageSize, 40 + i*PageSize);
@@ -233,7 +224,6 @@ AddrSpace::InitRegisters()
    // allocated the stack; but subtract off a bit, to make sure we don't
    // accidentally reference off the end!
     machine->WriteRegister(StackReg, numPages * PageSize - 16);
-    DEBUG('a', "Initializing stack register to %x\n", numPages * PageSize - 16);
 }
 
 //----------------------------------------------------------------------
@@ -297,25 +287,5 @@ int* AddrSpace::AllocateStack(){
     availMem->Release();
     return stackRegister;
 
-}
-
-void AddrSpace::AvailPages()
-{
-    DEBUG('e', "Available VP in address space %x\n", this);
-    unsigned int i =0;
-    for(i; i<numPages; i++){
-        if(pageTable[i].valid == true) {
-            DEBUG('e', "%d ", i);
-        }
-        else {
-            DEBUG('e', "A ");
-        }
-        if (i%8 == 0){
-            DEBUG('e', "\n");
-        }
-    }
-    if( i%8 ==1){
-        DEBUG('e', "\n");
-    }
 }
 

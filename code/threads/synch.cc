@@ -123,7 +123,7 @@ bool Lock::Acquire() {
     printf("Lock::Acquire -> Thread %s already owns lock %s!\n", 
       this->lockOwnerThread->getName(), this->name);
     return false;
-  }
+  }  
 
   // If the lock is available change to busy.
   // Make currentThread owner.
@@ -136,7 +136,6 @@ bool Lock::Acquire() {
     this->lockWaitQueue->Append((void *)currentThread);
     currentThread->Sleep();
   }
-
   //Restore interrupts.
   (void) interrupt->SetLevel(oldLevel);
   return true;

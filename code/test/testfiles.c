@@ -7,8 +7,6 @@
 int t1_l1, t1_l2, t1_l3, t2_l1, t3_l1, t4_l1, t5_l1, t5_l2;
 int t2_c1, t2_c2, t2_c3, t3_c1, t4_c1, t5_c1;
 
-void t1_t4();
-void t1_t5();
 void startTest2();
 void t2_t4();
 void startTest3();
@@ -23,8 +21,6 @@ void startTest5();
 */
 void t1_t1() {
   int i;
-
-  Write("In t1_t1\n", sizeof("In t1_t1\n"), ConsoleOutput);
 
   Acquire(t1_l1);
   Write("t1_t1 acquired t1_l1\n", sizeof("t1_t1 acquired t1_l1\n"), ConsoleOutput);
@@ -113,7 +109,7 @@ void t1_t5() {
   Write("t1_t5 acquiring and releasing at index -1\n", sizeof("t1_t5 acquiring and releasing at index -1\n"), ConsoleOutput);
   Acquire(-1);
   Release(-1);
-
+  
   Exit(0);
 }
 
