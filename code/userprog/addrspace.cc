@@ -162,7 +162,7 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
     
 
     for(i=0; i<numPages; i++){
-        DEBUG('a', "Initializing code segment, at 0x%x, size %d\n",    
+        DEBUG('z', "Initializing code segment, at 0x%x, size %d\n",    
             pageTable[i].physicalPage*PageSize, PageSize);
 
         executable->ReadAt(
@@ -289,6 +289,7 @@ int* AddrSpace::AllocateStack(){
         machine->pageTable = pageTable;
 
         delete oldPageTable;
+        RestoreState();
 
         int* stackRegister = new int[2];
         stackRegister[0] = numPages * PageSize - 16;

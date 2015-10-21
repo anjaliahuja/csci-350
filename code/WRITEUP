@@ -1,4 +1,4 @@
-Title:  Writeup for Project 1, Fall 2015 CSCI 350
+Title:  Writeup for Project 2, Fall 2015 CSCI 350
  Date:  09/20/2015
  Group:
  Anjali Ahuja 	ahujaa@usc.edu
@@ -29,6 +29,13 @@ III. DESIGN:
 			Broadcast_Syscall: An index is passed into the Get function for the lockTable in order to find the proper lock to use for wait.  If the lock is null, that means that the lock doesn't exist.  If the lock does not belong to the same process as thread creator, it will also throw an error.  The same checks occur for the index passed in for the CV.  Then broadcast is called on the kernelCV. The cvCounter gets set to 0 since all threads waiting will be woken up and the index is returned.
 			DestroyCV_Syscall: An index is passed into the Get function for the CVTable in order to find the proper cv to destroy.  If the cv is null, that means that the cv doesn't exist.  If the cv does not belong to the same process as thread creator, it will also throw an error.  First we check if the cv has threads waiting on it.  If not then the cv can be removed from the cvTable and then deleted.  If it is busy, then the kernelCV's isToBeDeleted is set to true, so that when the cv has no waiting threads, it will be destroyed (handled in wait).  The processTable must be updated to disassociate the process and the cv.  After, the index is returned.
 	ii. Part 2
+
+		Fork:
+			The Fork sys call takes in a user program's function pointer, creates a new thread and allocates 8 new stack pages for that thread. All threads in the same process have the same address space, tracked using the process table. To allocate a new thread, the address space is matched with the address space of the processor, and the numThreads variable for that process is incremented. A process lock is used to update the process table and prevent race conitions when multiple threads are being forked in the same process.
+
+		Exec:
+			E
+
 		------ talk about processtable and processlock purpose--------
 
 IV. IMPLEMENTATION
