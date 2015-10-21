@@ -5,8 +5,8 @@ enum bool {false, true};
 
 #define NULL 0
 
-#define NUM_CUSTOMERS 6
-#define NUM_APPCLERKS 4
+#define NUM_CUSTOMERS 20
+#define NUM_APPCLERKS 2
 #define NUM_PICCLERKS 2
 #define NUM_PASSPORTCLERKS 2
 #define NUM_CASHIERS 2
@@ -166,7 +166,7 @@ int findLine(char type, bool isSenator, int customer) {
     }
 
     /* Bribe */
-    random = Rand(9, 0);
+    random = Rand(3, 0);
     if (Customers[customer].money >= 600 && AppClerks[my_line].state == 1 && random < 3) {
       queue_push(&AppClerks[my_line].bribeLine, customer);
       Printf("Customer %d has gotten in bribe line for ApplicationClerk %d\n", 
@@ -206,7 +206,7 @@ int findLine(char type, bool isSenator, int customer) {
     }
 
     /* Bribe */
-    random = Rand(9, 0);
+    random = Rand(5, 0);
     if (Customers[customer].money >= 600 && PicClerks[my_line].state == 1 && random < 3) {
       queue_push(&PicClerks[my_line].bribeLine, customer);
       Printf("Customer %d has gotten in bribe line for PictureClerk %d\n", 
@@ -246,7 +246,7 @@ int findLine(char type, bool isSenator, int customer) {
     }
 
     /* Bribe */
-    random = Rand(9, 0);
+    random = Rand(5, 0);
     if (Customers[customer].money >= 600 && PassportClerks[my_line].state == 1 && random < 3) {
       queue_push(&PassportClerks[my_line].bribeLine, customer);
       Printf("Customer %d has gotten in bribe line for PassportClerk %d\n", 
@@ -286,7 +286,7 @@ int findLine(char type, bool isSenator, int customer) {
     }
 
     /* Bribe */
-    random = Rand(9, 0);
+    random = Rand(5, 0);
     if (Customers[customer].money >= 600 && Cashiers[my_line].state == 1 && random < 3) {
       queue_push(&Cashiers[my_line].bribeLine, customer);
       Printf("Customer %d has gotten in bribe line for Cashier %d\n", 
@@ -511,6 +511,9 @@ void startAppClerk() {
   while(true) {
     if(numCustomers == 0) break;
     Acquire(AppClerkLineLock);
+    Printf("TEST_6: ApplicationClerk %d acquired their line lock\n",
+      sizeof("TEST_6: ApplicationClerk %d acquired their line lock\n"),
+      id);
     /*if (SenatorArrived) {
 
     } */if (queue_size(&AppClerks[id].bribeLine) != 0) {
@@ -572,6 +575,10 @@ void startAppClerk() {
 
     AppClerks[id].currentCustomer = -1;
     Release(AppClerks[id].lock);
+    Printf("TEST_6: ApplicationClerk %d released their line lock\n",
+      sizeof("TEST_6: ApplicationClerk %d released their line lock\n"),
+      id);
+
   }
   Exit(0);
 }
@@ -586,6 +593,9 @@ void startPicClerk() {
   while(true) {
     if (numCustomers == 0) break;
     Acquire(PicClerkLineLock);
+    Printf("TEST_6: PictureClerk %d acquired their line lock\n",
+      sizeof("TEST_6: PictureClerk %d acquired their line lock\n"),
+      id);
 
     if (SenatorArrived /*&& !setUpSenator*/) {
 
@@ -654,6 +664,9 @@ void startPicClerk() {
 
     PicClerks[id].currentCustomer = -1;
     Release(PicClerks[id].lock);
+    Printf("TEST_6: PictureClerk %d released their line lock\n",
+      sizeof("TEST_6: PictureClerk %d released their line lock\n"),
+      id);
   }
   Exit(0);
 }
@@ -668,6 +681,9 @@ void startPassportClerk() {
   while(true) {
     if(numCustomers == 0) break;
     Acquire(PassportClerkLineLock);
+    Printf("TEST_6: PassportClerk %d acquired their line lock\n",
+      sizeof("TEST_6: PassportClerk %d acquired their line lock\n"),
+      id);
     if (SenatorArrived) {
 
     } else if (queue_size(&PassportClerks[id].bribeLine) != 0) {
@@ -735,6 +751,9 @@ void startPassportClerk() {
 
     PassportClerks[id].currentCustomer = -1;
     Release(PassportClerks[id].lock);
+    Printf("TEST_6: PassportClerk %d released their line lock\n",
+      sizeof("TEST_6: PassportClerk %d released their line lock\n"),
+      id);
   }
   Exit(0);
 }
@@ -749,6 +768,9 @@ void startCashier() {
   while(true) {
     if(numCustomers == 0) break;
     Acquire(CashierLineLock);
+    Printf("TEST_6: Cashier %d acquired their line lock\n",
+      sizeof("TEST_6: Cashier %d acquired their line lock\n"),
+      id);
     if (SenatorArrived) {
 
     } else if (queue_size(&Cashiers[id].bribeLine) != 0) {
@@ -834,6 +856,9 @@ void startCashier() {
 
     Cashiers[id].currentCustomer = -1;
     Release(Cashiers[id].lock);
+    Printf("TEST_6: Cashier %d released their line lock\n",
+      sizeof("TEST_6: Cashier %d released their line lock\n"),
+      id);
   }
   Exit(0);
 }
@@ -1037,7 +1062,7 @@ void initCustomersData() {
   for (i = 0; i < NUM_CUSTOMERS; i++) {
     Customers[i].name = "customer_" + i;
     Customers[i].ssn = i;
-    Customers[i].money = Rand(4, 0)*500+100;
+    Customers[i].money = 1600;
     Customers[i].app_clerk = false;
     Customers[i].pic_clerk = false;
     Customers[i].passport_clerk = false;
@@ -1160,7 +1185,7 @@ void fork() {
 }
 
 int main() {
-  Write("FULL_SIMULATION\n", sizeof("FULL_SIMULATION\n"), ConsoleOutput);
+  Write("TEST_6: Total sales never suffers from a race condition\n", sizeof("TEST_6: Total sales never suffers from a race condition\n"), ConsoleOutput);
   Printf("Number of Customers = %d\n", sizeof("Number of Customers = %d\n"), NUM_CUSTOMERS);
   Printf("Number of ApplicationClerks = %d\n", sizeof("Number of ApplicationClerks = %d\n"), NUM_APPCLERKS);
   Printf("Number of PictureClerks = %d\n", sizeof("Number of PictureClerks = %d\n"), NUM_PICCLERKS);
