@@ -855,18 +855,21 @@ void Exit_Syscall(int status){
     
     for(int i =0; i<NumCVs; i++){
       kernelCV* kcv = (kernelCV*)CVTable->Get(i);
+      if(kcv!= NULL){
       if (kcv->addressSpace == currentThread->space && kcv->toBeDeleted == true){
         DestroyCV_Syscall(i);
       }
     }
+  }
 
     for(int i =0; i<NumLocks; i++){
         kernelLock* lock = (kernelLock*)lockTable->Get(i);
+      if(lock != NULL){
       if (lock->addressSpace == currentThread->space && lock->toBeDeleted == true){
         DestroyLock_Syscall(i);
       }
     }
-
+  }
     processTable->Remove(processID);
     delete process;
   }
