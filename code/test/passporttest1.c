@@ -157,6 +157,7 @@ int findLine(char type, bool isSenator, int customer) {
 
     /* Picking a line */
     Acquire(AppClerkLineLock);
+    Printf("TEST_1: Customer %d has acquired ApplicationClerk's line lock\n", sizeof("TEST_1: Customer %d has acquired ApplicationClerk's line lock\n"), customer);
     for(i = 0; i < NUM_APPCLERKS; i++) {
       if(queue_size(&AppClerks[i].line) < line_size) {
         line_size = queue_size(&AppClerks[i].line);
@@ -1117,13 +1118,18 @@ void fork() {
   for (i = 0; i < NUM_CUSTOMERS; ++i) {
     Fork(startCustomer, "customer", sizeof("customer"));
   }
-  Fork(startManager, "manager", sizeof("manager"));
 }
 
 int main() {
   Write(" TEST_1: Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
 \n", sizeof(" TEST_1: Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
 \n"), ConsoleOutput);
+  Printf("Number of Customers = %d\n", sizeof("Number of Customers = %d\n"), NUM_CUSTOMERS);
+  Printf("Number of ApplicationClerks = %d\n", sizeof("Number of ApplicationClerks = %d\n"), NUM_APPCLERKS);
+  Printf("Number of PictureClerks = %d\n", sizeof("Number of PictureClerks = %d\n"), NUM_PICCLERKS);
+  Printf("Number of Cashiers = %d\n", sizeof("Number of Cashiers = %d\n"), NUM_CASHIERS);
+  Write("Number of Senators = 0\n\n", sizeof("Number of Senators = 0"), ConsoleOutput);
+
   init();
   fork();
 }
