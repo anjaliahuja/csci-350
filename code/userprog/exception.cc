@@ -947,12 +947,12 @@ void populateTLB() {
   int pageIndex = va/NumPhysPages;
 
   // copy page table data into TLB
-  tlb[TLB_INDEX].virtualPage = currentThread->space->pageTable[pageIndex].virtualPage;
-  tlb[TLB_INDEX].physicalPage = currentThread->space->pageTable[pageIndex].physicalPage;
-  tlb[TLB_INDEX].valid = currentThread->space->pageTable[pageIndex].valid;
-  tlb[TLB_INDEX].readOnly = currentThread->space->pageTable[pageIndex].readOnly;
-  tlb[TLB_INDEX].use = currentThread->space->pageTable[pageIndex].use;
-  tlb[TLB_INDEX].dirty = currentThread->space->pageTable[pageIndex].dirty;
+  machine->tlb[TLB_INDEX].virtualPage = currentThread->space->pageTable[pageIndex].virtualPage;
+  machine->tlb[TLB_INDEX].physicalPage = currentThread->space->pageTable[pageIndex].physicalPage;
+  machine->tlb[TLB_INDEX].valid = currentThread->space->pageTable[pageIndex].valid;
+  machine->tlb[TLB_INDEX].readOnly = currentThread->space->pageTable[pageIndex].readOnly;
+  machine->tlb[TLB_INDEX].use = currentThread->space->pageTable[pageIndex].use;
+  machine->tlb[TLB_INDEX].dirty = currentThread->space->pageTable[pageIndex].dirty;
 
   // TLB treated as a circular queue
   TLB_INDEX = (TLB_INDEX+1)%TLBSize;
@@ -1062,9 +1062,6 @@ void ExceptionHandler(ExceptionType which) {
         break;
 
   }
-  else if (which == PageFaultException) {
-    populateTLB();
-  }
 
   // Put in the return value and increment the PC
   machine->WriteRegister(2,rv);
@@ -1072,7 +1069,10 @@ void ExceptionHandler(ExceptionType which) {
   machine->WriteRegister(PCReg,machine->ReadRegister(NextPCReg));
   machine->WriteRegister(NextPCReg,machine->ReadRegister(PCReg)+4);
   return;
-    } else {
+    } 
+  else if (which == PageFaultException) {
+    populateTLB();
+  } else {
       cout<<"Unexpected user mode exception - which:"<<which<<"  type:"<< type<<endl;
       interrupt->Halt();
     }
