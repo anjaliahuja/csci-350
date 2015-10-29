@@ -235,7 +235,18 @@ AddrSpace::InitRegisters()
 //----------------------------------------------------------------------
 
 void AddrSpace::SaveState() 
-{}
+{   
+  // Disable interrupts.
+  IntStatus oldLevel = interrupt->SetLevel(IntOff); 
+
+  // On context switch set all valid bits to false
+  for (int i = 0; i < TLBSize; i++) {
+    machine->tlb[i].valid = false;
+  }
+
+  //Restore interrupts.
+  (void) interrupt->SetLevel(oldLevel);
+}
 
 //----------------------------------------------------------------------
 // AddrSpace::RestoreState
@@ -247,7 +258,7 @@ void AddrSpace::SaveState()
 
 void AddrSpace::RestoreState() 
 {
-    machine->pageTable = pageTable;
+    //machine->pageTable = pageTable;
     machine->pageTableSize = numPages;
 }
 
@@ -276,7 +287,7 @@ int* AddrSpace::AllocateStack(){
             pageTable[i].readOnly = FALSE;
         }
 
-        machine->pageTable = pageTable;
+        //machine->pageTable = pageTable;
 
         delete oldPageTable;
 

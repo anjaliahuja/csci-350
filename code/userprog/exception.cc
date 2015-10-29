@@ -29,6 +29,8 @@
 
 using namespace std;
 
+int TLB_INDEX = 0;
+
 int copyin(unsigned int vaddr, int len, char *buf) {
     // Copy len bytes from the current thread's virtual address vaddr.
     // Return the number of bytes so read, or -1 if an error occors.
@@ -930,8 +932,34 @@ void Printf_Syscall(unsigned int vaddr, int len, int number){
   delete [] string;
 }
 
+/*
+PROJECT 3
+*/
 
-//Implementation for CVs
+void populateTLB() {
+  // Disable interrupts.
+  IntStatus oldLevel = interrupt->SetLevel(IntOff); 
+
+  // find needed virtual address 
+  int va = machine->ReadRegister(39);
+
+  // find page table index
+  int pageIndex = va/NumPhysPages;
+
+  // copy page table data into TLB
+  tlb[TLB_INDEX].virtualPage = currentThread->space->pageTable[pageIndex].virtualPage;
+  tlb[TLB_INDEX].physicalPage = currentThread->space->pageTable[pageIndex].physicalPage;
+  tlb[TLB_INDEX].valid = currentThread->space->pageTable[pageIndex].valid;
+  tlb[TLB_INDEX].readOnly = currentThread->space->pageTable[pageIndex].readOnly;
+  tlb[TLB_INDEX].use = currentThread->space->pageTable[pageIndex].use;
+  tlb[TLB_INDEX].dirty = currentThread->space->pageTable[pageIndex].dirty;
+
+  // TLB treated as a circular queue
+  TLB_INDEX = (TLB_INDEX+1)%TLBSize;
+
+  //Restore interrupts.
+  (void) interrupt->SetLevel(oldLevel);
+}
 
 
 void ExceptionHandler(ExceptionType which) {
@@ -1033,6 +1061,9 @@ void ExceptionHandler(ExceptionType which) {
         Printf_Syscall(machine->ReadRegister(4), machine->ReadRegister(5), machine->ReadRegister(6));
         break;
 
+  }
+  else if (which == PageFaultException) {
+    populateTLB();
   }
 
   // Put in the return value and increment the PC
