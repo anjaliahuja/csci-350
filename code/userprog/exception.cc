@@ -944,7 +944,7 @@ void populateTLB() {
   int va = machine->ReadRegister(39);
 
   // find page table index
-  int pageIndex = va/NumPhysPages;
+  int pageIndex = va/PageSize;
 
   // copy page table data into TLB
   machine->tlb[TLB_INDEX].virtualPage = currentThread->space->pageTable[pageIndex].virtualPage;
