@@ -81,6 +81,12 @@ struct kernelProcess{
 
 };
 
+struct InvertedPageTable : public TranslationEntry {
+	AddrSpace* addressSpace;
+};
+
+extern InvertedPageTable* ipt;
+
 #endif
 
 #ifdef FILESYS_NEEDED 		// FILESYS or FILESYS_STUB 

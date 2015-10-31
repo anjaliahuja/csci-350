@@ -817,6 +817,7 @@ void Exit_Syscall(int status){
     for(int i = 0; i < 8; i++){
       bitMap->Clear(currentThread->space->pageTable[pageNum].physicalPage);
       currentThread->space->pageTable[pageNum].valid = FALSE;
+      ipt[currentThread->space->pageTable[pageNum].physicalPage].valid = FALSE;
       pageNum--;
     }
     availMem->Release(); 
@@ -832,6 +833,7 @@ void Exit_Syscall(int status){
       if(currentThread->space->pageTable[i].valid){
         bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
         currentThread->space->pageTable[i].valid = FALSE;
+        ipt[currentThread->space->pageTable[i].physicalPage].valid = FALSE;
       }
     }
     availMem->Release();
@@ -851,6 +853,7 @@ void Exit_Syscall(int status){
       if(currentThread->space->pageTable[i].valid){
         bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
         currentThread->space->pageTable[i].valid= FALSE;
+        ipt[currentThread->space->pageTable[i].physicalPage].valid = FALSE;
       }
     }
     availMem->Release();
@@ -945,15 +948,30 @@ void populateTLB() {
 
   // find page table index
   int pageIndex = va/PageSize;
-
-  // copy page table data into TLB
+/*
+  // Step 1: copy page table data into TLB
   machine->tlb[TLB_INDEX].virtualPage = currentThread->space->pageTable[pageIndex].virtualPage;
   machine->tlb[TLB_INDEX].physicalPage = currentThread->space->pageTable[pageIndex].physicalPage;
   machine->tlb[TLB_INDEX].valid = currentThread->space->pageTable[pageIndex].valid;
   machine->tlb[TLB_INDEX].readOnly = currentThread->space->pageTable[pageIndex].readOnly;
   machine->tlb[TLB_INDEX].use = currentThread->space->pageTable[pageIndex].use;
   machine->tlb[TLB_INDEX].dirty = currentThread->space->pageTable[pageIndex].dirty;
+*/
 
+  // Step 2: Must search the IPT
+  // 3 values to match: VPN, valid bit true, AddrSpace* or PID
+  for (int i = 0; i < NumPhysPages; i++) {
+    if (pageIndex == ipt[i].virtualPage &&
+        ipt[i].valid &&
+        currentThread->space == ipt[i].addressSpace) {
+      machine->tlb[TLB_INDEX].virtualPage = ipt[i].virtualPage;
+      machine->tlb[TLB_INDEX].physicalPage = ipt[i].physicalPage;
+      machine->tlb[TLB_INDEX].valid = ipt[i].valid;
+      machine->tlb[TLB_INDEX].readOnly = ipt[i].readOnly;
+      machine->tlb[TLB_INDEX].use = ipt[i].use;
+      machine->tlb[TLB_INDEX].dirty = ipt[i].dirty;
+    }
+  }
   // TLB treated as a circular queue
   TLB_INDEX = (TLB_INDEX+1)%TLBSize;
 

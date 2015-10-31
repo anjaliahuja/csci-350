@@ -145,13 +145,22 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
     pageTable = new TranslationEntry[numPages];
     for (i = 0; i < numPages; i++) {
     pageTable[i].virtualPage = i;   // for now, virtual page # = phys page #
-    pageTable[i].physicalPage = bitMap->Find();
+    int physPage = bitMap->Find();
+    pageTable[i].physicalPage = physPage;
     pageTable[i].valid = TRUE;
     pageTable[i].use = FALSE;
     pageTable[i].dirty = FALSE;
     pageTable[i].readOnly = FALSE;  // if the code segment was entirely on 
                     // a separate page, we could set its 
                     // pages to be read-only
+
+    ipt[physPage].virtualPage = i;
+    ipt[physPage].physicalPage = physPage;
+    ipt[physPage].valid = TRUE;
+    ipt[physPage].use = FALSE;
+    ipt[physPage].dirty = FALSE;
+    ipt[physPage].readOnly = FALSE;
+    ipt[physPage].addressSpace = this;
     }
     
 
@@ -280,11 +289,20 @@ int* AddrSpace::AllocateStack(){
 
         for(i; i<numPages; i++){
             pageTable[i].virtualPage = i;
-            pageTable[i].physicalPage = bitMap->Find();
+            int physPage = bitMap->Find();
+            pageTable[i].physicalPage = physPage;
             pageTable[i].valid = TRUE;
             pageTable[i].use = FALSE;
             pageTable[i].dirty = FALSE;
             pageTable[i].readOnly = FALSE;
+
+            ipt[physPage].virtualPage = i;
+            ipt[physPage].physicalPage = physPage;
+            ipt[physPage].valid = TRUE;
+            ipt[physPage].use = FALSE;
+            ipt[physPage].dirty = FALSE;
+            ipt[physPage].readOnly = FALSE;
+            ipt[physPage].addressSpace = this;
         }
 
         //machine->pageTable = pageTable;

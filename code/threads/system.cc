@@ -43,7 +43,7 @@ Lock* lockTableLock;
 Table* CVTable;
 Lock* CVTableLock;
 
-
+InvertedPageTable* ipt;
 
 #endif
 
@@ -176,6 +176,8 @@ Initialize(int argc, char **argv)
 
    processTable = new Table(NumProcesses);
    processLock = new Lock("ProcessLock");
+
+    ipt = new InvertedPageTable[NumPhysPages];
 
 #endif
 
