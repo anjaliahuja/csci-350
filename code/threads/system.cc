@@ -44,6 +44,7 @@ Table* CVTable;
 Lock* CVTableLock;
 
 InvertedPageTable* ipt;
+PageTable* pt;
 
 #endif
 

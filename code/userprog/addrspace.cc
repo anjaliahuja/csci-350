@@ -124,11 +124,13 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
        NoffHeader noffH;
     unsigned int i, size;
 
+    this->executable = executable;
+
     // Don't allocate the input or output to disk files
     fileTable.Put(0);
     fileTable.Put(0);
 
-    executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
+    //executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
     if ((noffH.noffMagic != NOFFMAGIC) && 
         (WordToHost(noffH.noffMagic) == NOFFMAGIC))
         SwapHeader(&noffH);
@@ -142,28 +144,30 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
 
     ASSERT(numPages <= NumPhysPages);       
 // first, set up the translation 
-    pageTable = new TranslationEntry[numPages];
-    for (i = 0; i < numPages; i++) {
-    pageTable[i].virtualPage = i;   // for now, virtual page # = phys page #
-    int physPage = bitMap->Find();
-    pageTable[i].physicalPage = physPage;
-    pageTable[i].valid = TRUE;
-    pageTable[i].use = FALSE;
-    pageTable[i].dirty = FALSE;
-    pageTable[i].readOnly = FALSE;  // if the code segment was entirely on 
-                    // a separate page, we could set its 
-                    // pages to be read-only
+    pageTable = new PageTable[numPages];
+    for (ipt = 0; i < numPages; i++) {
+        pageTable[i].virtualPage = i;   // for now, virtual page # = phys page #
+        //int physPage = bitMap->Find();
+        //pageTable[i].physicalPage = physPage;
+        pageTable[i].valid = FALSE;
+        pageTable[i].use = FALSE;
+        pageTable[i].dirty = FALSE;
+        pageTable[i].readOnly = FALSE;  // if the code segment was entirely on 
+                        // a separate page, we could set its 
+                        // pages to be read-only
+        pageTable[i].byteOffset = 40 + i*PageSize;;
+        pageTable[i].location = executable;
 
-    ipt[physPage].virtualPage = i;
-    ipt[physPage].physicalPage = physPage;
-    ipt[physPage].valid = TRUE;
-    ipt[physPage].use = FALSE;
-    ipt[physPage].dirty = FALSE;
-    ipt[physPage].readOnly = FALSE;
-    ipt[physPage].addressSpace = this;
+        ipt[physPage].virtualPage = i;
+        //ipt[physPage].physicalPage = physPage;
+        ipt[physPage].valid = TRUE;
+        ipt[physPage].use = FALSE;
+        ipt[physPage].dirty = FALSE;
+        ipt[physPage].readOnly = FALSE;
+        ipt[physPage].addressSpace = this;
     }
     
-
+/*
     for(i=0; i<numPages; i++){
         executable->ReadAt(
             &(machine->mainMemory[pageTable[i].physicalPage * PageSize]),
@@ -176,7 +180,7 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
     //bzero(machine->mainMemory, size);
 
 // then, copy in the code and data segments into memory
-  /*  if (noffH.code.size > 0) {
+   if (noffH.code.size > 0) {
         DEBUG('a', "Initializing code segment, at 0x%x, size %d\n", 
             noffH.code.virtualAddr, noffH.code.size);
         executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),
@@ -289,15 +293,15 @@ int* AddrSpace::AllocateStack(){
 
         for(i; i<numPages; i++){
             pageTable[i].virtualPage = i;
-            int physPage = bitMap->Find();
-            pageTable[i].physicalPage = physPage;
+            //int physPage = bitMap->Find();
+            //pageTable[i].physicalPage = physPage;
             pageTable[i].valid = TRUE;
             pageTable[i].use = FALSE;
             pageTable[i].dirty = FALSE;
             pageTable[i].readOnly = FALSE;
 
             ipt[physPage].virtualPage = i;
-            ipt[physPage].physicalPage = physPage;
+            //ipt[physPage].physicalPage = physPage;
             ipt[physPage].valid = TRUE;
             ipt[physPage].use = FALSE;
             ipt[physPage].dirty = FALSE;

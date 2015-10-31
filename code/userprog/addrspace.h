@@ -22,6 +22,11 @@
 #define MaxOpenFiles 256
 #define MaxChildSpaces 256
 
+struct PageTable : public TranslationEntry {
+    int byteOffset;
+    OpenFile* location;
+};
+
 class AddrSpace {
   public:
     AddrSpace(OpenFile *executable);	// Create an address space,
@@ -36,7 +41,7 @@ class AddrSpace {
     void RestoreState();		// info on a context switch
     Table fileTable;			// Table of openfiles
 
-    TranslationEntry *pageTable;	// Assume linear page table translation
+    PageTable *pageTable;	// Assume linear page table translation
 					// for now!
 					// address space
 
@@ -48,6 +53,6 @@ class AddrSpace {
     int* AllocateStack(); 
     unsigned int numPages;      // Number of pages in the virtual 
 
-};
+    OpenFile* executable; // make executable an instance variable of address space
 
 #endif // ADDRSPACE_H
