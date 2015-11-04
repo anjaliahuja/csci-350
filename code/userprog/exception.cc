@@ -957,6 +957,8 @@ int handleIPTMiss( int vpn ) {
   // Update pagetable ppn & valid bit
   currentThread->space->pageTable[vpn].physicalPage = ppn;
   currentThread->space->pageTable[vpn].valid = TRUE;
+
+  return ppn;
 }
 
 void populateTLB() {

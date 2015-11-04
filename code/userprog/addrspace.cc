@@ -125,7 +125,7 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
     unsigned int i, size;
 
     this->executable = executable;
-
+    
     // Don't allocate the input or output to disk files
     fileTable.Put(0);
     fileTable.Put(0);
@@ -155,7 +155,7 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
         pageTable[i].readOnly = FALSE;  // if the code segment was entirely on 
                         // a separate page, we could set its 
                         // pages to be read-only
-        pageTable[i].byteOffset = 0;
+        pageTable[i].byteOffset = noffH.code.inFileAddr + i*PageSize;;
         pageTable[i].location = executable;
 
         ipt[physPage].virtualPage = i;
