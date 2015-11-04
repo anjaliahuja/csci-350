@@ -55,4 +55,6 @@ class AddrSpace {
 
     OpenFile* executable; // make executable an instance variable of address space
 
+};
+
 #endif // ADDRSPACE_H

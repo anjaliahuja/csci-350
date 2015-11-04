@@ -125,12 +125,12 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
     unsigned int i, size;
 
     this->executable = executable;
-    
+
     // Don't allocate the input or output to disk files
     fileTable.Put(0);
     fileTable.Put(0);
 
-    //executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
+    executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
     if ((noffH.noffMagic != NOFFMAGIC) && 
         (WordToHost(noffH.noffMagic) == NOFFMAGIC))
         SwapHeader(&noffH);
@@ -155,16 +155,16 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
         pageTable[i].readOnly = FALSE;  // if the code segment was entirely on 
                         // a separate page, we could set its 
                         // pages to be read-only
-        pageTable[i].byteOffset = noffH.code.inFileAddr + i*PageSize;;
+        pageTable[i].byteOffset = noffH.code.inFileAddr + i*PageSize;
         pageTable[i].location = executable;
 
-        ipt[physPage].virtualPage = i;
-        //ipt[physPage].physicalPage = physPage;
+        /*ipt[physPage].virtualPage = i;
+        ipt[physPage].physicalPage = physPage;
         ipt[physPage].valid = TRUE;
         ipt[physPage].use = FALSE;
         ipt[physPage].dirty = FALSE;
         ipt[physPage].readOnly = FALSE;
-        ipt[physPage].addressSpace = this;
+        ipt[physPage].addressSpace = this;*/
     }
     
 /*
@@ -278,7 +278,7 @@ void AddrSpace::RestoreState()
 int* AddrSpace::AllocateStack(){
     availMem->Acquire();
         TranslationEntry* oldPageTable = pageTable; //make copy of old page table 
-        pageTable = new TranslationEntry[numPages + 8]; // make a new page table with 8 more pages
+        pageTable = new PageTable[numPages + 8]; // make a new page table with 8 more pages
         unsigned int i;
         for(i = 0; i<numPages; i++){
             pageTable[i].virtualPage = oldPageTable[i].virtualPage;   // for now, virtual page # = phys page #
@@ -300,13 +300,13 @@ int* AddrSpace::AllocateStack(){
             pageTable[i].dirty = FALSE;
             pageTable[i].readOnly = FALSE;
 
-            ipt[physPage].virtualPage = i;
-            //ipt[physPage].physicalPage = physPage;
+            /*ipt[physPage].virtualPage = i;
+            ipt[physPage].physicalPage = physPage;
             ipt[physPage].valid = TRUE;
             ipt[physPage].use = FALSE;
             ipt[physPage].dirty = FALSE;
             ipt[physPage].readOnly = FALSE;
-            ipt[physPage].addressSpace = this;
+            ipt[physPage].addressSpace = this;*/
         }
 
         //machine->pageTable = pageTable;

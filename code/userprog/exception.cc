@@ -941,7 +941,7 @@ PROJECT 3
 
 int handleIPTMiss( int vpn ) {
   // Allocate 1 page of memory
-  int ppn = bitMap.find();
+  int ppn = bitMap->Find();
 
   // Read the page from executable into memory – if needed
 
@@ -952,7 +952,7 @@ int handleIPTMiss( int vpn ) {
   ipt[ppn].readOnly = FALSE;
   ipt[ppn].use = FALSE;
   ipt[ppn].dirty = FALSE;
-  ipt[ppn].space = currentThread->space;
+  ipt[ppn].addressSpace = currentThread->space;
 
   // Update pagetable ppn & valid bit
   currentThread->space->pageTable[vpn].physicalPage = ppn;
@@ -984,8 +984,8 @@ void populateTLB() {
   // 3 values to match: VPN, valid bit true, AddrSpace* or PID
   int ppn = -1;
   for (int i = 0; i < NumPhysPages; i++) {
-    if (pageIndex == ipt[i].virtualPage &&
-        ipt[i].valid &&
+    if (ipt[i].valid &&
+        pageIndex == ipt[i].virtualPage &&
         currentThread->space == ipt[i].addressSpace) {
       ppn = i;
       break;
