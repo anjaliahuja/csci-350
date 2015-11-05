@@ -15,6 +15,7 @@
 #include "interrupt.h"
 #include "stats.h"
 #include "timer.h"
+#include "list.h"
 
 // Initialization and cleanup routines
 extern void Initialize(int argc, char **argv); 	// Initialization,
@@ -86,6 +87,8 @@ struct InvertedPageTable : public TranslationEntry {
 };
 
 extern InvertedPageTable* ipt;
+extern int pageReplacementPolicy;
+extern List* iptQueue;
 
 #endif
 

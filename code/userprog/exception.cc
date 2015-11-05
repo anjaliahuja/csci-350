@@ -944,7 +944,7 @@ int handleMemoryFull() {
   if (pageReplacementPolicy == 0) { // random
     ppn = rand() % NumPhysPages;
   } else { // FIFO
-
+    ppn = (int) iptQueue->Remove();
   }
 
   return ppn;
@@ -974,6 +974,10 @@ int handleIPTMiss( int vpn ) {
   ipt[ppn].use = FALSE;
   ipt[ppn].dirty = FALSE;
   ipt[ppn].addressSpace = currentThread->space;
+
+  if (pageReplacementPolicy == 1) {
+    iptQueue->Append((void*) ppn);
+  }
 
   // Update pagetable ppn & valid bit
   currentThread->space->pageTable[vpn].physicalPage = ppn;
