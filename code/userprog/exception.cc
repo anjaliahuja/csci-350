@@ -772,7 +772,7 @@ void Exec_Syscall(unsigned int vaddr, int len){
   }
   t->Fork((VoidFunctionPtr)internal_exec,0);  
 
-  delete exec;
+  //delete exec;
 }
 
 
@@ -939,6 +939,34 @@ void Printf_Syscall(unsigned int vaddr, int len, int number){
 PROJECT 3
 */
 
+int handleIPTMiss( int vpn ) {
+  // Allocate 1 page of memory
+  int ppn = bitMap->Find();
+
+  // Read the page from executable into memory – if needed
+  if (currentThread->space->pageTable[vpn].byteOffset != -1) {
+      currentThread->space->pageTable[vpn].location->ReadAt(
+        &(machine->mainMemory[ppn*PageSize]),
+        PageSize,
+        currentThread->space->pageTable[vpn].byteOffset);
+  }
+
+  // Update IPT
+  ipt[ppn].virtualPage = vpn;
+  ipt[ppn].physicalPage = ppn;
+  ipt[ppn].valid = TRUE;
+  ipt[ppn].readOnly = FALSE;
+  ipt[ppn].use = FALSE;
+  ipt[ppn].dirty = FALSE;
+  ipt[ppn].addressSpace = currentThread->space;
+
+  // Update pagetable ppn & valid bit
+  currentThread->space->pageTable[vpn].physicalPage = ppn;
+  currentThread->space->pageTable[vpn].valid = TRUE;
+
+  return ppn;
+}
+
 void populateTLB() {
   // Disable interrupts.
   IntStatus oldLevel = interrupt->SetLevel(IntOff); 
@@ -960,18 +988,26 @@ void populateTLB() {
 
   // Step 2: Must search the IPT
   // 3 values to match: VPN, valid bit true, AddrSpace* or PID
+  int ppn = -1;
   for (int i = 0; i < NumPhysPages; i++) {
     if (pageIndex == ipt[i].virtualPage &&
         ipt[i].valid &&
         currentThread->space == ipt[i].addressSpace) {
-      machine->tlb[TLB_INDEX].virtualPage = ipt[i].virtualPage;
-      machine->tlb[TLB_INDEX].physicalPage = ipt[i].physicalPage;
-      machine->tlb[TLB_INDEX].valid = ipt[i].valid;
-      machine->tlb[TLB_INDEX].readOnly = ipt[i].readOnly;
-      machine->tlb[TLB_INDEX].use = ipt[i].use;
-      machine->tlb[TLB_INDEX].dirty = ipt[i].dirty;
+      ppn = i;
+      break;
     }
   }
+
+  if (ppn == -1) {
+    ppn = handleIPTMiss(pageIndex);
+  } 
+
+  machine->tlb[TLB_INDEX].virtualPage = ipt[ppn].virtualPage;
+  machine->tlb[TLB_INDEX].physicalPage = ipt[ppn].physicalPage;
+  machine->tlb[TLB_INDEX].valid = ipt[ppn].valid;
+  machine->tlb[TLB_INDEX].readOnly = ipt[ppn].readOnly;
+  machine->tlb[TLB_INDEX].use = ipt[ppn].use;
+  machine->tlb[TLB_INDEX].dirty = ipt[ppn].dirty;
   // TLB treated as a circular queue
   TLB_INDEX = (TLB_INDEX+1)%TLBSize;
 
