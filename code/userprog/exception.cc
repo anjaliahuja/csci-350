@@ -939,9 +939,24 @@ void Printf_Syscall(unsigned int vaddr, int len, int number){
 PROJECT 3
 */
 
+int handleMemoryFull() {
+  int ppn = -1;
+  if (pageReplacementPolicy == 0) { // random
+    ppn = rand() % NumPhysPages;
+  } else { // FIFO
+
+  }
+
+  return ppn;
+}
+
 int handleIPTMiss( int vpn ) {
   // Allocate 1 page of memory
   int ppn = bitMap->Find();
+
+  if (ppn == -1) {
+    ppn = handleMemoryFull();
+  }
 
   // Read the page from executable into memory – if needed
   if (currentThread->space->pageTable[vpn].byteOffset != -1) {

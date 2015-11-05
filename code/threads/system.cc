@@ -45,6 +45,8 @@ Lock* CVTableLock;
 
 InvertedPageTable* ipt;
 
+int pageReplacementPolicy; // 0 is random, 1 is FIFO
+
 #endif
 
 #ifdef NETWORK
@@ -127,6 +129,18 @@ Initialize(int argc, char **argv)
 #ifdef USER_PROGRAM
 	if (!strcmp(*argv, "-s"))
 	    debugUserProg = TRUE;
+    if (!strcmp(*argv, "-P")) {
+        ASSERT(argc > 1);
+        pageReplacementPolicy = 1;
+        if(!strcmp(*(argv+1), "RAND") {
+            pageReplacementPolicy = 0;
+        } else if(!strcmp(*(argv+1), "FIFO"){
+            pageReplacementPolicy = 1;
+        } else {
+            printf("Did not select valid page replacement policy.  Defaulting to FIFO");
+        }
+        argCount = 2;
+    }
 #endif
 #ifdef FILESYS_NEEDED
 	if (!strcmp(*argv, "-f"))
