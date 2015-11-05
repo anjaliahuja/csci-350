@@ -145,7 +145,7 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
     ASSERT(numPages <= NumPhysPages);       
 // first, set up the translation 
     pageTable = new PageTable[numPages];
-    for (ipt = 0; i < numPages; i++) {
+    for (i = 0; i < numPages; i++) {
         pageTable[i].virtualPage = i;   // for now, virtual page # = phys page #
         //int physPage = bitMap->Find();
         //pageTable[i].physicalPage = physPage;
@@ -277,7 +277,7 @@ void AddrSpace::RestoreState()
 
 int* AddrSpace::AllocateStack(){
     availMem->Acquire();
-        TranslationEntry* oldPageTable = pageTable; //make copy of old page table 
+        PageTable* oldPageTable = pageTable; //make copy of old page table 
         pageTable = new PageTable[numPages + 8]; // make a new page table with 8 more pages
         unsigned int i;
         for(i = 0; i<numPages; i++){
@@ -287,6 +287,8 @@ int* AddrSpace::AllocateStack(){
             pageTable[i].use = oldPageTable[i].use;
             pageTable[i].dirty = oldPageTable[i].dirty;
             pageTable[i].readOnly = oldPageTable[i].readOnly; 
+            pageTable[i].byteOffset = oldPageTable[i].byteOffset;
+            pageTable[i].location = oldPageTable[i].location;
         }//copy all values of old page table to new page table
 
         numPages += 8; //add 8 new pages
@@ -295,10 +297,12 @@ int* AddrSpace::AllocateStack(){
             pageTable[i].virtualPage = i;
             //int physPage = bitMap->Find();
             //pageTable[i].physicalPage = physPage;
-            pageTable[i].valid = TRUE;
+            pageTable[i].valid = FALSE;//TRUE;
             pageTable[i].use = FALSE;
             pageTable[i].dirty = FALSE;
             pageTable[i].readOnly = FALSE;
+            pageTable[i].byteOffset = -1;
+            pageTable[i].location = NULL;
 
             /*ipt[physPage].virtualPage = i;
             ipt[physPage].physicalPage = physPage;

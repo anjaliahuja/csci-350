@@ -944,6 +944,12 @@ int handleIPTMiss( int vpn ) {
   int ppn = bitMap->Find();
 
   // Read the page from executable into memory – if needed
+  if (currentThread->space->pageTable[vpn].byteOffset != -1) {
+      currentThread->space->pageTable[vpn].location->ReadAt(
+        &(machine->mainMemory[ppn*PageSize]),
+        PageSize,
+        currentThread->space->pageTable[vpn].byteOffset);
+  }
 
   // Update IPT
   ipt[ppn].virtualPage = vpn;
@@ -984,8 +990,8 @@ void populateTLB() {
   // 3 values to match: VPN, valid bit true, AddrSpace* or PID
   int ppn = -1;
   for (int i = 0; i < NumPhysPages; i++) {
-    if (ipt[i].valid &&
-        pageIndex == ipt[i].virtualPage &&
+    if (pageIndex == ipt[i].virtualPage &&
+        ipt[i].valid &&
         currentThread->space == ipt[i].addressSpace) {
       ppn = i;
       break;
