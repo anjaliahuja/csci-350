@@ -51,6 +51,18 @@ List* iptQueue;
 
 #endif
 
+#ifdef USE_TLB 
+int currentTLB;
+InvertedPageTable* ipt;
+int pageReplacementPolicy; // 0 is random, 1 is FIFO
+List* iptQueue; //for FIFO 
+Lock* iptLock; 
+OpenFile* swapfile;
+BitMap* swapMap; 
+#endif
+
+
+
 #ifdef NETWORK
 PostOffice *postOffice;
 #endif
@@ -193,9 +205,24 @@ Initialize(int argc, char **argv)
    processTable = new Table(NumProcesses);
    processLock = new Lock("ProcessLock");
 
-    ipt = new InvertedPageTable[NumPhysPages];
-    iptQueue = new List;
+   
     
+
+
+#ifdef USE_TLB
+    currentTLB = 0;
+    ipt = new InvertedPageTable[NumPhysPages];
+    iptQueue = new List();
+    iptLock = new Lock("IPTLock");
+
+    //Swapfile
+    swapfile = fileSystem->Open("../vm/swapfile");
+    if(swapfile == NULL){
+        printf("Unable to open swapfile \n");
+    }
+    swapMap = new BitMap(SwapSize);
+
+#endif
 #endif
 
 #ifdef FILESYS

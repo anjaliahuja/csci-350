@@ -82,13 +82,21 @@ struct kernelProcess{
 
 };
 
+#ifdef USE_TLB
 struct InvertedPageTable : public TranslationEntry {
 	AddrSpace* addressSpace;
 };
 
+extern int currentTLB;
 extern InvertedPageTable* ipt;
 extern int pageReplacementPolicy;
 extern List* iptQueue;
+extern Lock* iptLock;
+
+#include "filesys.h"
+extern OpenFile* swapfile;
+#dfine SwapSize 5000; 
+extern BitMap* swapMap; 
 
 #endif
 

@@ -941,13 +941,51 @@ PROJECT 3
 
 int handleMemoryFull() {
   int ppn = -1;
+
+  iptLock->Acquire();
   if (pageReplacementPolicy == 0) { // random
     ppn = rand() % NumPhysPages;
   } else { // FIFO
-    ppn = (int) iptQueue->Remove();
+    int* temp = (int*) iptQueue->Remove();
+    ppn = *temp;
+    delete temp; 
   }
 
-  return ppn;
+  iptLock->Release(); 
+
+  //check if ppn is in TLB, if it is, must check dirty bit, propogate, invalidate 
+  for (int i =0; i<TLBSize; i++){
+    if(ppn == machine->tlb[i].physicalPage && machine->tlb[i].valid){
+      ipt[ppn].dirty == machine->tlb[i].dirty;
+      machine->tlb[i].valid = FALSE;
+      break;
+    }
+  }
+
+  //check if bit is dirty, if it is, write to swap file 
+  if(ipt[ppn].valid && ipt[ppn].dirty){
+    int swapbit = swapMap->Find(); 
+    if(swapbit == -1){
+      printf("Error, swapfile is full");
+      return -1;
+    }
+
+    //write to swap file
+    swapfile->WriteAt(
+      &(machine->mainMemory[ppn*PageSize]),
+      PageSize,
+      swapbit*PageSize);
+
+    ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].byteOffset = swapbit*PageSize; 
+   ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].type = SWAP;
+   ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].location = swapfile; 
+}
+
+  if(ipt[ppn].valid){
+    ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].valid = FALSE; 
+  }
+    
+    return ppn;
 }
 
 int handleIPTMiss( int vpn ) {
@@ -958,13 +996,6 @@ int handleIPTMiss( int vpn ) {
     ppn = handleMemoryFull();
   }
 
-  // Read the page from executable into memory – if needed
-  if (currentThread->space->pageTable[vpn].byteOffset != -1) {
-      currentThread->space->pageTable[vpn].location->ReadAt(
-        &(machine->mainMemory[ppn*PageSize]),
-        PageSize,
-        currentThread->space->pageTable[vpn].byteOffset);
-  }
 
   // Update IPT
   ipt[ppn].virtualPage = vpn;
@@ -977,6 +1008,18 @@ int handleIPTMiss( int vpn ) {
 
   if (pageReplacementPolicy == 1) {
     iptQueue->Append((void*) ppn);
+  }
+
+   // Read the page from executable into memory – if needed
+  if (currentThread->space->pageTable[vpn].byteOffset != -1) {
+      currentThread->space->pageTable[vpn].location->ReadAt(
+        &(machine->mainMemory[ppn*PageSize]),
+        PageSize,
+        currentThread->space->pageTable[vpn].byteOffset);
+      if(currentThread->space->pageTable[vpn].type == SWAP){
+        swapMap->Clear(currentThread->space->pageTable[vpn].byteOffset/PageSize);
+        ipt[ppn].dirty = TRUE; 
+      }
   }
 
   // Update pagetable ppn & valid bit
