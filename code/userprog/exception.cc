@@ -1,4 +1,3 @@
-//testing commit
 
 // exception.cc 
 //  Entry point into the Nachos kernel from user programs.
@@ -28,11 +27,43 @@
 #include "syscall.h"
 #include <stdio.h>
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <vector> 
 
 using namespace std;
 
 int TLB_INDEX = 0;
 
+
+
+/*Networking stuff */
+void initNetwork(
+  PacketHeader &inPktHder,
+  PacketHeader &outPktHdr,
+
+  MailHeader &inMailHdr,
+  MailHeader &outMailHdr,
+
+  int messageLength
+  ){
+  outPktHdr.to = inPktHdr.from;
+  outPktHdr.from = inPktHdr.to;
+  outMailHdr.to = inMailHdr.from;
+  outMailHdr.from = inMailHdr.to;
+  outMailHdr.length = messageLength+1; 
+}
+
+void sendMessage(
+  PacketHeader &inPktHdr,
+  PacketHeader &outPktHdr,
+  MailHeader &inMailHdr,
+  MailHeader &outMailHdr,
+  std::string msg){
+  
+}
+
+  )
 int copyin(unsigned int vaddr, int len, char *buf) {
     // Copy len bytes from the current thread's virtual address vaddr.
     // Return the number of bytes so read, or -1 if an error occors.

@@ -205,12 +205,6 @@ Initialize(int argc, char **argv)
    processTable = new Table(NumProcesses);
    processLock = new Lock("ProcessLock");
 
-   
-    
-//testing commit
-
-
-#ifdef USE_TLB
     currentTLB = 0;
     ipt = new InvertedPageTable[NumPhysPages];
     iptQueue = new List();
@@ -223,7 +217,6 @@ Initialize(int argc, char **argv)
     }
     swapMap = new BitMap(SwapSize);
 
-#endif
 #endif
 
 #ifdef FILESYS
