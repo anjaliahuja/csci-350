@@ -83,7 +83,8 @@ struct kernelProcess{
 };
 
 #ifdef USE_TLB
-struct InvertedPageTable : public TranslationEntry {
+struct InvertedPageTable : public TranslationEntry//testing commit
+
 	AddrSpace* addressSpace;
 };
 
