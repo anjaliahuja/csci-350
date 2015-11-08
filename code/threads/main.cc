@@ -52,7 +52,10 @@
 
 #include "utility.h"
 #include "system.h"
-
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector> 
 
 // External functions used by this file
 
@@ -77,6 +80,14 @@ extern void Problem2(void), TestSuite(void);
 //	"argv" is an array of strings, one for each command line argument
 //		ex: "nachos -d +" -> argv = {"nachos", "-d", "+"}
 //----------------------------------------------------------------------
+
+#ifdef NETWORK 
+
+Lock* SLock;
+Lock* CVLock;
+Lock* MVLock;
+
+enum ServerState {BUSY, AVAILABLE}; 
 
 int
 main(int argc, char **argv)

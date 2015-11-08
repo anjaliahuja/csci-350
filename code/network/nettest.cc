@@ -30,6 +30,10 @@
 //	4. wait for an acknowledgement from the other machine to our 
 //	    original message
 
+
+
+
+
 void
 MailTest(int farAddr)
 {
@@ -79,4 +83,14 @@ MailTest(int farAddr)
 
     // Then we're done!
     interrupt->Halt();
+}
+
+
+void initNetworkHeaders(
+    PacketHeader &inPktHdr,
+    PacketHeader &outPktHdr,
+    MailHeader &inMailHdr,
+    MailHeader &outMailHdr,
+    int length){
+    
 }
