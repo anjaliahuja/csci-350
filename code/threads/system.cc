@@ -43,14 +43,6 @@ Lock* lockTableLock;
 Table* CVTable;
 Lock* CVTableLock;
 
-InvertedPageTable* ipt;
-
-int pageReplacementPolicy; // 0 is random, 1 is FIFO
-List* iptQueue;
-
-
-#endif
-
 #ifdef USE_TLB 
 int currentTLB;
 InvertedPageTable* ipt;
@@ -60,7 +52,7 @@ Lock* iptLock;
 OpenFile* swapfile;
 BitMap* swapMap; 
 #endif
-
+#endif
 
 
 #ifdef NETWORK
@@ -205,25 +197,17 @@ Initialize(int argc, char **argv)
    processTable = new Table(NumProcesses);
    processLock = new Lock("ProcessLock");
 
-   
-    
-//testing commit
-
-
-#ifdef USE_TLB
     currentTLB = 0;
     ipt = new InvertedPageTable[NumPhysPages];
     iptQueue = new List();
     iptLock = new Lock("IPTLock");
 
-    //Swapfile
+    //swapfile
+    swapMap = new BitMap(SwapSize);
     swapfile = fileSystem->Open("../vm/swapfile");
     if(swapfile == NULL){
         printf("Unable to open swapfile \n");
     }
-    swapMap = new BitMap(SwapSize);
-
-#endif
 #endif
 
 #ifdef FILESYS
