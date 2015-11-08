@@ -1009,7 +1009,9 @@ int handleIPTMiss( int vpn ) {
   ipt[ppn].addressSpace = currentThread->space;
 
   if (pageReplacementPolicy == 1) {
-    iptQueue->Append((void*) ppn);
+    int* temp = new int;
+    *temp = ppn;
+    iptQueue->Append((void*) temp);
   }
 
    // Read the page from executable into memory – if needed

@@ -142,7 +142,7 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
                         // to leave room for the stack
     size = numPages * PageSize;
 
-    ASSERT(numPages <= NumPhysPages);       
+   // ASSERT(numPages <= NumPhysPages);       
 // first, set up the translation 
     pageTable = new PageTable[numPages];
     for (i = 0; i < numPages; i++) {
