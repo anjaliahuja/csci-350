@@ -782,6 +782,7 @@ void Yield_Syscall(){
   currentThread->Yield();
 } 
 void Exit_Syscall(int status){
+  printf("exit sys: %d\n", status);
   processLock->Acquire();
 
   bool lastProcess = false;
@@ -979,24 +980,26 @@ int handleMemoryFull() {
   if (pageReplacementPolicy == 0) { // random
     ppn = rand() % NumPhysPages;
   } else { // FIFO
-    int* temp = (int*) iptQueue->Remove();
-    ppn = *temp;
-    delete temp; 
+    ppn = *(int*) iptQueue->Remove();
   }
-
   iptLock->Release(); 
 
-  //check if ppn is in TLB, if it is, must check dirty bit, propogate, invalidate 
+  //check if ppn is in TLB, if it is, propagate dirty bit and invalidate TLB entry
+
+  // Disable interrupts.
+  IntStatus oldLevel = interrupt->SetLevel(IntOff); 
   for (int i =0; i<TLBSize; i++){
-    if(ppn == machine->tlb[i].physicalPage && machine->tlb[i].valid){
+    if(ppn == machine->tlb[i].physicalPage){
       ipt[ppn].dirty = machine->tlb[i].dirty;
       machine->tlb[i].valid = FALSE;
       break;
     }
   }
+  //Restore interrupts.
+  (void) interrupt->SetLevel(oldLevel);
 
-  //check if bit is dirty, if it is, write to swap file 
-  if(ipt[ppn].valid && ipt[ppn].dirty){
+  // if the page is dirty, it must be copied into the swap file
+  if(ipt[ppn].dirty){
     int swapbit = swapMap->Find(); 
     if(swapbit == -1){
       printf("Error, swapfile is full");
@@ -1009,16 +1012,16 @@ int handleMemoryFull() {
       PageSize,
       swapbit*PageSize);
 
-    ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].byteOffset = swapbit*PageSize; 
-    ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].type = SWAP;
-    ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].location = swapfile; 
+    // update page table for evicted page
+   ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].byteOffset = swapbit*PageSize; 
+   ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].type = SWAP;
+   ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].location = swapfile; 
 }
-
-  if(ipt[ppn].valid){
-    ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].valid = FALSE; 
-  }
-    
-    return ppn;
+  
+  // update page table
+  ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].valid = FALSE;     
+  
+  return ppn;
 }
 
 int handleIPTMiss( int vpn ) {
@@ -1028,7 +1031,6 @@ int handleIPTMiss( int vpn ) {
   if (ppn == -1) {
     ppn = handleMemoryFull();
   }
-
 
   // Update IPT
   ipt[ppn].virtualPage = vpn;
@@ -1065,24 +1067,13 @@ int handleIPTMiss( int vpn ) {
 }
 
 void populateTLB() {
-  // Disable interrupts.
-  IntStatus oldLevel = interrupt->SetLevel(IntOff); 
 
   // find needed virtual address 
   int va = machine->ReadRegister(39);
-  printf("VA: %d\n", va);
+  //printf("VA: %d\n", va);
 
   // find page table index
   int pageIndex = va/PageSize;
-/*
-  // Step 1: copy page table data into TLB
-  machine->tlb[TLB_INDEX].virtualPage = currentThread->space->pageTable[pageIndex].virtualPage;
-  machine->tlb[TLB_INDEX].physicalPage = currentThread->space->pageTable[pageIndex].physicalPage;
-  machine->tlb[TLB_INDEX].valid = currentThread->space->pageTable[pageIndex].valid;
-  machine->tlb[TLB_INDEX].readOnly = currentThread->space->pageTable[pageIndex].readOnly;
-  machine->tlb[TLB_INDEX].use = currentThread->space->pageTable[pageIndex].use;
-  machine->tlb[TLB_INDEX].dirty = currentThread->space->pageTable[pageIndex].dirty;
-*/
 
   // Step 2: Must search the IPT
   // 3 values to match: VPN, valid bit true, AddrSpace* or PID
@@ -1099,6 +1090,14 @@ void populateTLB() {
   if (ppn == -1) {
     ppn = handleIPTMiss(pageIndex);
   } 
+
+  // Disable interrupts.
+  IntStatus oldLevel = interrupt->SetLevel(IntOff); 
+
+  // propogate dirty bit
+  if (machine->tlb[TLB_INDEX].valid) {
+    ipt[machine->tlb[TLB_INDEX].physicalPage].dirty = machine->tlb[TLB_INDEX].dirty;
+  }
 
   machine->tlb[TLB_INDEX].virtualPage = ipt[ppn].virtualPage;
   machine->tlb[TLB_INDEX].physicalPage = ipt[ppn].physicalPage;

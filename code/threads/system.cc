@@ -133,11 +133,11 @@ Initialize(int argc, char **argv)
 	    argCount = 2;
 	}
 #ifdef USER_PROGRAM
+    pageReplacementPolicy = 1;
 	if (!strcmp(*argv, "-s"))
 	    debugUserProg = TRUE;
     if (!strcmp(*argv, "-P")) {
         ASSERT(argc > 1);
-        pageReplacementPolicy = 1;
         if(!strcmp(*(argv+1), "RAND")) {
             pageReplacementPolicy = 0;
         } else if(!strcmp(*(argv+1), "FIFO")) {
