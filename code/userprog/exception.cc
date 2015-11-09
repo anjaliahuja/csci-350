@@ -1023,8 +1023,7 @@ int handleMemoryFull() {
 
 int handleIPTMiss( int vpn ) {
   // Allocate 1 page of memory
-  int ppn = bitMap->Find();
-
+ 
   if (ppn == -1) {
     ppn = handleMemoryFull();
   }
