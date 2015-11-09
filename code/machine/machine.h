@@ -1,4 +1,3 @@
-
 // machine.h 
 //	Data structures for simulating the execution of user programs
 //	running on top of Nachos.

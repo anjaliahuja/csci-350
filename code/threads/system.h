@@ -86,16 +86,21 @@ struct kernelProcess{
 struct InvertedPageTable : public TranslationEntry {
 	AddrSpace* addressSpace;
 };
+enum PageReplacementPolicy {
+	RAND,
+	FIFO
+};
 
-extern int currentTLB;
 extern InvertedPageTable* ipt;
-extern int pageReplacementPolicy;
+extern PageReplacementPolicy pageReplacementPolicy;
 extern List* iptQueue;
 extern Lock* iptLock;
 
+#endif
+
 #include "filesys.h"
+#define SwapSize 5000
 extern OpenFile* swapfile;
-#dfine SwapSize 5000; 
 extern BitMap* swapMap; 
 
 #endif
@@ -114,6 +119,9 @@ extern SynchDisk   *synchDisk;
 #include "post.h"
 extern PostOffice* postOffice;
 #define MAILBOX 1
+#define SERVER_ID 0
+#define MAX_MV 1000
+
 #define RPC_CreateLock   1
 #define RPC_DestroyLock  2
 #define RPC_Acquire      3
@@ -128,7 +136,6 @@ extern PostOffice* postOffice;
 #define RPC_Set 		    12
 #define RPC_DestroyMV	  13
 
-#define SERVER_ID 0
-#define MAX_MV 1000
+#endif
 
 #endif // SYSTEM_H

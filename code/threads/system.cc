@@ -43,24 +43,16 @@ Lock* lockTableLock;
 Table* CVTable;
 Lock* CVTableLock;
 
-InvertedPageTable* ipt;
-
-int pageReplacementPolicy; // 0 is random, 1 is FIFO
-List* iptQueue;
-
-
-#endif
-
 #ifdef USE_TLB 
 int currentTLB;
 InvertedPageTable* ipt;
-int pageReplacementPolicy; // 0 is random, 1 is FIFO
+PageReplacementPolicy pageReplacementPolicy; 
 List* iptQueue; //for FIFO 
 Lock* iptLock; 
 OpenFile* swapfile;
 BitMap* swapMap; 
 #endif
-
+#endif
 
 
 #ifdef NETWORK
@@ -141,15 +133,15 @@ Initialize(int argc, char **argv)
 	    argCount = 2;
 	}
 #ifdef USER_PROGRAM
+    pageReplacementPolicy = FIFO;
 	if (!strcmp(*argv, "-s"))
 	    debugUserProg = TRUE;
     if (!strcmp(*argv, "-P")) {
         ASSERT(argc > 1);
-        pageReplacementPolicy = 1;
         if(!strcmp(*(argv+1), "RAND")) {
-            pageReplacementPolicy = 0;
+            pageReplacementPolicy = RAND;
         } else if(!strcmp(*(argv+1), "FIFO")) {
-            pageReplacementPolicy = 1;
+            pageReplacementPolicy = FIFO;
         } else {
             printf("Did not select valid page replacement policy.  Defaulting to FIFO");
         }
@@ -210,13 +202,13 @@ Initialize(int argc, char **argv)
     iptQueue = new List();
     iptLock = new Lock("IPTLock");
 
-    //Swapfile
+    //swapfile
+    swapMap = new BitMap(SwapSize);
     swapfile = fileSystem->Open("../vm/swapfile");
     if(swapfile == NULL){
         printf("Unable to open swapfile \n");
     }
     swapMap = new BitMap(SwapSize);
-
 #endif
 
 #ifdef FILESYS
@@ -262,4 +254,3 @@ Cleanup()
     
     Exit(0);
 }
-
