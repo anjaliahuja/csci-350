@@ -988,12 +988,10 @@ int handleMemoryFull() {
   // Disable interrupts.
   IntStatus oldLevel = interrupt->SetLevel(IntOff); 
   for (int i =0; i<TLBSize; i++){
-    if(ppn == machine->tlb[i].physicalPage){
+    if(ppn == machine->tlb[i].physicalPage && machine->tlb[i].valid){
+      //propogate dirty bit
+      ipt[ppn].dirty = machine->tlb[i].dirty;
       machine->tlb[i].valid = FALSE;
-      if (machine->tlb[i].valid) {
-        //propogate dirty bit
-        ipt[ppn].dirty = machine->tlb[i].dirty;
-      }
       break;
     }
   }
