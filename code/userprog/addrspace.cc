@@ -256,6 +256,10 @@ void AddrSpace::SaveState()
   // On context switch set all valid bits to false
   for (int i = 0; i < TLBSize; i++) {
     machine->tlb[i].valid = false;
+    if (machine->tlb[i].valid) {
+        //propogate dirty bit
+        ipt[machine->tlb[i].physicalPage].dirty = machine->tlb[i].dirty;
+    }
   }
 
   //Restore interrupts.
