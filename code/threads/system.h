@@ -86,10 +86,13 @@ struct kernelProcess{
 struct InvertedPageTable : public TranslationEntry {
 	AddrSpace* addressSpace;
 };
+enum PageReplacementPolicy {
+	RAND,
+	FIFO
+};
 
-extern int currentTLB;
 extern InvertedPageTable* ipt;
-extern int pageReplacementPolicy;
+extern PageReplacementPolicy pageReplacementPolicy;
 extern List* iptQueue;
 extern Lock* iptLock;
 

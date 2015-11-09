@@ -977,9 +977,9 @@ int handleMemoryFull() {
   int ppn = -1;
 
   iptLock->Acquire();
-  if (pageReplacementPolicy == 0) { // random
+  if (pageReplacementPolicy == RAND) {
     ppn = rand() % NumPhysPages;
-  } else { // FIFO
+  } else {
     ppn = *(int*) iptQueue->Remove();
   }
   iptLock->Release(); 
@@ -1040,7 +1040,7 @@ int handleIPTMiss( int vpn ) {
   ipt[ppn].dirty = FALSE;
   ipt[ppn].addressSpace = currentThread->space;
 
-  if (pageReplacementPolicy == 1) {
+  if (pageReplacementPolicy == FIFO) {
     int* temp = new int;
     *temp = ppn;
     iptQueue->Append((void*) temp);
