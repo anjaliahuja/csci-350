@@ -15,6 +15,7 @@
 #include "interrupt.h"
 #include "stats.h"
 #include "timer.h"
+#include "list.h"
 
 // Initialization and cleanup routines
 extern void Initialize(int argc, char **argv); 	// Initialization,
@@ -81,11 +82,23 @@ struct kernelProcess{
 
 };
 
+#ifdef USE_TLB
 struct InvertedPageTable : public TranslationEntry {
 	AddrSpace* addressSpace;
 };
 
+extern int currentTLB;
 extern InvertedPageTable* ipt;
+extern int pageReplacementPolicy;
+extern List* iptQueue;
+extern Lock* iptLock;
+
+#endif
+
+#include "filesys.h"
+#define SwapSize 5000
+extern OpenFile* swapfile;
+extern BitMap* swapMap; 
 
 #endif
 
@@ -102,6 +115,22 @@ extern SynchDisk   *synchDisk;
 #ifdef NETWORK
 #include "post.h"
 extern PostOffice* postOffice;
+#define RPC_CreateLock   1
+#define RPC_DestroyLock  2
+#define RPC_Acquire      3
+#define RPC_Release      4
+#define RPC_CreateCV     5
+#define RPC_DestroyCV    6
+#define RPC_Wait         7
+#define RPC_Signal       8
+#define RPC_Broadcast    9
+#define RPC_CreateMV	10
+#define RPC_GetMV		11
+#define RPC_SetMV		12
+#define RPC_DestroyMV	13
+
+#define SERVER_ID 0
+#define MAX_MV 1000
 #endif
 
 #endif // SYSTEM_H

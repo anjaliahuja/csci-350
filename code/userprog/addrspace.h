@@ -21,10 +21,17 @@
 
 #define MaxOpenFiles 256
 #define MaxChildSpaces 256
+//testing commit
 
+enum FileType{
+    EXECUTABLE,
+    SWAP,
+    NEITHER
+};
 struct PageTable : public TranslationEntry {
     int byteOffset;
     OpenFile* location;
+    FileType type;
 };
 
 class AddrSpace {

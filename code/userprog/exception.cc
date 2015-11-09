@@ -1,3 +1,5 @@
+//testing commit
+
 // exception.cc 
 //  Entry point into the Nachos kernel from user programs.
 //  There are two kinds of things that can cause control to
@@ -780,6 +782,7 @@ void Yield_Syscall(){
   currentThread->Yield();
 } 
 void Exit_Syscall(int status){
+  printf("exit sys: %d\n", status);
   processLock->Acquire();
 
   bool lastProcess = false;
@@ -813,13 +816,26 @@ void Exit_Syscall(int status){
   if(process->numThreads > 1){
     DEBUG('e', "Exit case 1: not last thread in process");
     availMem->Acquire();
-    int pageNum = currentThread->stackVP;
+    iptLock->Acquire();
+    int vpn = currentThread->stackVP;
     for(int i = 0; i < 8; i++){
-      bitMap->Clear(currentThread->space->pageTable[pageNum].physicalPage);
-      currentThread->space->pageTable[pageNum].valid = FALSE;
-      ipt[currentThread->space->pageTable[pageNum].physicalPage].valid = FALSE;
-      pageNum--;
+      if(currentThread->space->pageTable[vpn].valid){
+        int ppn = -1;
+        for (int j =0; j<NumPhysPages; j++){
+          if(ipt[j].valid && ipt[j].virtualPage == vpn && ipt[j].addressSpace == currentThread->space && ipt[j].use == false){
+            ppn = j;
+            break;
+          }
+        }
+      bitMap->Clear(ppn);
+      ipt[ppn].valid = FALSE;
+      currentThread->space->pageTable[vpn].valid = FALSE;
+      vpn--;
+
+
+      }
     }
+    iptLock->Release();
     availMem->Release(); 
     process->numThreads--;
     DEBUG('e', "Exit thread case 1\n");
@@ -829,15 +845,23 @@ void Exit_Syscall(int status){
   else if(lastProcess && process->numThreads == 1){
     DEBUG('e', "Exit case 2: last thread in last process");
     availMem->Acquire();
-    for(unsigned int i =0; i<currentThread->space->numPages; i++){
-      if(currentThread->space->pageTable[i].valid){
-        bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
-        currentThread->space->pageTable[i].valid = FALSE;
-        ipt[currentThread->space->pageTable[i].physicalPage].valid = FALSE;
+    iptLock->Acquire(); 
+    for(unsigned int vpn =0; vpn<currentThread->space->numPages; vpn++){
+      if(currentThread->space->pageTable[vpn].valid){
+        int ppn = -1;
+        for(int j = 0; j<NumPhysPages; j++){
+          if(ipt[j].valid && ipt[j].virtualPage==vpn && ipt[j].addressSpace == currentThread->space){
+            ppn = j;
+            break;
+          }
+        }
+        bitMap->Clear(ppn);
+        ipt[ppn].valid = FALSE;
+        currentThread->space->pageTable[vpn].valid = FALSE;
       }
     }
+    iptLock->Release();
     availMem->Release();
-
     currentThread->Finish();
     processLock->Release();
     interrupt->Halt();
@@ -849,13 +873,23 @@ void Exit_Syscall(int status){
     //Delete CVs
     DEBUG('e', "Case 3: last thread in process but not last process, need to reclaim memory");
     availMem->Acquire();
-    for(unsigned int i=0; i< currentThread->space->numPages; i++){
-      if(currentThread->space->pageTable[i].valid){
-        bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
-        currentThread->space->pageTable[i].valid= FALSE;
-        ipt[currentThread->space->pageTable[i].physicalPage].valid = FALSE;
+    iptLock->Acquire();
+    for(int vpn=0; vpn< currentThread->space->numPages; vpn++){
+      if(currentThread->space->pageTable[vpn].valid){
+        int ppn = -1;
+        for(int j = 0; j< NumPhysPages; j++){
+          if(ipt[j].valid && ipt[j].virtualPage == vpn && ipt[j].addressSpace == currentThread->space){
+            ppn = j;
+            break;
+          }
+        }
+      
+        bitMap->Clear(ppn);
+        ipt[ppn].valid = FALSE;
+        currentThread->space->pageTable[vpn].valid = FALSE;       
       }
-    }
+     }
+     iptLock->Release();
     availMem->Release();
     
     for(int i =0; i<NumCVs; i++){
@@ -939,16 +973,62 @@ void Printf_Syscall(unsigned int vaddr, int len, int number){
 PROJECT 3
 */
 
+int handleMemoryFull() {
+  int ppn = -1;
+
+  iptLock->Acquire();
+  if (pageReplacementPolicy == 0) { // random
+    ppn = rand() % NumPhysPages;
+  } else { // FIFO
+    ppn = *(int*) iptQueue->Remove();
+  }
+  iptLock->Release(); 
+
+  //check if ppn is in TLB, if it is, propagate dirty bit and invalidate TLB entry
+  // Disable interrupts.
+  IntStatus oldLevel = interrupt->SetLevel(IntOff); 
+  for (int i =0; i<TLBSize; i++){
+    if(ppn == machine->tlb[i].physicalPage){
+      ipt[ppn].dirty = machine->tlb[i].dirty;
+      machine->tlb[i].valid = FALSE;
+      break;
+    }
+  }
+  //Restore interrupts.
+  (void) interrupt->SetLevel(oldLevel);
+
+  // if the page is dirty, it must be copied into the swap file
+  if(ipt[ppn].dirty){
+    int swapbit = swapMap->Find(); 
+    if(swapbit == -1){
+      printf("Error, swapfile is full");
+      return -1;
+    }
+
+    //write to swap file
+    swapfile->WriteAt(
+      &(machine->mainMemory[ppn*PageSize]),
+      PageSize,
+      swapbit*PageSize);
+
+    // update page table for evicted page
+   currentThread->space->pageTable[ipt[ppn].virtualPage].byteOffset = swapbit*PageSize; 
+   currentThread->space->pageTable[ipt[ppn].virtualPage].type = SWAP;
+   currentThread->space->pageTable[ipt[ppn].virtualPage].location = swapfile; 
+}
+  
+  // update page table
+  currentThread->space->pageTable[ipt[ppn].virtualPage].valid = FALSE;     
+  
+  return ppn;
+}
+
 int handleIPTMiss( int vpn ) {
   // Allocate 1 page of memory
   int ppn = bitMap->Find();
 
-  // Read the page from executable into memory – if needed
-  if (currentThread->space->pageTable[vpn].byteOffset != -1) {
-      currentThread->space->pageTable[vpn].location->ReadAt(
-        &(machine->mainMemory[ppn*PageSize]),
-        PageSize,
-        currentThread->space->pageTable[vpn].byteOffset);
+  if (ppn == -1) {
+    ppn = handleMemoryFull();
   }
 
   // Update IPT
@@ -960,6 +1040,24 @@ int handleIPTMiss( int vpn ) {
   ipt[ppn].dirty = FALSE;
   ipt[ppn].addressSpace = currentThread->space;
 
+  if (pageReplacementPolicy == 1) {
+    int* temp = new int;
+    *temp = ppn;
+    iptQueue->Append((void*) temp);
+  }
+
+   // Read the page from executable into memory – if needed
+  if (currentThread->space->pageTable[vpn].byteOffset != -1) {
+      currentThread->space->pageTable[vpn].location->ReadAt(
+        &(machine->mainMemory[ppn*PageSize]),
+        PageSize,
+        currentThread->space->pageTable[vpn].byteOffset);
+      if(currentThread->space->pageTable[vpn].type == SWAP){
+        swapMap->Clear(currentThread->space->pageTable[vpn].byteOffset/PageSize);
+        ipt[ppn].dirty = TRUE; 
+      }
+  }
+
   // Update pagetable ppn & valid bit
   currentThread->space->pageTable[vpn].physicalPage = ppn;
   currentThread->space->pageTable[vpn].valid = TRUE;
@@ -968,23 +1066,13 @@ int handleIPTMiss( int vpn ) {
 }
 
 void populateTLB() {
-  // Disable interrupts.
-  IntStatus oldLevel = interrupt->SetLevel(IntOff); 
 
   // find needed virtual address 
   int va = machine->ReadRegister(39);
+  //printf("VA: %d\n", va);
 
   // find page table index
   int pageIndex = va/PageSize;
-/*
-  // Step 1: copy page table data into TLB
-  machine->tlb[TLB_INDEX].virtualPage = currentThread->space->pageTable[pageIndex].virtualPage;
-  machine->tlb[TLB_INDEX].physicalPage = currentThread->space->pageTable[pageIndex].physicalPage;
-  machine->tlb[TLB_INDEX].valid = currentThread->space->pageTable[pageIndex].valid;
-  machine->tlb[TLB_INDEX].readOnly = currentThread->space->pageTable[pageIndex].readOnly;
-  machine->tlb[TLB_INDEX].use = currentThread->space->pageTable[pageIndex].use;
-  machine->tlb[TLB_INDEX].dirty = currentThread->space->pageTable[pageIndex].dirty;
-*/
 
   // Step 2: Must search the IPT
   // 3 values to match: VPN, valid bit true, AddrSpace* or PID
@@ -1001,6 +1089,14 @@ void populateTLB() {
   if (ppn == -1) {
     ppn = handleIPTMiss(pageIndex);
   } 
+
+  // Disable interrupts.
+  IntStatus oldLevel = interrupt->SetLevel(IntOff); 
+
+  // propogate dirty bit
+  if (machine->tlb[TLB_INDEX].valid && machine->tlb[TLB_INDEX].dirty) {
+    ipt[machine->tlb[TLB_INDEX].physicalPage].dirty = TRUE;
+  }
 
   machine->tlb[TLB_INDEX].virtualPage = ipt[ppn].virtualPage;
   machine->tlb[TLB_INDEX].physicalPage = ipt[ppn].physicalPage;
