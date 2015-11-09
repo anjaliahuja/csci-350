@@ -815,13 +815,26 @@ void Exit_Syscall(int status){
   if(process->numThreads > 1){
     DEBUG('e', "Exit case 1: not last thread in process");
     availMem->Acquire();
-    int pageNum = currentThread->stackVP;
+    iptLock->Acquire();
+    int vpn = currentThread->stackVP;
     for(int i = 0; i < 8; i++){
-      bitMap->Clear(currentThread->space->pageTable[pageNum].physicalPage);
-      currentThread->space->pageTable[pageNum].valid = FALSE;
-      ipt[currentThread->space->pageTable[pageNum].physicalPage].valid = FALSE;
-      pageNum--;
+      if(currentThread->space->pageTable[vpn].valid){
+        int ppn = -1;
+        for (int j =0; j<NumPhysPages; j++){
+          if(ipt[j].valid && ipt[j].virtualPage == vpn && ipt[j].addressSpace == currentThread->space && ipt[j].use == false){
+            ppn = j;
+            break;
+          }
+        }
+      bitMap->Clear(ppn);
+      ipt[ppn].valid = FALSE;
+      currentThread->space->pageTable[vpn].valid = FALSE;
+      vpn--;
+
+
+      }
     }
+    iptLock->Release();
     availMem->Release(); 
     process->numThreads--;
     DEBUG('e', "Exit thread case 1\n");
@@ -831,15 +844,23 @@ void Exit_Syscall(int status){
   else if(lastProcess && process->numThreads == 1){
     DEBUG('e', "Exit case 2: last thread in last process");
     availMem->Acquire();
-    for(unsigned int i =0; i<currentThread->space->numPages; i++){
-      if(currentThread->space->pageTable[i].valid){
-        bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
-        currentThread->space->pageTable[i].valid = FALSE;
-        ipt[currentThread->space->pageTable[i].physicalPage].valid = FALSE;
+    iptLock->Acquire(); 
+    for(unsigned int vpn =0; vpn<currentThread->space->numPages; vpn++){
+      if(currentThread->space->pageTable[vpn].valid){
+        int ppn = -1;
+        for(int j = 0; j<NumPhysPages; j++){
+          if(ipt[j].valid && ipt[j].virtualPage==vpn && ipt[j].addressSpace == currentThread->space){
+            ppn = j;
+            break;
+          }
+        }
+        bitMap->Clear(ppn);
+        ipt[ppn].valid = FALSE;
+        currentThread->space->pageTable[vpn].valid = FALSE;
       }
     }
+    iptLock->Release();
     availMem->Release();
-
     currentThread->Finish();
     processLock->Release();
     interrupt->Halt();
@@ -851,13 +872,23 @@ void Exit_Syscall(int status){
     //Delete CVs
     DEBUG('e', "Case 3: last thread in process but not last process, need to reclaim memory");
     availMem->Acquire();
-    for(unsigned int i=0; i< currentThread->space->numPages; i++){
-      if(currentThread->space->pageTable[i].valid){
-        bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
-        currentThread->space->pageTable[i].valid= FALSE;
-        ipt[currentThread->space->pageTable[i].physicalPage].valid = FALSE;
+    iptLock->Acquire();
+    for(int vpn=0; vpn< currentThread->space->numPages; vpn++){
+      if(currentThread->space->pageTable[vpn].valid){
+        int ppn = -1;
+        for(int j = 0; j< NumPhysPages; j++){
+          if(ipt[j].valid && ipt[j].virtualPage == vpn && ipt[j].addressSpace == currentThread->space){
+            ppn = j;
+            break;
+          }
+        }
+      
+        bitMap->Clear(ppn);
+        ipt[ppn].valid = FALSE;
+        currentThread->space->pageTable[vpn].valid = FALSE;       
       }
-    }
+     }
+     iptLock->Release();
     availMem->Release();
     
     for(int i =0; i<NumCVs; i++){
