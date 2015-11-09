@@ -958,7 +958,7 @@ int handleMemoryFull() {
   //check if ppn is in TLB, if it is, must check dirty bit, propogate, invalidate 
   for (int i =0; i<TLBSize; i++){
     if(ppn == machine->tlb[i].physicalPage && machine->tlb[i].valid){
-      ipt[ppn].dirty == machine->tlb[i].dirty;
+      ipt[ppn].dirty = machine->tlb[i].dirty;
       machine->tlb[i].valid = FALSE;
       break;
     }
@@ -979,8 +979,8 @@ int handleMemoryFull() {
       swapbit*PageSize);
 
     ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].byteOffset = swapbit*PageSize; 
-   ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].type = SWAP;
-   ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].location = swapfile; 
+    ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].type = SWAP;
+    ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].location = swapfile; 
 }
 
   if(ipt[ppn].valid){
