@@ -39,10 +39,14 @@
 #define SC_Wait         17
 #define SC_Signal       18
 #define SC_Broadcast    19
-#define SC_Rand 		20
-#define SC_Printf 		21
 
+#define SC_CreateMV    22
+#define SC_GetMV       23
+#define SC_SetMV       24
+#define SC_DestroyMV   25
 
+#define SC_Rand 		   20
+#define SC_Printf 		 21
 
 #define MAXFILENAME 256
 
@@ -153,8 +157,12 @@ int Wait(int lock, int CV);
 int Signal(int lock, int CV);
 int Broadcast(int lock, int CV);
 
-int Rand(int range, int offset);
+int CreateMV(char* name, int size);
+int SetMV(int mv, int value);
+int GetMV(int mv);
+int DestroyMV(int mv);
 
+int Rand(int range, int offset);
 void Printf(char* buf, int len, int num1);
 
 

@@ -82,5 +82,5 @@ MailTest(int farAddr)
 }
 
 void Server(){
-    
+
 }
