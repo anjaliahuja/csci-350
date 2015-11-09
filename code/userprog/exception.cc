@@ -985,7 +985,6 @@ int handleMemoryFull() {
   iptLock->Release(); 
 
   //check if ppn is in TLB, if it is, propagate dirty bit and invalidate TLB entry
-
   // Disable interrupts.
   IntStatus oldLevel = interrupt->SetLevel(IntOff); 
   for (int i =0; i<TLBSize; i++){
@@ -1013,13 +1012,13 @@ int handleMemoryFull() {
       swapbit*PageSize);
 
     // update page table for evicted page
-   ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].byteOffset = swapbit*PageSize; 
-   ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].type = SWAP;
-   ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].location = swapfile; 
+   currentThread->space->pageTable[ipt[ppn].virtualPage].byteOffset = swapbit*PageSize; 
+   currentThread->space->pageTable[ipt[ppn].virtualPage].type = SWAP;
+   currentThread->space->pageTable[ipt[ppn].virtualPage].location = swapfile; 
 }
   
   // update page table
-  ipt[ppn].addressSpace->pageTable[ipt[ppn].virtualPage].valid = FALSE;     
+  currentThread->space->pageTable[ipt[ppn].virtualPage].valid = FALSE;     
   
   return ppn;
 }
@@ -1095,8 +1094,8 @@ void populateTLB() {
   IntStatus oldLevel = interrupt->SetLevel(IntOff); 
 
   // propogate dirty bit
-  if (machine->tlb[TLB_INDEX].valid) {
-    ipt[machine->tlb[TLB_INDEX].physicalPage].dirty = machine->tlb[TLB_INDEX].dirty;
+  if (machine->tlb[TLB_INDEX].valid && machine->tlb[TLB_INDEX].dirty) {
+    ipt[machine->tlb[TLB_INDEX].physicalPage].dirty = TRUE;
   }
 
   machine->tlb[TLB_INDEX].virtualPage = ipt[ppn].virtualPage;
