@@ -1039,6 +1039,7 @@ void populateTLB() {
 
   // find needed virtual address 
   int va = machine->ReadRegister(39);
+  printf("VA: %d\n", va);
 
   // find page table index
   int pageIndex = va/PageSize;
