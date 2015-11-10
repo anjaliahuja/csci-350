@@ -1,0 +1,165 @@
+Title:  Writeup for Project 3, Fall 2015 CSCI 350
+ Date:  11/08/2015
+ Group:
+ Anjali Ahuja 	ahujaa@usc.edu
+ Anne Kao 		annekao@usc.edu
+ Bernard Xie	bernardx@usc.edu
+
+
+I. REQUIREMENTS:
+	+ Part 1: 
+	Implement system software-management of Translation Lookaside Buffer(TLB_.  It will be required to implement a TLB miss which will populate the TLB.  Will also have to make sure the TLB is set up properly on a context switch.
+  Implement an inverted page table(IPT) which is supposed to keep track of what is in memory.  This will be updated when something is moved into/out of memory.
+
+	+ Part 2:
+	Take away preloading into memory.  This is implemented through not closing the executable and handling IPT misses.  On an IPT miss, the page will have to be loaded into memory.
+  Implement Demand Paged Virtual Memory.  Memory has to be reduced thus memory will be filled up.  When memory is full, a page replacement policy must be implemented to remove pages.  In order to do this, the pages must be kept track of.
+	
+  + Part 3:
+
+
+II. ASSUMPTIONS:
+
+	
+III. DESIGN:
+  i. Part 1
+    Step 1: 
+    Translation Lookaside Buffer(TLB): Cache of most recently used page entries.
+    First we set up what happens on a PageFaultException.  When this happens we call populateTLB.  In this function we disable the interrupts (since we'll be dealing with the TLB) and calculate the relevant physical page number.  The data at that ppn gets stored into the TLB at the current index (global variable that cycles through 0, 1, 2, 3).  After this is done we disable the interrupts.  On a context switch (in restore state) we make sure to invalidate all valid tlb bits.  Also we make sure to remove all "machine->pageTable = pageTable".
+    Step 2: 
+    Inverted Page Table(IPT): Map for each page in physical memory to virtual memory.
+    Setup IPT: We create a new struct that inherits from TranslationEntry.  We add an AddrSpace* addressSpace to it and then declare InvertedPageTable* ipt with a size of NumPhysPages.
+    Everytime there is a "bitMap->Find()" we populate that same entry in the IPT.  This is done in both the AddrSpace constructor and in our AddrSpace::AllocateStack().  In exception.cc, we fill the TLB with the IPT data instead of the page table.
+    We also update the invalidate the IPT valid bit on an exit_syscall.
+
+  ii. Part 2
+    Step 3: 
+    Updated PageTable structure that inherits from TranslationEntry with an addition of a byteOffset (represent location of virtual page in executable/swap file) and disk location.  byteOffset is set as 40+i*pageSize and location is set as executable in the AddrSpace constructor.  On AllocateStack, the byteOffset is -1 and the location is NULL.
+    Stop preloading into memory.  Everytime there is a "bitMap->Find()" we comment that section out and remove any code that uses the value (physical page number) from it.  This will be done in an IPT miss instead.
+    If we search the IPT and did not find the physical page we needed to update the TLB, we've gotten an IPT miss.  On an IPT miss we allocate a new page of memory using "bitMap->Find()".  Then we go to the pageTable entry to find the needed virtual page in order to find out where the page is located on disk (is the byteOffset -1?).  If it's not there (is -1), then we must read a page from the executable.  When this is done, the PageTable's ppn is set and the valid bit is set to true.
+    Step 4:
+    We set NumPhysPages to 32 in machine.h.  Also the "Assert(numPages <= NumPhysPages)" is commented out.  We also added an List* iptQueue for FIFO page replacement policy.  Lock* iptLock for when we take from the iptQueue.  Openfile* swapfile which is the file that will be written to.  BitMap* swapMap which keeps track of where a particular page has been placed within the swapfile.  We added an enum for the PageReplacementPolicy that is set with -P to be RAND (random page selection) or FIFO (first in first out page selection).  Our PageTable struct created in Step 3 also now has a type that is either SWAP, EXECUTABLE, or NEITHER.  This will be used within handleIPTMiss to clear the bitmap when necessary.  Also, as discussed in class, on a context switch, we propogate the dirty bit.
+    Within exit_syscall, we cycle through the virtual pages and clear the bitMap on each virtual page's corresponding physical page.  We also invalidate the IPT valid bit on that physical page and the page table on that virtual page.
+    Because the NumPhysPages is decreased, this causes more times for the memory to be full, we add a handleMemoryFull function when a physical page cannot be found in the handleIPTmiss.  Inside this function we evict a page depending on whether the user passes in "-P RAND" or "-P FIFO".  We then check if the ppn is in the TLB.  If it is, we propogate the dirty bit and invalidate the TLB entry.  If the evicted page is dirty, it has to be copied into the swapfile.  We find a spot in the swapMap to write at.  When this is done, the page table must be updated to reflect the changes for the evicted page (byteOffset, type, and location if it was dirty, turn valid to false for all cases).
+    The original handleIPTMiss was changed as well to incorporate the pageReplacementPolicy (add to iptQueue when necessary).  Now if we must read the page from the executable, we also check if the page is in the swapfile.  If it is, then we clear the swapMap of that page and set the current page's dirty bit to true.
+    In populateTLB, the dirty bit must be propogated for the current tlb index.
+
+  iii. Part 3
+ 
+IV. IMPLEMENTATION
+
+  i. Files Modified
+  WRITEUP
+  ../code/machine/machine.h
+  ../code/userprog/exception.cc
+  ../code/threads/system.h
+  ../code/threads/system.cc
+  ../code/userprog/addrspace.h
+  ../code/userprog/addrspace.cc
+  ../code/userprog/progtest.cc
+  ../code/test/Makefile
+
+  ii. Files added
+  ../code/test/matmult2.c
+  ../code/test/sort2.c
+
+  iii. Data Structures added, file they were added to
+  In ../code/threads/system.h
+    struct InvertedPageTable : public TranslationEntry {
+     AddrSpace* addressSpace;
+    };
+    enum PageReplacementPolicy {
+     RAND,
+     FIFO
+    };
+    
+    extern InvertedPageTable* ipt;
+    extern PageReplacementPolicy pageReplacementPolicy;
+    extern List* iptQueue;
+    extern Lock* iptLock;
+
+    #include "filesys.h"
+    #define SwapSize 5000
+    extern OpenFile* swapfile;
+    extern BitMap* swapMap; 
+
+  In ../code/threads/system.cc
+    InvertedPageTable* ipt;
+    PageReplacementPolicy pageReplacementPolicy;
+    List* iptQueue;
+    Lock* iptLock;
+    OpenFile* swapfile;
+    BitMap* swapMap;
+
+  In ../code/userprog/addrspace.h
+    enum FileType{
+        EXECUTABLE,
+        SWAP,
+        NEITHER
+    };
+    struct PageTable : public TranslationEntry {
+        int byteOffset;
+        OpenFile* location;
+        FileType type;
+    };
+    OpenFile* executable
+
+  iv. Data structures modified and file they were added to
+  In ../code/userprog/addrspace.h
+    TranslationEntry *pageTable --> PageTable *pageTable
+
+  v. Functions added and in which file
+  In ../code/userprog/exception.cc
+    void populateTLB();
+    int handleIPTMiss(int vpn);
+    int handleMemoryFull();
+
+  vi. Functions modified and in which file.
+  In ../code/threads/system.cc
+    Initialize(int argc, char **argv);
+
+  In ../code/userprog/addrspace.cc
+    AddrSpace::AddrSpace(OpenFile *executable);
+    AddrSpace::SaveState();
+    AddrSpace::RestoreState();
+    AddrSpace::AllocateStack();
+
+  In ../code/userprog/exception.cc
+    Exec_Syscall(unsigned int vaddr, int len);
+    Exit_Syscall(int status);
+    ExceptionHandler(ExceptionType which);
+
+  In ../code/userprog/progtest.cc
+    StartProcess(char* filename);
+
+V. TESTING
+  Part 1 & Part 2:
+  In order to test parts 1 and 2 we created matmult2.c and sort2.c which exec 2 instances of matmult and sort respectively.  To run these tests with the random page replacement, type in "nachos -x ../test/matmult2 -P RAND" and "nachos -x ../test/sort2 -P RAND".  For FIFO, type in "nachos -x ../test/matmult2 -P FIFO" and "nachos -x ../test/sort2 -P FIFO".  
+  matmult2 test will print: 
+    exit sys: 0
+    exit sys: 7220
+    exit sys: 7220
+  The last two exit printouts come from the two instances of matmult.  The first printout comes from the main in the test.
+  sort2 test will print: 
+    exit sys: 0
+    exit sys: 1023
+    exit sys: 1023
+  The last two exit printouts come from the two instances of sort.  The first printout comes from the main in the test.
+  Additional testing can occur by running a single instance of matmult and sort (in the instruction above, instead of matmult2 use matmult and instead of sort2 use sort).  This will print "exit sys: 7220" and "exit sys: 1023" respectively.
+
+  Part 3:
+
+
+VI. DISCUSSION: 
+	i. Experiment expectation 
+  For parts 1 and 2 we expected matmult and sort to print out 7220 and 1023 respectively for the status in the exit syscall.
+
+	ii. Experiment result
+  For parts 1 and 2 the results meet the expectation.
+
+	iii. Explanation (Explain how your project proves what its supposed to prove)
+  For parts 1 and 2 we were able to use a TLB which is used to speed up address translation.  Through the implementation, we look at the TLB first which has a cache of pages.  Thus if we find what we are looking for a translation can be performed quickly.  We were also able to implement virtual memory using page replacement policies.
+
+VII. MISCELLANEOUS 
+
+  
