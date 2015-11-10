@@ -21,11 +21,11 @@
 #include <sstream>
 #include <string>
 #include <vector> 
+#include <queue>
 #include "system.h"
 #include "network.h"
 #include "post.h"
 #include "interrupt.h"
-#include "../network/post.h"
 
 // Test out message delivery, by doing the following:
 //	1. send a message to the machine with ID "farAddr", at mail box #0
@@ -57,7 +57,7 @@ struct ServerCV{
 
 struct ServerMV{
     string name;
-    int* val;
+    int* values;
     int len;
     bool toBeDeleted;
 };
@@ -69,7 +69,7 @@ void sendMessage(PacketHeader* outPktHdr, MailHeader* outMailHdr, stringstream& 
     char *message = new char[msgLen];
     std::strcpy(message, msg.str().c_str());
 
-    if(!postOffice->Send(outPktHdr, outMailHdr, data)){
+    if(!postOffice->Send(*outPktHdr, *outMailHdr, message)){
         printf("Error in server, cannot send message \n");
     }
 }
@@ -83,14 +83,14 @@ void Server(){
         PacketHeader* outPktHdr = new PacketHeader();
         PacketHeader* inPktHdr = new PacketHeader();
         MailHeader* outMailHdr = new MailHeader();
-        MailHeadr* inMailHdr = new MailHeader(); 
+        MailHeader* inMailHdr = new MailHeader(); 
 
         char buffer[MaxMailSize]; 
 
         postOffice->Receive(0, inPktHdr, inMailHdr, buffer); 
 
         outPktHdr->to = inPktHdr->from;
-        outMailhdr->to = inMailHdr->from;
+        outMailHdr->to = inMailHdr->from;
         outPktHdr->from - inPktHdr->to;
 
         int type;
@@ -106,7 +106,7 @@ void Server(){
             case RPC_CreateLock: {
                 ss>>name;
                int index = -1;
-               for(int i = 0; i<SLocks.size();i++){
+               for(int i = 0; i<SLocks->size();i++){
                 if(SLocks->at(i)->name.compare(name) == 0){
                     index = i;
                     SLocks->at(i)->counter++;
@@ -131,7 +131,7 @@ void Server(){
                else{
                 reply << index; 
                }
-              sendMessage(outPktHdr, OutMailHdr, reply);
+              sendMessage(outPktHdr, outMailHdr, reply);
               break;
             }
             case RPC_DestroyLock: {
@@ -143,14 +143,14 @@ void Server(){
                     if(SLocks->at(lockID) == NULL){
                         reply << -1;
                     } else{
-                        SLocks->counter--;
+                        SLocks->at(lockID)->counter--;
                         reply<<lockID;
                         if(SLocks->at(lockID)->state == Available && SLocks->at(lockID)->counter == 0){
                             ServerLock *lock = SLocks->at(lockID);
                             SLocks->at(lockID) = NULL;
                             delete lock;
                         } else{
-                        SLocks->(lockID)->toBeDeleted = true;
+                        SLocks->at(lockID)->toBeDeleted = true;
                         }
                     }
                 }
@@ -214,7 +214,7 @@ void Server(){
                 sendMessage(outPktHdr, outMailHdr, reply);
                 break;
             }
-            case RPC_CV: {
+            case RPC_CreateCV: {
                 ss>>name;
                 int index = -1; 
                 for(unsigned int i = 0; i<SCVs->size(); i++){
@@ -355,7 +355,7 @@ void Server(){
                                 SCVs->at(cvID)->mailWaiting->pop();
                                 sendMessage(tempOutPkt, tempOutMail, reply);
                             }
-                            SCVs->at(cvID)->lockID = -1;
+                            SCVs->at(cvID)->lockIndex = -1;
                         }
 
                     }
@@ -370,7 +370,7 @@ void Server(){
 
             int index = -1;
 
-            for(unsigned int = 0; i < SMVs->size(); i++){
+            for(int i = 0; i < SMVs->size(); i++){
                 if(SMVs->at(i) != NULL){
                     if(SMVs->at(i)->name == name){
                         index = i;
@@ -382,10 +382,10 @@ void Server(){
             if(index == -1){ // MV doesnt already exist
                 ServerMV *mv = new ServerMV;
                 mv->name = name;
-                mv->val = new int[mvSize];
+                mv->values = new int[mvSize];
                 mv->len = mvSize;
                 for(unsigned int i = 0; i < mvSize; i++){
-                    mv->val[i] = 0;
+                    mv->values[i] = 0;
                 }
                 mv->toBeDeleted = false;
                 SMVs->push_back(mv);
@@ -420,10 +420,10 @@ void Server(){
             } else {
                 if(SMVs->at(mvID)==NULL){
                     reply << -1;
-                } else if(mvIndex >= SMVs->at(mvID)->size()){
+                } else if(mvIndex >= SMVs->at(mvID)->len){
                     reply << -1;
                 } else{
-                    reply << SMVs->at(mvID)->at(mvIndex);
+                    reply << SMVs->at(mvID)->values[mvIndex];
                 }
             }
             sendMessage(outPktHdr, outMailHdr, reply);
@@ -438,16 +438,22 @@ void Server(){
             else{
                 if(SMVs->at(mvID)==NULL){
                     reply << -1;
-                } else if (mvIndex >= SMVs->at(mvID)->size()){
+                } else if (mvIndex >= SMVs->at(mvID)->len){
                     reply << -1;
                 } else{
-                    SMVs->at(mvID)->val[mvIndex] = mvVal; 
+                    SMVs->at(mvID)->values[mvIndex] = mvVal; 
                     reply << mvVal; 
                 }
             }
             sendMessage(outPktHdr, outMailHdr, reply);
+            break;
         }
+    default:
+        cout<<"Unknown RPC \n";
+        continue;
+        break;
     }
+}
 }
 
 

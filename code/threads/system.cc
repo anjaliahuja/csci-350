@@ -43,7 +43,7 @@ Lock* lockTableLock;
 Table* CVTable;
 Lock* CVTableLock;
 
-#ifdef USE_TLB 
+
 int currentTLB;
 InvertedPageTable* ipt;
 PageReplacementPolicy pageReplacementPolicy; 
@@ -51,7 +51,7 @@ List* iptQueue; //for FIFO
 Lock* iptLock; 
 OpenFile* swapfile;
 BitMap* swapMap; 
-#endif
+
 #endif
 
 

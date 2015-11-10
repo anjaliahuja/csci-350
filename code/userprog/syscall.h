@@ -158,8 +158,8 @@ int Signal(int lock, int CV);
 int Broadcast(int lock, int CV);
 
 int CreateMV(char* name, int size);
-int SetMV(int mv, int value);
-int GetMV(int mv);
+int SetMV(int mv, int index, int value);
+int GetMV(int mv, int index);
 int DestroyMV(int mv);
 
 int Rand(int range, int offset);

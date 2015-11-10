@@ -63,6 +63,9 @@ extern void MailTest(int networkID);
 #ifdef THREADS
 extern void Problem2(void), TestSuite(void);
 #endif
+#ifdef NETWORK
+extern void Server(void);
+#endif
 
 //----------------------------------------------------------------------
 // main

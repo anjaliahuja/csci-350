@@ -82,7 +82,7 @@ struct kernelProcess{
 
 };
 
-#ifdef USE_TLB
+
 struct InvertedPageTable : public TranslationEntry {
 	AddrSpace* addressSpace;
 };
@@ -96,7 +96,6 @@ extern PageReplacementPolicy pageReplacementPolicy;
 extern List* iptQueue;
 extern Lock* iptLock;
 
-#endif
 
 #include "filesys.h"
 #define SwapSize 5000
@@ -131,10 +130,10 @@ extern PostOffice* postOffice;
 #define RPC_Wait         7
 #define RPC_Signal       8
 #define RPC_Broadcast    9
-#define RPC_CreateMV	  10
-#define RPC_Get   	    11
-#define RPC_Set 		    12
-#define RPC_DestroyMV	  13
+#define RPC_CreateMV	 10
+#define RPC_GetMV  	     11
+#define RPC_SetMV 		 12
+#define RPC_DestroyMV	 13
 
 #endif
 

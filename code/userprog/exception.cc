@@ -362,122 +362,20 @@ void Exec_Syscall(unsigned int vaddr, int len){
 void Yield_Syscall(){
   currentThread->Yield();
 } 
-void Exit_Syscall(int status){
-  processLock->Acquire();
 
-  bool lastProcess = false;
-  if(processTable->NumUsed() == 1){ // only one process in table, its the last process
-    lastProcess = true;
-  }
-
-  //Find current process
-
-  int processID = -1;
-  kernelProcess* process;
-  for(int i =0; i<NumProcesses; i++){
-    process = (kernelProcess*) processTable->Get(i);
-    if(process == NULL){
-      continue; 
-    }
-    if(process->addressSpace == currentThread->space){
-      processID = i;
-      break;
-    }
-  }
-  if(processID == -1){
-    printf("Invalid process identifier");
-    processLock->Release();
-    return;
-  }
-  //3 Cases
-  //Case 1: Check if thread has called exit in a process but its not the last thread
-  //Reclaim 8 pages 
-
-  if(process->numThreads > 1){
-    DEBUG('e', "Exit case 1: not last thread in process");
-    availMem->Acquire();
-    int pageNum = currentThread->stackVP;
-    for(int i = 0; i < 8; i++){
-      bitMap->Clear(currentThread->space->pageTable[pageNum].physicalPage);
-      currentThread->space->pageTable[pageNum].valid = FALSE;
-      ipt[currentThread->space->pageTable[pageNum].physicalPage].valid = FALSE;
-      pageNum--;
-    }
-    availMem->Release(); 
-    process->numThreads--;
-    DEBUG('e', "Exit thread case 1\n");
-  }
-
-  //Case 2: last executing thread in last process (ready queue is empty)
-  else if(lastProcess && process->numThreads == 1){
-    DEBUG('e', "Exit case 2: last thread in last process");
-    availMem->Acquire();
-    for(unsigned int i =0; i<currentThread->space->numPages; i++){
-      if(currentThread->space->pageTable[i].valid){
-        bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
-        currentThread->space->pageTable[i].valid = FALSE;
-        ipt[currentThread->space->pageTable[i].physicalPage].valid = FALSE;
-      }
-    }
-    availMem->Release();
-
-    currentThread->Finish();
-    processLock->Release();
-    interrupt->Halt();
-    return;
-  }
-
-  //Case 3: Last thread in process but not last process, need to reclaim all locks, cvs, stack memory
-  else if(!lastProcess && process->numThreads == 1){
-    //Delete CVs
-    DEBUG('e', "Case 3: last thread in process but not last process, need to reclaim memory");
-    availMem->Acquire();
-    for(unsigned int i=0; i< currentThread->space->numPages; i++){
-      if(currentThread->space->pageTable[i].valid){
-        bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
-        currentThread->space->pageTable[i].valid= FALSE;
-        ipt[currentThread->space->pageTable[i].physicalPage].valid = FALSE;
-      }
-    }
-    availMem->Release();
-    
-    for(int i =0; i<NumCVs; i++){
-      kernelCV* kcv = (kernelCV*)CVTable->Get(i);
-      if(kcv!= NULL){
-      if (kcv->addressSpace == currentThread->space && kcv->toBeDeleted == true){
-        DestroyCV_Syscall(i);
-      }
-    }
-  }
-
-    for(int i =0; i<NumLocks; i++){
-        kernelLock* lock = (kernelLock*)lockTable->Get(i);
-      if(lock != NULL){
-      if (lock->addressSpace == currentThread->space && lock->toBeDeleted == true){
-        DestroyLock_Syscall(i);
-      }
-    }
-  }
-    processTable->Remove(processID);
-    delete process;
-  }
-   processLock->Release();
-   currentThread->Finish();
-}
 
 /************************************************ BEGINNING OF RPC SYSCALLS ***********************************************************/
-#ifdef NETWORK
 
 void SyscallSendMsg(std::string request) {
   PacketHeader outPacketHeader;
   MailHeader outMailHeader;
   char *req = new char[request.length()];
-  std::strcpy(req, msg.c_str());
+  std::strcpy(req, request.c_str());
 
   outPacketHeader.to = SERVER_ID;
   outMailHeader.to = SERVER_ID;
   outMailHeader.from = MAILBOX; 
-  outMailHeader.length = strlen(data) + 1;
+  outMailHeader.length = strlen(req) + 1;
 
   if(!postOffice->Send(outPacketHeader, outMailHeader, req)) {
       printf("Unable to send message due to Server error\n");
@@ -487,7 +385,7 @@ void SyscallSendMsg(std::string request) {
 
 std::string SyscallReceiveMsg(int mailBox) {
   PacketHeader inPacketHeader;
-  PacketHeader inMailHeader;
+  MailHeader inMailHeader;
   char *res = new char[MaxMailSize];
   postOffice->Receive(mailBox, &inPacketHeader, &inMailHeader, res);
   std::stringstream ss;
@@ -495,7 +393,6 @@ std::string SyscallReceiveMsg(int mailBox) {
   delete[] res;
   return ss.str();
 }
-#endif
 
 int CreateCV_Syscall(int vaddr, int len) {
   /** With RPCs **/
@@ -508,7 +405,7 @@ int CreateCV_Syscall(int vaddr, int len) {
   }
 
   std::stringstream ss;
-  ss << RPC_CreateCV << " " << name << " " << size;
+  ss << RPC_CreateCV << " " << name << " " << len;
   SyscallSendMsg(ss.str());
 
   std::string res = SyscallReceiveMsg(MAILBOX);
@@ -924,6 +821,7 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   lockTableLock->Release();
 
   return index;
+  #endif
 }
 
 int Acquire_Syscall(int index) {
@@ -1135,21 +1033,21 @@ int CreateMV_Syscall(int vaddr, int len) {
   #endif
 }
 
-int Get_Syscall(int mv) {
+int GetMV_Syscall(int mv, int index) {
   /** With RPCs **/
   #ifdef NETWORK
   DEBUG('o', "Client called GetMV\n");
   std::stringstream ss;
-  ss << RPC_Get << " " << index;
+  ss << RPC_GetMV << " " << mv << " " << index;
   SyscallSendMsg(ss.str());
 
   std::string res = SyscallReceiveMsg(MAILBOX);
   ss.str(std::string());
   ss.str(res);
-  int mv = -1; // -1 is error
-  ss >> mv;
+  int rv = -1; // -1 is error
+  ss >> rv;
 
-  return mv;
+  return rv;
 
   /** Without RPCs **/
   #else
@@ -1158,21 +1056,21 @@ int Get_Syscall(int mv) {
   #endif
 }
 
-int Set_Syscall(int mv, int val) {
+int SetMV_Syscall(int mv, int index, int val) {
   /** With RPCs **/
   #ifdef NETWORK
   DEBUG('o', "Client called SetMV\n");
   std::stringstream ss;
-  ss << RPC_Set << " " << index;
+  ss << RPC_SetMV << " " << mv << " " << index << " " << val;
   SyscallSendMsg(ss.str());
 
   std::string res = SyscallReceiveMsg(MAILBOX);
   ss.str(std::string());
   ss.str(res);
-  int mv = -1; // -1 is error
-  ss >> mv;
+  int rv = -1; // -1 is error
+  ss >> rv;
 
-  return mv;
+  return rv;
 
   /** Without RPCs **/
   #else
@@ -1186,16 +1084,16 @@ int DestroyMV_Syscall(int mv) {
   #ifdef NETWORK
   DEBUG('o', "Client called DestroyMV\n");
   std::stringstream ss;
-  ss << RPC_DestroyMV << " " << index;
+  ss << RPC_DestroyMV << " " << mv;
   SyscallSendMsg(ss.str());
 
   std::string res = SyscallReceiveMsg(MAILBOX);
   ss.str(std::string());
   ss.str(res);
-  int mv = -1; // -1 is error
-  ss >> mv;
+  int rv = -1; // -1 is error
+  ss >> rv;
 
-  return mv;
+  return rv;
 
   /** Without RPCs **/
   #else
@@ -1314,6 +1212,9 @@ int handleMemoryFull() {
 int handleIPTMiss( int vpn ) {
   // Allocate 1 page of memory
  
+  availMem->Acquire();
+  int ppn = bitMap->Find();
+  availMem->Release();
   if (ppn == -1) {
     ppn = handleMemoryFull();
   }
@@ -1398,6 +1299,108 @@ void populateTLB() {
   (void) interrupt->SetLevel(oldLevel);
 }
 
+void Exit_Syscall(int status){
+  processLock->Acquire();
+
+  bool lastProcess = false;
+  if(processTable->NumUsed() == 1){ // only one process in table, its the last process
+    lastProcess = true;
+  }
+
+  //Find current process
+
+  int processID = -1;
+  kernelProcess* process;
+  for(int i =0; i<NumProcesses; i++){
+    process = (kernelProcess*) processTable->Get(i);
+    if(process == NULL){
+      continue; 
+    }
+    if(process->addressSpace == currentThread->space){
+      processID = i;
+      break;
+    }
+  }
+  if(processID == -1){
+    printf("Invalid process identifier");
+    processLock->Release();
+    return;
+  }
+  //3 Cases
+  //Case 1: Check if thread has called exit in a process but its not the last thread
+  //Reclaim 8 pages 
+
+  if(process->numThreads > 1){
+    DEBUG('e', "Exit case 1: not last thread in process");
+    availMem->Acquire();
+    int pageNum = currentThread->stackVP;
+    for(int i = 0; i < 8; i++){
+      bitMap->Clear(currentThread->space->pageTable[pageNum].physicalPage);
+      currentThread->space->pageTable[pageNum].valid = FALSE;
+      ipt[currentThread->space->pageTable[pageNum].physicalPage].valid = FALSE;
+      pageNum--;
+    }
+    availMem->Release(); 
+    process->numThreads--;
+    DEBUG('e', "Exit thread case 1\n");
+  }
+
+  //Case 2: last executing thread in last process (ready queue is empty)
+  else if(lastProcess && process->numThreads == 1){
+    DEBUG('e', "Exit case 2: last thread in last process");
+    availMem->Acquire();
+    for(unsigned int i =0; i<currentThread->space->numPages; i++){
+      if(currentThread->space->pageTable[i].valid){
+        bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
+        currentThread->space->pageTable[i].valid = FALSE;
+        ipt[currentThread->space->pageTable[i].physicalPage].valid = FALSE;
+      }
+    }
+    availMem->Release();
+
+    currentThread->Finish();
+    processLock->Release();
+    interrupt->Halt();
+    return;
+  }
+
+  //Case 3: Last thread in process but not last process, need to reclaim all locks, cvs, stack memory
+  else if(!lastProcess && process->numThreads == 1){
+    //Delete CVs
+    DEBUG('e', "Case 3: last thread in process but not last process, need to reclaim memory");
+    availMem->Acquire();
+    for(unsigned int i=0; i< currentThread->space->numPages; i++){
+      if(currentThread->space->pageTable[i].valid){
+        bitMap->Clear(currentThread->space->pageTable[i].physicalPage);
+        currentThread->space->pageTable[i].valid= FALSE;
+        ipt[currentThread->space->pageTable[i].physicalPage].valid = FALSE;
+      }
+    }
+    availMem->Release();
+    
+    for(int i =0; i<NumCVs; i++){
+      kernelCV* kcv = (kernelCV*)CVTable->Get(i);
+      if(kcv!= NULL){
+      if (kcv->addressSpace == currentThread->space && kcv->toBeDeleted == true){
+        DestroyCV_Syscall(i);
+      }
+    }
+  }
+
+    for(int i =0; i<NumLocks; i++){
+        kernelLock* lock = (kernelLock*)lockTable->Get(i);
+      if(lock != NULL){
+      if (lock->addressSpace == currentThread->space && lock->toBeDeleted == true){
+        DestroyLock_Syscall(i);
+      }
+    }
+  }
+    processTable->Remove(processID);
+    delete process;
+  }
+   processLock->Release();
+   currentThread->Finish();
+}
 
 void ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2); // Which syscall?
@@ -1479,11 +1482,11 @@ void ExceptionHandler(ExceptionType which) {
         break;
     case SC_GetMV:
         DEBUG('a', "SC_GetMV syscall.\n");
-        rv = Get_Syscall(machine->ReadRegister(4));
+        rv = GetMV_Syscall(machine->ReadRegister(4), machine->ReadRegister(5));
         break;
     case SC_SetMV:
         DEBUG('a', "SC_SetMV syscall.\n");
-        rv = Set_Syscall(machine->ReadRegister(4), machine->ReadRegister(5));
+        rv = SetMV_Syscall(machine->ReadRegister(4), machine->ReadRegister(5), machine->ReadRegister(6));
         break;
     case SC_DestroyMV:
         DEBUG('a', "SC_DestroyMV syscall.\n");
