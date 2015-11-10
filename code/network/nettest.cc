@@ -36,6 +36,10 @@
 
 enum ServerState{Busy, Available};
 
+Lock* lockLock;
+Lock* CVLock;
+Lock* MVLock; 
+
 struct ServerLock{
     string name;
     ServerState state;
@@ -87,7 +91,9 @@ void Server(){
 
         char buffer[MaxMailSize]; 
 
-        postOffice->Receive(0, inPktHdr, inMailHdr, buffer); 
+        postOffice->Receive(SERVER_ID, inPktHdr, inMailHdr, buffer); 
+        fflush(stdout);
+
 
         outPktHdr->to = inPktHdr->from;
         outMailHdr->to = inMailHdr->from;
@@ -97,6 +103,7 @@ void Server(){
         stringstream ss;
         ss<<buffer;
         ss>>type; 
+        
 
         string name;
         int lockID, cvID, mvID, mvVal, mvIndex, mvSize;
@@ -104,7 +111,10 @@ void Server(){
 
         switch(type){
             case RPC_CreateLock: {
+                lockLock->Acquire();
                 ss>>name;
+                cout<<"RPC Create Lock name: " << name << endl; 
+
                int index = -1;
                for(int i = 0; i<SLocks->size();i++){
                 if(SLocks->at(i)->name.compare(name) == 0){
@@ -132,10 +142,13 @@ void Server(){
                 reply << index; 
                }
               sendMessage(outPktHdr, outMailHdr, reply);
+              SLock->Release(); 
               break;
             }
             case RPC_DestroyLock: {
+                SLock->Acquire();
                 ss >> lockID; 
+                cout<<"RPC Destroy Lock ID: " << lockID << endl; 
 
                 if(lockID < 0 || lockID >= SLocks->size()){
                     reply << -1;
@@ -155,12 +168,15 @@ void Server(){
                     }
                 }
                 sendMessage(outPktHdr, outMailHdr, reply);
+                SLock->Release(); 
                 break;
 
             }
 
             case RPC_Acquire: {
+                SLock->Acquire(); 
                 ss >> lockID;
+                cout<<"RPC Acquire Lock ID: " << lockID << endl; 
 
                 bool pass = true; 
 
@@ -184,10 +200,13 @@ void Server(){
                 if(pass){
                     sendMessage(outPktHdr, outMailHdr, reply);
                 }
+                SLock->Release(); 
                 break;
             }
             case RPC_Release: {
+                SLock->Acquire(); 
                 ss >> lockID;
+                cout<<"RPC Release Lock ID: " << lockID << endl; 
                 if(lockID < 0 || lockID >= SLocks->size()){
                     reply << -1;
                 } else{
@@ -212,9 +231,12 @@ void Server(){
                     }
                 }
                 sendMessage(outPktHdr, outMailHdr, reply);
+                SLock->Release();
                 break;
             }
             case RPC_CreateCV: {
+                CVLock->Acquire(); 
+                cout<<"RPC CreateCV: " << name << endl; 
                 ss>>name;
                 int index = -1; 
                 for(unsigned int i = 0; i<SCVs->size(); i++){
@@ -245,11 +267,15 @@ void Server(){
                     reply << index; 
                 }
                 sendMessage(outPktHdr, outMailHdr, reply);
+                CVLock->Release(); 
                 break;
 
             }
             case RPC_DestroyCV: {
+                CVLock->Acquire();
                 ss >> cvID; 
+                cout<<"RPC Destroy CV : " << cvID << endl; 
+
                 if(cvID < 0 || cvID >= SCVs->size()){
                     reply << -1;
                 } else{
@@ -263,10 +289,13 @@ void Server(){
                     }
                 }
                 sendMessage(outPktHdr, outMailHdr, reply);
+                CVLock->Release();
                 break;
             }
             case RPC_Wait: {
+
                 ss >> cvID >> lockID; 
+                cout<<"RPC Wait : " << cvID << endl; 
 
                 bool pass = true;
 
@@ -307,7 +336,10 @@ void Server(){
                 break;
             }
         case RPC_Signal: {
+
                 ss>> cvID >> lockID;
+                cout<<"RPC Signal: " << cvID << endl; 
+
                 if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
                     reply << -1;
                 } 
@@ -334,7 +366,10 @@ void Server(){
 
         }
         case RPC_Broadcast: {
+
             ss>>cvID >> lockID;
+            cout<<"RPC Broadcast cv ID lock ID: " << cvID << " " << lockID<< endl; 
+
             if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
                     reply << -1;
                 } 
@@ -366,6 +401,7 @@ void Server(){
         }
 
         case RPC_CreateMV: {
+
             ss>>name>>mvSize; 
 
             int index = -1;
@@ -396,6 +432,7 @@ void Server(){
             break;
         }
         case RPC_DestroyMV: {
+
             ss >> mvID;
             if(mvID < 0 || mvID >= SMVs->size()){
                 reply << -1;
@@ -414,6 +451,7 @@ void Server(){
         }
 
         case RPC_GetMV: {
+
             ss >> mvID >> mvIndex; 
             if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
                 reply << -1;
@@ -430,6 +468,7 @@ void Server(){
         }
 
         case RPC_SetMV: {
+
             ss >> mvID >> mvIndex >> mvVal;
 
             if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
@@ -449,7 +488,7 @@ void Server(){
             break;
         }
     default:
-        cout<<"Unknown RPC \n";
+        std::cout<<"Unknown RPC \n" << type << std::endl;
         continue;
         break;
     }

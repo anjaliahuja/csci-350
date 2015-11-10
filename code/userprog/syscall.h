@@ -166,10 +166,6 @@ int Rand(int range, int offset);
 void Printf(char* buf, int len, int num1);
 
 
-/*monitor variable syscalls*/
-int CreateMV(char* name, int len, int size);
-int SetMV(int mv, int index, int value);
-int GetMV(int mv, int index);
 
 #endif /* IN_ASM */
 

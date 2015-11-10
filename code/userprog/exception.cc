@@ -366,6 +366,7 @@ void Yield_Syscall(){
 
 /************************************************ BEGINNING OF RPC SYSCALLS ***********************************************************/
 
+#ifdef NETWORK
 void SyscallSendMsg(std::string request) {
   PacketHeader outPacketHeader;
   MailHeader outMailHeader;
@@ -383,16 +384,19 @@ void SyscallSendMsg(std::string request) {
   delete[] req;
 }
 
-std::string SyscallReceiveMsg(int mailBox) {
+std::string SyscallReceiveMsg() {
   PacketHeader inPacketHeader;
   MailHeader inMailHeader;
   char *res = new char[MaxMailSize];
-  postOffice->Receive(mailBox, &inPacketHeader, &inMailHeader, res);
+  postOffice->Receive(MAILBOX, &inPacketHeader, &inMailHeader, res);
+  fflush(stdout);
+
   std::stringstream ss;
   ss << res;
   delete[] res;
   return ss.str();
 }
+#endif
 
 int CreateCV_Syscall(int vaddr, int len) {
   /** With RPCs **/
@@ -408,7 +412,7 @@ int CreateCV_Syscall(int vaddr, int len) {
   ss << RPC_CreateCV << " " << name << " " << len;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg(MAILBOX);
+  std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
   int cv = -1; // -1 is error
@@ -471,7 +475,7 @@ int DestroyCV_Syscall(int index) {
   ss << RPC_DestroyCV << " " << index;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg(MAILBOX);
+  std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
   int cv = -1; // -1 is error
@@ -528,7 +532,7 @@ int Wait_Syscall(int lockIndex, int CVIndex) {
   ss << RPC_Wait << " " << lockIndex << " " << CVIndex;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg(MAILBOX);
+  std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
   int cv = -1; // -1 is error
@@ -614,7 +618,7 @@ int Signal_Syscall(int lockIndex, int CVIndex) {
   ss << RPC_Signal << " " << lockIndex << " " << CVIndex;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg(MAILBOX);
+  std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
   int cv = -1; // -1 is error
@@ -689,7 +693,7 @@ int Broadcast_Syscall(int lockIndex, int CVIndex) {
   ss << RPC_Broadcast << " " << lockIndex << " " << CVIndex;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg(MAILBOX);
+  std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
   int cv = -1; // -1 is error
@@ -768,7 +772,7 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   ss << RPC_CreateLock << " " << name << " " << len;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg(MAILBOX);
+  std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
   int lock = -1; // -1 is error
@@ -832,7 +836,7 @@ int Acquire_Syscall(int index) {
   ss << RPC_Acquire << " " << index;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg(MAILBOX);
+  std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
   int lock = -1; // -1 is error
@@ -884,7 +888,7 @@ int Release_Syscall(int index) {
   ss << RPC_Release << " " << index;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg(MAILBOX);
+  std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
   int lock = -1; // -1 is error
@@ -949,7 +953,7 @@ int DestroyLock_Syscall(int index) {
   ss << RPC_DestroyLock << " " << index;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg(MAILBOX);
+  std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
   int lock = -1; // -1 is error
@@ -1016,7 +1020,7 @@ int CreateMV_Syscall(int vaddr, int len) {
   ss << RPC_CreateMV << " " << name << " " << len;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg(MAILBOX);
+  std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
   int mv = -1; // -1 is error
@@ -1041,7 +1045,7 @@ int GetMV_Syscall(int mv, int index) {
   ss << RPC_GetMV << " " << mv << " " << index;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg(MAILBOX);
+  std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
   int rv = -1; // -1 is error
@@ -1064,7 +1068,7 @@ int SetMV_Syscall(int mv, int index, int val) {
   ss << RPC_SetMV << " " << mv << " " << index << " " << val;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg(MAILBOX);
+  std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
   int rv = -1; // -1 is error
@@ -1087,7 +1091,7 @@ int DestroyMV_Syscall(int mv) {
   ss << RPC_DestroyMV << " " << mv;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg(MAILBOX);
+  std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
   int rv = -1; // -1 is error
@@ -1358,7 +1362,6 @@ void Exit_Syscall(int status){
     }
     availMem->Release();
 
-    currentThread->Finish();
     processLock->Release();
     interrupt->Halt();
     return;
