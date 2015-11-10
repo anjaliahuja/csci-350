@@ -99,7 +99,7 @@ void Server(){
         ss>>type; 
 
         string name;
-        int lockID, cvID, mvID, mvVal;
+        int lockID, cvID, mvID, mvVal, mvIndex, mvSize;
         stringstream reply; 
 
         switch(type){
@@ -214,7 +214,7 @@ void Server(){
                 sendMessage(outPktHdr, outMailHdr, reply);
                 break;
             }
-            case RPC_CreateCondition{
+            case RPC_CV: {
                 ss>>name;
                 int index = -1; 
                 for(unsigned int i = 0; i<SCVs->size(); i++){
@@ -244,10 +244,11 @@ void Server(){
                 else {
                     reply << index; 
                 }
-                sendReply(outPktHdr, outMailHdr, reply);
+                sendMessage(outPktHdr, outMailHdr, reply);
+                break;
 
             }
-            case RPC_DestroyCV{
+            case RPC_DestroyCV: {
                 ss >> cvID; 
                 if(cvID < 0 || cvID >= SCVs->size()){
                     reply << -1;
@@ -262,8 +263,9 @@ void Server(){
                     }
                 }
                 sendMessage(outPktHdr, outMailHdr, reply);
+                break;
             }
-            case RPC_Wait{
+            case RPC_Wait: {
                 ss >> cvID >> lockID; 
 
                 bool pass = true;
@@ -304,7 +306,7 @@ void Server(){
                 }
                 break;
             }
-            case RPC_Signal: {
+        case RPC_Signal: {
                 ss>> cvID >> lockID;
                 if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
                     reply << -1;
@@ -358,10 +360,96 @@ void Server(){
 
                     }
                 }
-                
 
+                sendMessage(outPktHdr, outMailHdr, reply);
+                break;       
+        }
+
+        case RPC_CreateMV: {
+            ss>>name>>mvSize; 
+
+            int index = -1;
+
+            for(unsigned int = 0; i < SMVs->size(); i++){
+                if(SMVs->at(i) != NULL){
+                    if(SMVs->at(i)->name == name){
+                        index = i;
+                        reply << i; 
+                        break;
+                    }
+                }
+            }
+            if(index == -1){ // MV doesnt already exist
+                ServerMV *mv = new ServerMV;
+                mv->name = name;
+                mv->val = new int[mvSize];
+                mv->len = mvSize;
+                for(unsigned int i = 0; i < mvSize; i++){
+                    mv->val[i] = 0;
+                }
+                mv->toBeDeleted = false;
+                SMVs->push_back(mv);
+
+                reply <<SMVs->size()-1;
+            }
+            sendMessage(outPktHdr, outMailHdr, reply);
+            break;
+        }
+        case RPC_DestroyMV: {
+            ss >> mvID;
+            if(mvID < 0 || mvID >= SMVs->size()){
+                reply << -1;
+            } else{
+                if(SMVs->at(mvID)==NULL){
+                    reply << -1;
+                } else{
+                   ServerMV *mv = SMVs->at(mvID);
+                   SMVs->at(mvID)=NULL;
+                   delete mv; 
+                   reply << mv; 
+                }
+            }
+
+            sendMessage(outPktHdr, outMailHdr, reply);
+        }
+
+        case RPC_GetMV: {
+            ss >> mvID >> mvIndex; 
+            if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
+                reply << -1;
+            } else {
+                if(SMVs->at(mvID)==NULL){
+                    reply << -1;
+                } else if(mvIndex >= SMVs->at(mvID)->size()){
+                    reply << -1;
+                } else{
+                    reply << SMVs->at(mvID)->at(mvIndex);
+                }
+            }
+            sendMessage(outPktHdr, outMailHdr, reply);
+        }
+
+        case RPC_SetMV: {
+            ss >> mvID >> mvIndex >> mvVal;
+
+            if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
+                reply << -1;
+            }
+            else{
+                if(SMVs->at(mvID)==NULL){
+                    reply << -1;
+                } else if (mvIndex >= SMVs->at(mvID)->size()){
+                    reply << -1;
+                } else{
+                    SMVs->at(mvID)->val[mvIndex] = mvVal; 
+                    reply << mvVal; 
+                }
+            }
+            sendMessage(outPktHdr, outMailHdr, reply);
+        }
     }
 }
+
 
 void
 MailTest(int farAddr)
