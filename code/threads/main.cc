@@ -146,6 +146,13 @@ main(int argc, char **argv)
 						// start up another nachos
             MailTest(atoi(*(argv + 1)));
             argCount = 2;
+        } else if (!strcmp(*argv, "-server")) {
+      ASSERT(argc > 1);
+            Delay(2); // delay for 2 seconds
+            // to give the user time to 
+            // start up another nachos
+            Server();
+            argCount = 2;
         }
 #endif // NETWORK
     }

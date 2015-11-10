@@ -155,8 +155,9 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
         pageTable[i].readOnly = FALSE;  // if the code segment was entirely on 
                         // a separate page, we could set its 
                         // pages to be read-only
-        pageTable[i].byteOffset = noffH.code.inFileAddr + i*PageSize;
+        pageTable[i].byteOffset = 40 + i*PageSize;
         pageTable[i].location = executable;
+        pageTable[i].type = EXECUTABLE;
 
         /*ipt[physPage].virtualPage = i;
         ipt[physPage].physicalPage = physPage;
@@ -255,6 +256,10 @@ void AddrSpace::SaveState()
   // On context switch set all valid bits to false
   for (int i = 0; i < TLBSize; i++) {
     machine->tlb[i].valid = false;
+    if (machine->tlb[i].valid) {
+        //propogate dirty bit
+        ipt[machine->tlb[i].physicalPage].dirty = machine->tlb[i].dirty;
+    }
   }
 
   //Restore interrupts.
@@ -289,6 +294,7 @@ int* AddrSpace::AllocateStack(){
             pageTable[i].readOnly = oldPageTable[i].readOnly; 
             pageTable[i].byteOffset = oldPageTable[i].byteOffset;
             pageTable[i].location = oldPageTable[i].location;
+            pageTable[i].type = oldPageTable[i].type;
         }//copy all values of old page table to new page table
 
         numPages += 8; //add 8 new pages
@@ -303,6 +309,7 @@ int* AddrSpace::AllocateStack(){
             pageTable[i].readOnly = FALSE;
             pageTable[i].byteOffset = -1;
             pageTable[i].location = NULL;
+            pageTable[i].type = NEITHER;
 
             /*ipt[physPage].virtualPage = i;
             ipt[physPage].physicalPage = physPage;
