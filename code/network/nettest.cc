@@ -43,6 +43,7 @@ struct ServerLock{
     queue<PacketHeader*>* packetWaiting;
     queue<MailHeader*>* mailWaiting;
     bool toBeDeleted;
+    int counter; 
 };
 
 struct ServerCV{
@@ -51,6 +52,7 @@ struct ServerCV{
     queue<MailHeader*>* mailWaiting;
     int lockIndex;
     bool toBeDeleted;
+    int counter;
 };
 
 struct ServerMV{
@@ -60,22 +62,13 @@ struct ServerMV{
     bool toBeDeleted;
 };
 
-void initNetworkMessaging(PacketHeader &inPktHdr, PacketHeader &outPktHdr, MailHeader &inMailHdr, MailHeader &outMailHdr, int len)
-{
-    outPktHdr.to = inPktHdr.from;
-    outPktHdr.from = inPktHdr.to;
-    outMailHdr.to = inMailHdr.from;
-    outMailHdr.from = inMailHdr.to;
-    outMailHdr.length = len+1;
-}
 
-void sendMessage(PacketHeader* outPktHdr, MailHeader* outMailHdr, PacketHeader* inPktHdr, MailHeader* inMailHdr, stringstream& msg){
-    int msgLen = msg.str().length();
+void sendMessage(PacketHeader* outPktHdr, MailHeader* outMailHdr, stringstream& msg){
+    int msgLen = msg.str().length() +1;
     outMailHdr->length = msgLen;
     char *message = new char[msgLen];
-    std::strcpy(message, msg.c_str());
+    std::strcpy(message, msg.str().c_str());
 
-    initNetworkMessaging(inPktHdr, outPktHdr, inMailHdr, outMailHdr, strlen(message));
     if(!postOffice->Send(outPktHdr, outMailHdr, data)){
         printf("Error in server, cannot send message \n");
     }
@@ -96,6 +89,10 @@ void Server(){
 
         postOffice->Receive(0, inPktHdr, inMailHdr, buffer); 
 
+        outPktHdr->to = inPktHdr->from;
+        outMailhdr->to = inMailHdr->from;
+        outPktHdr->from - inPktHdr->to;
+
         int type;
         stringstream ss;
         ss<<buffer;
@@ -106,17 +103,18 @@ void Server(){
         stringstream reply; 
 
         switch(type){
-            case RPC_CreateLock: 
+            case RPC_CreateLock: {
                 ss>>name;
                int index = -1;
                for(int i = 0; i<SLocks.size();i++){
                 if(SLocks->at(i)->name.compare(name) == 0){
                     index = i;
+                    SLocks->at(i)->counter++;
                     break;
                 }
                }
                if(index == -1){
-                index = SLocks.size(); 
+                index = SLocks->size(); 
                 ServerLock *lock = new ServerLock;
                 lock->name = name;
                 lock->packetWaiting = new queue<PacketHeader *>();
@@ -135,10 +133,233 @@ void Server(){
                }
               sendMessage(outPktHdr, OutMailHdr, reply);
               break;
-            case RPC_DestroyLock: 
+            }
+            case RPC_DestroyLock: {
+                ss >> lockID; 
+
+                if(lockID < 0 || lockID >= SLocks->size()){
+                    reply << -1;
+                } else {
+                    if(SLocks->at(lockID) == NULL){
+                        reply << -1;
+                    } else{
+                        SLocks->counter--;
+                        reply<<lockID;
+                        if(SLocks->at(lockID)->state == Available && SLocks->at(lockID)->counter == 0){
+                            ServerLock *lock = SLocks->at(lockID);
+                            SLocks->at(lockID) = NULL;
+                            delete lock;
+                        } else{
+                        SLocks->(lockID)->toBeDeleted = true;
+                        }
+                    }
+                }
+                sendMessage(outPktHdr, outMailHdr, reply);
+                break;
 
             }
+
+            case RPC_Acquire: {
+                ss >> lockID;
+
+                bool pass = true; 
+
+                if(lockID < 0 || lockID >= SLocks->size()){
+                    reply << -1;
+                } else {
+                    if(SLocks -> at(lockID) == NULL){
+                        reply << -1;
+                    } else if(SLocks->at(lockID)->owner == outPktHdr->to && SLocks->at(lockID)->state == Busy){
+                        reply << -1; 
+                    } else if(SLocks->at(lockID)->state== Busy){
+                        pass= false;
+                        SLocks->at(lockID)->packetWaiting->push(outPktHdr);
+                        SLocks->at(lockID)->mailWaiting->push(outMailHdr);
+                    } else{
+                        SLocks->at(lockID)->owner = outPktHdr->to;
+                        SLocks->at(lockID)->state = Busy;
+                        reply << -2; 
+                    }
+                }
+                if(pass){
+                    sendMessage(outPktHdr, outMailHdr, reply);
+                }
+                break;
+            }
+            case RPC_Release: {
+                ss >> lockID;
+                if(lockID < 0 || lockID >= SLocks->size()){
+                    reply << -1;
+                } else{
+                    if(SLocks->at(lockID)== NULL){
+                        reply << -1;
+                    } else if(SLocks->at(lockID)->state == Available || SLocks->at(lockID)->owner != outPktHdr->to){
+                        reply << -1;
+                    } else{
+                        reply << -2; 
+                        if(SLocks->at(lockID)->packetWaiting->empty()){
+                            SLocks->at(lockID)->state = Available;
+                            SLocks->at(lockID)->owner = -1;
+                        } else{
+                            PacketHeader* tempOutPkt = SLocks->at(lockID)->packetWaiting->front();
+                            SLocks->at(lockID)->packetWaiting->pop();
+                            MailHeader* tempOutMail = SLocks->at(lockID)->mailWaiting->front();
+                            SLocks->at(lockID)->mailWaiting->pop();
+
+                            SLocks->at(lockID)->owner = tempOutPkt->to;
+                            sendMessage(tempOutPkt, tempOutMail, reply);
+                        }
+                    }
+                }
+                sendMessage(outPktHdr, outMailHdr, reply);
+                break;
+            }
+            case RPC_CreateCondition{
+                ss>>name;
+                int index = -1; 
+                for(unsigned int i = 0; i<SCVs->size(); i++){
+                    if(SCVs->at(i) != NULL){
+                        if(SCVs->at(i)->name == name){
+                            SCVs->at(i)->counter++;
+                            index = i;
+                            break;
+
+                        }
+                    }
+                }
+                if(index == -1){
+                    index = SCVs->size();
+                    ServerCV* scv = new ServerCV; 
+                    scv->name = name;
+                    scv->packetWaiting = new queue<PacketHeader *>();
+                    scv->mailWaiting = new queue<MailHeader *>();
+                    scv->toBeDeleted = false;
+                    scv->lockIndex = -1; 
+
+                    SCVs->push_back(scv); 
+
+                    reply << SCVs->size() -1;
+
+                }
+                else {
+                    reply << index; 
+                }
+                sendReply(outPktHdr, outMailHdr, reply);
+
+            }
+            case RPC_DestroyCV{
+                ss >> cvID; 
+                if(cvID < 0 || cvID >= SCVs->size()){
+                    reply << -1;
+                } else{
+                    if(SCVs->at(cvID) == NULL){
+                        reply << -1;
+                    } else{
+                        reply << cvID;
+                        ServerCV* scv = SCVs->at(cvID);
+                        SCVs->at(cvID) = NULL;
+                        delete scv; 
+                    }
+                }
+                sendMessage(outPktHdr, outMailHdr, reply);
+            }
+            case RPC_Wait{
+                ss >> cvID >> lockID; 
+
+                bool pass = true;
+
+                if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
+                    reply << -1;
+                }
+                else{
+                    if(SLocks->at(lockID)==NULL || SCVs->at(cvID)==NULL){
+                        reply<<-1;
+                    } else if (SLocks->at(lockID)->owner != outPktHdr->to || (SCVs->at(cvID)->lockIndex != lockID && SCVs->at(cvID)->lockIndex != -1)){
+                        reply << -1;
+                    }else {
+                        pass = false;
+                        if(SCVs->at(cvID)->lockIndex == -1){
+                            SCVs->at(cvID)->lockIndex = lockID;
+                        }
+                        SCVs->at(cvID)->packetWaiting->push(outPktHdr);
+                        SCVs->at(cvID)->mailWaiting->push(outMailHdr);
+
+                        PacketHeader* tempOutPkt = SLocks->at(lockID)->packetWaiting->front();
+                        MailHeader* tempOutMail = SLocks->at(lockID)->mailWaiting->front();
+
+                        if(!(tempOutPkt)==NULL){
+                            SLocks->at(lockID)->packetWaiting->pop();
+                            SLocks->at(lockID)->mailWaiting->pop();
+                            SLocks->at(lockID)->owner=tempOutPkt->to;
+                            reply<<-2;
+                            sendMessage(tempOutPkt, tempOutMail, reply);
+                        }
+                        else{
+                            SLocks->at(lockID)->state = Available;
+                        }
+                    }
+                }
+                if(pass){
+                    sendMessage(outPktHdr, outMailHdr, reply);
+                }
+                break;
+            }
+            case RPC_Signal: {
+                ss>> cvID >> lockID;
+                if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
+                    reply << -1;
+                } 
+                else{
+                    if(SLocks->at(lockID)==NULL||SCVs->at(cvID)== NULL){
+                        reply << -1;
+                    } else if(SLocks->at(lockID)->owner != outPktHdr->to || SCVs->at(cvID)->lockIndex != lockID){
+                        reply << -1;
+                    } else{
+                        reply<<-2;
+                        PacketHeader* tempOutPkt = SCVs->at(cvID)->packetWaiting->front();
+                        SCVs->at(cvID)->packetWaiting->pop();
+                        MailHeader* tempOutMail = SCVs->at(cvID)->mailWaiting->front();
+                        SCVs->at(cvID)->mailWaiting->pop();
+                        sendMessage(tempOutPkt, tempOutMail, reply);
+
+                        if(SCVs->at(cvID)->packetWaiting->empty()){
+                            SCVs->at(cvID)->lockIndex = -1; 
+                        }
+                    }
+                }
+                sendMessage(outPktHdr, outMailHdr, reply);
+                break;       
+
         }
+        case RPC_Broadcast: {
+            ss>>cvID >> lockID;
+            if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
+                    reply << -1;
+                } 
+                else{
+                    if(SLocks->at(lockID)==NULL||SCVs->at(cvID)== NULL){
+                        reply << -1;
+                    } else if(SLocks->at(lockID)->owner != outPktHdr->to || SCVs->at(cvID)->lockIndex != lockID){
+                        reply << -1;
+                    } else{
+                        if(SCVs->at(cvID)->packetWaiting->empty()){
+                            reply<<-1;
+                        } else{
+                            while(!SCVs->at(cvID)->packetWaiting->empty()){
+                                reply << -2;
+                                 PacketHeader* tempOutPkt = SCVs->at(cvID)->packetWaiting->front();
+                                SCVs->at(cvID)->packetWaiting->pop();
+                                MailHeader* tempOutMail = SCVs->at(cvID)->mailWaiting->front();
+                                SCVs->at(cvID)->mailWaiting->pop();
+                                sendMessage(tempOutPkt, tempOutMail, reply);
+                            }
+                            SCVs->at(cvID)->lockID = -1;
+                        }
+
+                    }
+                }
+                
+
     }
 }
 
