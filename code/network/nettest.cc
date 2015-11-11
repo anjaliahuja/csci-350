@@ -268,6 +268,7 @@ void Server(){
                     scv->toBeDeleted = false;
                     scv->lockIndex = -1; 
                     scv->counter = 1;
+                    scv->useCounter = 0;
 
                     SCVs->push_back(scv); 
 
@@ -295,7 +296,7 @@ void Server(){
                     } else{
                         reply << cvID;
                         SCVs->at(cvID)->counter--;
-                        if(SCVs->at(cvID)->counter == 0){
+                        if(SCVs->at(cvID)->useCounter == 0){
                             ServerCV* scv = SCVs->at(cvID);
                             SCVs->at(cvID) = NULL;
                             delete scv; 
@@ -323,6 +324,7 @@ void Server(){
                     } else if (SLocks->at(lockID)->owner != outPktHdr->to || (SCVs->at(cvID)->lockIndex != lockID && SCVs->at(cvID)->lockIndex != -1)){
                         reply << -1;
                     }else {
+                        SCVs->at(cvID)->useCounter++;
                         pass = false;
                         if(SCVs->at(cvID)->lockIndex == -1){
                             SCVs->at(cvID)->lockIndex = lockID;
@@ -366,6 +368,7 @@ void Server(){
                         reply << -1;
                     } else{
                         reply<<-2;
+                        SCVs->at(cvID)->useCounter--;
                         PacketHeader* tempOutPkt = SCVs->at(cvID)->packetWaiting->front();
                         SCVs->at(cvID)->packetWaiting->pop();
                         MailHeader* tempOutMail = SCVs->at(cvID)->mailWaiting->front();
@@ -405,6 +408,7 @@ void Server(){
                         } else{
                             while(!SCVs->at(cvID)->packetWaiting->empty()){
                                 reply << -2;
+                                SCVs->at(cvID)->useCounter--;
                                  PacketHeader* tempOutPkt = SCVs->at(cvID)->packetWaiting->front();
                                 SCVs->at(cvID)->packetWaiting->pop();
                                 MailHeader* tempOutMail = SCVs->at(cvID)->mailWaiting->front();
