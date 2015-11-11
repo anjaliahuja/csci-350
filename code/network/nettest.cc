@@ -1,16 +1,16 @@
 // nettest.cc 
-//	Test out message delivery between two "Nachos" machines,
-//	using the Post Office to coordinate delivery.
+//  Test out message delivery between two "Nachos" machines,
+//  using the Post Office to coordinate delivery.
 //
-//	Two caveats:
-//	  1. Two copies of Nachos must be running, with machine ID's 0 and 1:
-//		./nachos -m 0 -o 1 &
-//		./nachos -m 1 -o 0 &
+//  Two caveats:
+//    1. Two copies of Nachos must be running, with machine ID's 0 and 1:
+//      ./nachos -m 0 -o 1 &
+//      ./nachos -m 1 -o 0 &
 //
-//	  2. You need an implementation of condition variables,
-//	     which is *not* provided as part of the baseline threads 
-//	     implementation.  The Post Office won't work without
-//	     a correct implementation of condition variables.
+//    2. You need an implementation of condition variables,
+//       which is *not* provided as part of the baseline threads 
+//       implementation.  The Post Office won't work without
+//       a correct implementation of condition variables.
 //
 // Copyright (c) 1992-1993 The Regents of the University of California.
 // All rights reserved.  See copyright.h for copyright notice and limitation 
@@ -28,11 +28,11 @@
 #include "interrupt.h"
 
 // Test out message delivery, by doing the following:
-//	1. send a message to the machine with ID "farAddr", at mail box #0
-//	2. wait for the other machine's message to arrive (in our mailbox #0)
-//	3. send an acknowledgment for the other machine's message
-//	4. wait for an acknowledgement from the other machine to our 
-//	    original message
+//  1. send a message to the machine with ID "farAddr", at mail box #0
+//  2. wait for the other machine's message to arrive (in our mailbox #0)
+//  3. send an acknowledgment for the other machine's message
+//  4. wait for an acknowledgement from the other machine to our 
+//      original message
 
 enum ServerState{Busy, Available};
 
@@ -177,7 +177,7 @@ void Server(){
                 lockLock->Acquire(); 
                 ss >> lockID;
                 cout<<"RPC Acquire Lock ID: " << lockID << endl; 
-
+                cout<<"State of lock is" <<SLocks->at(lockID)->state <<endl;
                 bool pass = true; 
 
                 if(lockID < 0 || lockID >= SLocks->size()){
@@ -187,21 +187,21 @@ void Server(){
                         reply << -1;
                     } else if(SLocks->at(lockID)->owner == outPktHdr->to && SLocks->at(lockID)->state == Busy){
                         reply << -1; 
-                    } else if(SLocks->at(lockID)->state== Busy){
+                    } else if(SLocks->at(lockID)->state == Busy){
                         pass= false;
                         SLocks->at(lockID)->packetWaiting->push(outPktHdr);
+                        int sizeofPacket = SLocks->at(lockID)->packetWaiting->size();
+                        cout<<"packet waiting size: "<< sizeofPacket <<endl;
                         SLocks->at(lockID)->mailWaiting->push(outMailHdr);
                     } else{
+                        cout<<"Set lock to busy"<<endl;
                         SLocks->at(lockID)->owner = outPktHdr->to;
+                        cout<<"Lock owner is: " << outPktHdr->to <<endl;
                         SLocks->at(lockID)->state = Busy;
-                        reply << lockID; 
+                        reply << -2; 
                     }
                 }
                 if(pass){
-                    cout << "lock to acquire goes from: " << endl;
-                    cout << outPktHdr->from << " to " << outPktHdr->to << endl;
-                    cout << "with the reply: " << endl;
-                    cout << reply.str() << endl;
                     sendMessage(outPktHdr, outMailHdr, reply);
                 }
                 lockLock->Release(); 
@@ -212,25 +212,32 @@ void Server(){
                 ss >> lockID;
                 cout<<"RPC Release Lock ID: " << lockID << endl; 
                 if(lockID < 0 || lockID >= SLocks->size()){
+                    cout<<"error 1"<<endl;
                     reply << -1;
                 } else{
                     if(SLocks->at(lockID)== NULL){
+                        cout<<"error 2"<<endl;
                         reply << -1;
-                    } else if(SLocks->at(lockID)->state == Available || SLocks->at(lockID)->owner != outPktHdr->to){
+                    } else if(SLocks->at(lockID)->state == Available){
+                        cout<<"Release error 3"<<endl;
+                        if(SLocks->at(lockID)->state == Available){
+                            cout<<"State is available of lock"<<endl;
+                        }else{
+                         
+                            cout<<"owner is not correct"<<endl;
+                            cout<<"Owner is" << SLocks->at(lockID)->owner<<endl;
+                            cout<<"OutPktHdr is "<< outPktHdr->to<<endl;
+                        }
+
                         reply << -1;
                     } else{
-<<<<<<< HEAD
-=======
                         reply << -2; 
->>>>>>> origin/anne_tests
-                        if(SLocks->at(lockID)->packetWaiting->empty()){ 
+                        if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->mailWaiting->empty()){ 
+
                             SLocks->at(lockID)->state = Available; 
+                            cout<<"Lock number: " <<lockID<<" is now available"<<endl;
                             SLocks->at(lockID)->owner = -1;
                         } else{
-<<<<<<< HEAD
-                            reply << -2; 
-=======
->>>>>>> origin/anne_tests
                             PacketHeader* tempOutPkt = SLocks->at(lockID)->packetWaiting->front();
                             SLocks->at(lockID)->packetWaiting->pop();
                             MailHeader* tempOutMail = SLocks->at(lockID)->mailWaiting->front();
@@ -243,11 +250,6 @@ void Server(){
                                 SLocks->at(lockID) = NULL;
                                 delete lock;
                             }*/
-                        }
-                        if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->toBeDeleted == true){
-                            ServerLock* lock = SLocks->at(lockID);
-                            SLocks->at(lockID) = NULL;
-                            delete lock;
                         }
                     }
                 }
@@ -324,7 +326,7 @@ void Server(){
                 CVLock->Acquire();
                 ss >> lockID >> cvID; 
                 cout<<"RPC Wait : " << cvID << endl; 
-
+                cout<<"In wait, the lock state of "<<lockID << "is "<<SLocks->at(lockID)->state<<endl;
                 bool pass = true;
 
                 if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
@@ -344,19 +346,21 @@ void Server(){
                         SCVs->at(cvID)->packetWaiting->push(outPktHdr);
                         SCVs->at(cvID)->mailWaiting->push(outMailHdr);
 
-                        PacketHeader* tempOutPkt = SLocks->at(lockID)->packetWaiting->front();
-                        MailHeader* tempOutMail = SLocks->at(lockID)->mailWaiting->front();
 
-                        if(!(tempOutPkt)==NULL){
+                        PacketHeader* waitOutPkt = SLocks->at(lockID)->packetWaiting->front();
+                        MailHeader* waitOutMail = SLocks->at(lockID)->mailWaiting->front();
+
+                        if(!(waitOutPkt == NULL)){
                             SLocks->at(lockID)->packetWaiting->pop();
                             SLocks->at(lockID)->mailWaiting->pop();
-                            SLocks->at(lockID)->owner=tempOutPkt->to;
-                            reply<<-2;
-                            sendMessage(tempOutPkt, tempOutMail, reply);
+                            SLocks->at(lockID)->owner = waitOutPkt->to;
+                            reply << -2;
+                            sendMessage(waitOutPkt, waitOutMail, reply);
+                        } else{
+                            cout<<"Error 3"<<endl;
+                            SLocks->at(lockID)->state = Available; 
                         }
-                        else{
-                            SLocks->at(lockID)->state = Available;
-                        }
+
                     }
                 }
                 if(pass){
@@ -439,7 +443,7 @@ void Server(){
         }
 
         case RPC_CreateMV: {
-            MVLock->Acquire(); 
+            lockLock->Acquire(); 
             ss>>name>>mvSize; 
 
             int index = -1;
@@ -467,12 +471,9 @@ void Server(){
                 reply <<SMVs->size()-1;
             }
             sendMessage(outPktHdr, outMailHdr, reply);
-            MVLock->Release();
             break;
-
         }
         case RPC_DestroyMV: {
-            MVLock->Acquire();
             cout<<"In destroy MV RPC " <<endl;
             ss >> mvID;
             if(mvID < 0 || mvID >= SMVs->size()){
@@ -489,12 +490,10 @@ void Server(){
             }
 
             sendMessage(outPktHdr, outMailHdr, reply);
-            MVLock->Release();
-            break;
         }
 
         case RPC_GetMV: {
-            MVLock->Acquire();
+
             ss >> mvID >> mvIndex; 
             if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
                 reply << -1;
@@ -508,12 +507,10 @@ void Server(){
                 }
             }
             sendMessage(outPktHdr, outMailHdr, reply);
-            MVLock->Release();
-            break;
         }
 
         case RPC_SetMV: {
-            MVLock->Acquire();
+
             ss >> mvID >> mvIndex >> mvVal;
 
             if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
@@ -530,7 +527,6 @@ void Server(){
                 }
             }
             sendMessage(outPktHdr, outMailHdr, reply);
-            MVLock->Release();
             break;
         }
     default:
@@ -554,7 +550,7 @@ MailTest(int farAddr)
     // construct packet, mail header for original message
     // To: destination machine, mailbox 0
     // From: our machine, reply to: mailbox 1
-    outPktHdr.to = farAddr;		
+    outPktHdr.to = farAddr;     
     outMailHdr.to = 0;
     outMailHdr.from = 1;
     outMailHdr.length = strlen(data) + 1;
@@ -592,5 +588,4 @@ MailTest(int farAddr)
     // Then we're done!
     interrupt->Halt();
 }
-
 
