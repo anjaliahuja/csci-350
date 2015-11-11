@@ -147,13 +147,14 @@ IV. IMPLEMENTATION
 
 V. TESTING
   Part 1 & Part 2:
-  In order to test parts 1 and 2 we created matmult2.c and sort2.c which exec 2 instances of matmult and sort respectively.  To run these tests with the random page replacement, type in "nachos -x ../test/matmult2 -P RAND" and "nachos -x ../test/sort2 -P RAND".  For FIFO, type in "nachos -x ../test/matmult2 -P FIFO" and "nachos -x ../test/sort2 -P FIFO".  
-  matmult2 test will print: 
+  In order to test parts 1 and 2 we created matmult2exec.c and sort2exec.c which exec 2 instances of matmult and sort respectively.  To run these tests with the random page replacement, type in "nachos -x ../test/matmult2exec -P RAND" and "nachos -x ../test/sort2exec -P RAND".  For FIFO, type in "nachos -x ../test/matmult2exec -P FIFO" and "nachos -x ../test/sort2exec -P FIFO".  
+  We also created matmult2fork.c and sort2fork.c which fork 2 instances of matmult and sort respectively.  To run these tests with the random page replacement, type in "nachos -x ../test/matmult2fork -P RAND" and "nachos -x ../test/sort2fork -P RAND".  For FIFO, type in "nachos -x ../test/matmult2fork -P FIFO" and "nachos -x ../test/sort2fork -P FIFO".  
+  matmult2 tests will print: 
     exit sys: 0
     exit sys: 7220
     exit sys: 7220
   The last two exit printouts come from the two instances of matmult.  The first printout comes from the main in the test.
-  sort2 test will print: 
+  sort2 tests will print: 
     exit sys: 0
     exit sys: 1023
     exit sys: 1023
