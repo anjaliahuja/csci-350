@@ -32,7 +32,7 @@ INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR)
 
 
-all: halt matmult2 matmult sort2 sort testfiles passportsim testexit testexitprogram testprint passporttest1 passporttest2 passporttest3 passporttest4 passporttest5 passporttest6 lock_cv_test1 lock_cv_test2 lock_cv_test3 lock_cv_test4 lock_cv_test5 lock_cv_test6 MVtests
+all: halt matmult2 matmult sort2 sort testfiles passportsim testexit testexitprogram testprint passporttest1 passporttest2 passporttest3 passporttest4 passporttest5 passporttest6 lock_cv_test1 lock_cv_test2 lock_cv_test3 lock_cv_test4 lock_cv_test5 lock_cv_test6 MVtests MVtests1
 
 start.o: start.s ../userprog/syscall.h
 	$(CPP) $(CPPFLAGS) start.s > strt.s
@@ -166,7 +166,12 @@ MVtests.o: MVtests.c
 MVtests: MVtests.o start.o
 	$(LD) $(LDFLAGS) start.o MVtests.o -o MVtests.coff
 	../bin/coff2noff MVtests.coff MVtests
+MVtests1.o: MVtests1.c
+	$(CC) $(CFLAGS) -c MVtests1.c
+MVtests1: MVtests1.o start.o
+	$(LD) $(LDFLAGS) start.o MVtests1.o -o MVtests1.coff
+	../bin/coff2noff MVtests1.coff MVtests1
 
 
 clean:
-	rm -f *.o *.coff matmult testfiles testexit testexitprogram testprint passporttest1 passporttest2 passporttest3 passporttest4 passporttest5 passporttest6 passportsim MVtests
+	rm -f *.o *.coff matmult testfiles testexit testexitprogram testprint passporttest1 passporttest2 passporttest3 passporttest4 passporttest5 passporttest6 passportsim MVtests MVtests1

@@ -21,6 +21,12 @@ int main(){
 	Printf("Value of MV after incrementing: %d\n", sizeof("Value of MV after incrementing: %d\n"), newVal);
 
 	Wait(lock2, cv1);
+
+	Printf("Value of monitor variable after broadcast at position 0: %d\n",sizeof("Value of monitor variable after broadcast at position 0: %d\n"), value);
+
+	value = GetMV(mv1, 0);
+
+
 	
 	/*DestroyLock(lock2);
 	//Write("Lock destroyed\n", sizeof("Lock destroyed\n"), ConsoleOutput);
@@ -31,6 +37,7 @@ int main(){
 	*/
 	Release(lock2);
 
+	Exit(0);
 
 
 }
