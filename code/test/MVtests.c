@@ -22,9 +22,9 @@ int main(){
 
 	Wait(lock2, cv1);
 
+	value = GetMV(mv1, 0);
 	Printf("Value of monitor variable after broadcast at position 0: %d\n",sizeof("Value of monitor variable after broadcast at position 0: %d\n"), value);
 
-	value = GetMV(mv1, 0);
 
 
 	
