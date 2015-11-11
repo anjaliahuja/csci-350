@@ -16,6 +16,9 @@ I. REQUIREMENTS:
   Implement Demand Paged Virtual Memory.  Memory has to be reduced thus memory will be filled up.  When memory is full, a page replacement policy must be implemented to remove pages.  In order to do this, the pages must be kept track of.
 	
   + Part 3:
+  Implement RPCs for all lock and condition variable systems
+  Implement system for handling monitor variables
+  System calls made by clients as user programs running on multiple instances of nachos, sent to one server who handles requests and sends back in form of message through RPCs 
 
 
 II. ASSUMPTIONS:
@@ -45,6 +48,16 @@ III. DESIGN:
     In populateTLB, the dirty bit must be propogated for the current tlb index.
 
   iii. Part 3
+  New Remote procedure calls are added to the nettest.cc file. The server recieves a message from the client with which syscall it needs from the server, along with parameters needed for that syscall. The server then parses the message and enters into a switch statement to handle different requests.
+
+  3 structs are added to the top of nettest, ServerLock, ServerCV and ServerMV. ServerLock stores the lock name, state, owner, wait queues for PacketHeader and MailHeader, whether the lock should be deleted, etc. The serverCV struct contains info about the lockIndex as well as retaining other information from project 2, and the serverMV struct holds the name, array of values, length of name and bool to be deleted.
+
+  RPC Implementation:
+  Create lock- takes in string stream of lock name, if the lock exists already, the index of the lock is sent back to client. If lock doesn't exist, a new lock is created and added to the vector of server locks, and the index of that lock is created. 
+  Destroy Lock- destroy lock checks to see if the lock exists and that it isn't Null. If its available and the lock counter is at 0, the lock is destroyed and the lockID of the destroyed lock is sent back as confirmation.
+  Acquire- Acquire checks if lock exists and that it isn't null, and that the lock owner is the one who is trying to acquire the lock, and that the lock state isn't busy. if lock state is busy, 
+
+
  
 IV. IMPLEMENTATION
 
