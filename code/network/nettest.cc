@@ -57,6 +57,7 @@ struct ServerCV{
     int lockIndex;
     bool toBeDeleted;
     int counter;
+    int useCounter;
 };
 
 struct ServerMV{
@@ -119,7 +120,7 @@ void Server(){
                for(int i = 0; i<SLocks->size();i++){
                 if(SLocks->at(i)->name.compare(name) == 0){
                     index = i;
-                    //SLocks->at(i)->counter++;
+                    SLocks->at(i)->counter++;
                     break;
                 }
                }
@@ -157,7 +158,7 @@ void Server(){
                     } else{
                         SLocks->at(lockID)->counter--;
                         reply<<lockID;
-                        if(SLocks->at(lockID)->state == Available && SLocks->at(lockID)->counter == 0){
+                        if(SLocks->at(lockID)->state == Available){
                             ServerLock *lock = SLocks->at(lockID);
                             SLocks->at(lockID) = NULL;
                             delete lock;
@@ -230,11 +231,11 @@ void Server(){
 
                             SLocks->at(lockID)->owner = tempOutPkt->to;
                             sendMessage(tempOutPkt, tempOutMail, reply);
-                            if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->toBeDeleted == true){
+                            /*if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->toBeDeleted == true){
                                 ServerLock* lock = SLocks->at(lockID);
                                 SLocks->at(lockID) = NULL;
                                 delete lock;
-                            }
+                            }*/
                         }
                     }
                 }
@@ -251,7 +252,7 @@ void Server(){
                     if(SCVs->at(i) != NULL){
                         cout << "name: " << SCVs->at(i)->name << std::endl;
                         if(SCVs->at(i)->name == name){
-                            //SCVs->at(i)->counter++;
+                            SCVs->at(i)->counter++;
                             index = i;
                             break;
 
