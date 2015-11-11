@@ -20,6 +20,5 @@ int main() {
   Write("Test 1 releases lock\n", sizeof("Test 1 releases lock\n"), ConsoleOutput);
   Release(lock);
 
-
   Exit(0);
 }

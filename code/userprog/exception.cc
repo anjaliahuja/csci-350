@@ -1342,6 +1342,7 @@ void populateTLB() {
 }
 
 void Exit_Syscall(int status){
+  printf("exit_sys: %d\n", status);
   processLock->Acquire();
 
   bool lastProcess = false;

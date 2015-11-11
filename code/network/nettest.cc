@@ -57,6 +57,7 @@ struct ServerCV{
     int lockIndex;
     bool toBeDeleted;
     int counter;
+    int useCounter;
 };
 
 struct ServerMV{
@@ -157,7 +158,7 @@ void Server(){
                     } else{
                         SLocks->at(lockID)->counter--;
                         reply<<lockID;
-                        if(SLocks->at(lockID)->state == Available && SLocks->at(lockID)->counter == 0){
+                        if(SLocks->at(lockID)->state == Available){
                             ServerLock *lock = SLocks->at(lockID);
                             SLocks->at(lockID) = NULL;
                             delete lock;
@@ -218,11 +219,18 @@ void Server(){
                     } else if(SLocks->at(lockID)->state == Available || SLocks->at(lockID)->owner != outPktHdr->to){
                         reply << -1;
                     } else{
+<<<<<<< HEAD
+=======
+                        reply << -2; 
+>>>>>>> origin/anne_tests
                         if(SLocks->at(lockID)->packetWaiting->empty()){ 
                             SLocks->at(lockID)->state = Available; 
                             SLocks->at(lockID)->owner = -1;
                         } else{
+<<<<<<< HEAD
                             reply << -2; 
+=======
+>>>>>>> origin/anne_tests
                             PacketHeader* tempOutPkt = SLocks->at(lockID)->packetWaiting->front();
                             SLocks->at(lockID)->packetWaiting->pop();
                             MailHeader* tempOutMail = SLocks->at(lockID)->mailWaiting->front();
@@ -230,6 +238,11 @@ void Server(){
 
                             SLocks->at(lockID)->owner = tempOutPkt->to;
                             sendMessage(tempOutPkt, tempOutMail, reply);
+                            /*if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->toBeDeleted == true){
+                                ServerLock* lock = SLocks->at(lockID);
+                                SLocks->at(lockID) = NULL;
+                                delete lock;
+                            }*/
                         }
                         if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->toBeDeleted == true){
                             ServerLock* lock = SLocks->at(lockID);
@@ -238,10 +251,6 @@ void Server(){
                         }
                     }
                 }
-                cout << "lock to release goes from: " << endl;
-                cout << outPktHdr->from << " to " << outPktHdr->to << endl;
-                cout << "with the reply: " << endl;
-                cout << reply << endl;
                 sendMessage(outPktHdr, outMailHdr, reply);
                 lockLock->Release();
                 break;
@@ -271,6 +280,7 @@ void Server(){
                     scv->toBeDeleted = false;
                     scv->lockIndex = -1; 
                     scv->counter = 1;
+                    scv->useCounter = 0;
 
                     SCVs->push_back(scv); 
 
@@ -298,7 +308,7 @@ void Server(){
                     } else{
                         reply << cvID;
                         SCVs->at(cvID)->counter--;
-                        if(SCVs->at(cvID)->counter == 0){
+                        if(SCVs->at(cvID)->useCounter == 0){
                             ServerCV* scv = SCVs->at(cvID);
                             SCVs->at(cvID) = NULL;
                             delete scv; 
@@ -326,6 +336,7 @@ void Server(){
                     } else if (SLocks->at(lockID)->owner != outPktHdr->to || (SCVs->at(cvID)->lockIndex != lockID && SCVs->at(cvID)->lockIndex != -1)){
                         reply << -1;
                     }else {
+                        SCVs->at(cvID)->useCounter++;
                         pass = false;
                         if(SCVs->at(cvID)->lockIndex == -1){
                             SCVs->at(cvID)->lockIndex = lockID;
@@ -369,6 +380,7 @@ void Server(){
                         reply << -1;
                     } else{
                         reply<<-2;
+                        SCVs->at(cvID)->useCounter--;
                         PacketHeader* tempOutPkt = SCVs->at(cvID)->packetWaiting->front();
                         SCVs->at(cvID)->packetWaiting->pop();
                         MailHeader* tempOutMail = SCVs->at(cvID)->mailWaiting->front();
@@ -408,6 +420,7 @@ void Server(){
                         } else{
                             while(!SCVs->at(cvID)->packetWaiting->empty()){
                                 reply << -2;
+                                SCVs->at(cvID)->useCounter--;
                                  PacketHeader* tempOutPkt = SCVs->at(cvID)->packetWaiting->front();
                                 SCVs->at(cvID)->packetWaiting->pop();
                                 MailHeader* tempOutMail = SCVs->at(cvID)->mailWaiting->front();
