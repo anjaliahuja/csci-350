@@ -218,13 +218,11 @@ void Server(){
                     } else if(SLocks->at(lockID)->state == Available || SLocks->at(lockID)->owner != outPktHdr->to){
                         reply << -1;
                     } else{
-                        reply << -2; 
-                        if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->toBeDeleted == true){
-                            ServerLock* lock = SLocks->at(lockID);
-                            SLocks->at(lockID) = NULL;
-                            delete lock;
-                        }
-                        else{
+                        if(SLocks->at(lockID)->packetWaiting->empty()){ 
+                            SLocks->at(lockID)->state = Available; 
+                            SLocks->at(lockID)->owner = -1;
+                        } else{
+                            reply << -2; 
                             PacketHeader* tempOutPkt = SLocks->at(lockID)->packetWaiting->front();
                             SLocks->at(lockID)->packetWaiting->pop();
                             MailHeader* tempOutMail = SLocks->at(lockID)->mailWaiting->front();
@@ -232,6 +230,11 @@ void Server(){
 
                             SLocks->at(lockID)->owner = tempOutPkt->to;
                             sendMessage(tempOutPkt, tempOutMail, reply);
+                        }
+                        if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->toBeDeleted == true){
+                            ServerLock* lock = SLocks->at(lockID);
+                            SLocks->at(lockID) = NULL;
+                            delete lock;
                         }
                     }
                 }
@@ -423,7 +426,7 @@ void Server(){
         }
 
         case RPC_CreateMV: {
-            lockLock->Acquire(); 
+            MVLock->Acquire(); 
             ss>>name>>mvSize; 
 
             int index = -1;
@@ -451,9 +454,12 @@ void Server(){
                 reply <<SMVs->size()-1;
             }
             sendMessage(outPktHdr, outMailHdr, reply);
+            MVLock->Release();
             break;
+
         }
         case RPC_DestroyMV: {
+            MVLock->Acquire();
             cout<<"In destroy MV RPC " <<endl;
             ss >> mvID;
             if(mvID < 0 || mvID >= SMVs->size()){
@@ -470,10 +476,12 @@ void Server(){
             }
 
             sendMessage(outPktHdr, outMailHdr, reply);
+            MVLock->Release();
+            break;
         }
 
         case RPC_GetMV: {
-
+            MVLock->Acquire();
             ss >> mvID >> mvIndex; 
             if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
                 reply << -1;
@@ -487,10 +495,12 @@ void Server(){
                 }
             }
             sendMessage(outPktHdr, outMailHdr, reply);
+            MVLock->Release();
+            break;
         }
 
         case RPC_SetMV: {
-
+            MVLock->Acquire();
             ss >> mvID >> mvIndex >> mvVal;
 
             if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
@@ -507,6 +517,7 @@ void Server(){
                 }
             }
             sendMessage(outPktHdr, outMailHdr, reply);
+            MVLock->Release();
             break;
         }
     default:
