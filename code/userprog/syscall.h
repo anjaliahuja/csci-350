@@ -157,7 +157,7 @@ int Wait(int lock, int CV);
 int Signal(int lock, int CV);
 int Broadcast(int lock, int CV);
 
-int CreateMV(char* name, int size);
+int CreateMV(char* name, int nameLen, int size);
 int SetMV(int mv, int index, int value);
 int GetMV(int mv, int index);
 int DestroyMV(int mv);
