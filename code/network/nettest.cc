@@ -119,7 +119,7 @@ void Server(){
                for(int i = 0; i<SLocks->size();i++){
                 if(SLocks->at(i)->name.compare(name) == 0){
                     index = i;
-                    SLocks->at(i)->counter++;
+                    //SLocks->at(i)->counter++;
                     break;
                 }
                }
@@ -218,11 +218,11 @@ void Server(){
                     } else if(SLocks->at(lockID)->state == Available || SLocks->at(lockID)->owner != outPktHdr->to){
                         reply << -1;
                     } else{
+                        reply << -2; 
                         if(SLocks->at(lockID)->packetWaiting->empty()){ 
                             SLocks->at(lockID)->state = Available; 
                             SLocks->at(lockID)->owner = -1;
                         } else{
-                            reply << -2; 
                             PacketHeader* tempOutPkt = SLocks->at(lockID)->packetWaiting->front();
                             SLocks->at(lockID)->packetWaiting->pop();
                             MailHeader* tempOutMail = SLocks->at(lockID)->mailWaiting->front();
@@ -230,18 +230,14 @@ void Server(){
 
                             SLocks->at(lockID)->owner = tempOutPkt->to;
                             sendMessage(tempOutPkt, tempOutMail, reply);
-                        }
-                        if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->toBeDeleted == true){
-                            ServerLock* lock = SLocks->at(lockID);
-                            SLocks->at(lockID) = NULL;
-                            delete lock;
+                            if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->toBeDeleted == true){
+                                ServerLock* lock = SLocks->at(lockID);
+                                SLocks->at(lockID) = NULL;
+                                delete lock;
+                            }
                         }
                     }
                 }
-                cout << "lock to release goes from: " << endl;
-                cout << outPktHdr->from << " to " << outPktHdr->to << endl;
-                cout << "with the reply: " << endl;
-                cout << reply << endl;
                 sendMessage(outPktHdr, outMailHdr, reply);
                 lockLock->Release();
                 break;
@@ -255,7 +251,7 @@ void Server(){
                     if(SCVs->at(i) != NULL){
                         cout << "name: " << SCVs->at(i)->name << std::endl;
                         if(SCVs->at(i)->name == name){
-                            SCVs->at(i)->counter++;
+                            //SCVs->at(i)->counter++;
                             index = i;
                             break;
 
