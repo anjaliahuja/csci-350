@@ -194,7 +194,7 @@ void Server(){
                     } else{
                         SLocks->at(lockID)->owner = outPktHdr->to;
                         SLocks->at(lockID)->state = Busy;
-                        reply << SLocks->at(lockID); 
+                        reply << lockID; 
                     }
                 }
                 if(pass){
@@ -236,11 +236,12 @@ void Server(){
             }
             case RPC_CreateCV: {
                 CVLock->Acquire(); 
-                cout<<"RPC CreateCV: " << name << endl; 
                 ss>>name;
+                cout<<"RPC CreateCV: " << name << endl; 
                 int index = -1; 
                 for(unsigned int i = 0; i<SCVs->size(); i++){
                     if(SCVs->at(i) != NULL){
+                        cout << "name: " << SCVs->at(i)->name << std::endl;
                         if(SCVs->at(i)->name == name){
                             SCVs->at(i)->counter++;
                             index = i;

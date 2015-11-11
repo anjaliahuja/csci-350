@@ -403,14 +403,21 @@ int CreateCV_Syscall(int vaddr, int len) {
   /** With RPCs **/
   #ifdef NETWORK
   DEBUG('o', "Client called CreateCV\n");
-  char *name = new char[len+1];
+  char *name = new char[len];
+  if(!name){
+    printf("Create CV:Error allocating kernel buffer for create CV \n");
+    return -1;
+  }
   if(copyin(vaddr, len, name) == -1) {
     printf("Create CV: Bad pointer passed \n");
     return -1;
   }
+  name[len] = '\0';
 
   std::stringstream ss;
-  ss << RPC_CreateCV << " " << name << " " << len;
+  ss << RPC_CreateCV << " " << name;
+    cout << RPC_CreateCV << " " << name << len <<endl;
+
   SyscallSendMsg(ss.str());
 
   std::string res = SyscallReceiveMsg();
@@ -420,7 +427,6 @@ int CreateCV_Syscall(int vaddr, int len) {
   ss >> cv;
 
   DEBUG('o', "Client received the cv #%d from server \n", cv);
-  delete[] name;
   return cv;
 
   /** Without RPCs **/
@@ -770,7 +776,8 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   }
 
   std::stringstream ss;
-  ss << RPC_CreateLock << " " << name << " " << len;
+  ss << RPC_CreateLock << " " << name;
+  cout << RPC_CreateLock << " " << name;
   SyscallSendMsg(ss.str());
 
   std::string res = SyscallReceiveMsg();
@@ -780,7 +787,6 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   ss >> lock;
 
   DEBUG('o', "Client received the lock #%d from server \n", lock);
-  delete[] name;
   return lock;
 
   /** Without RPCs **/
@@ -1018,7 +1024,7 @@ int CreateMV_Syscall(int vaddr, int len) {
   }
 
   std::stringstream ss;
-  ss << RPC_CreateMV << " " << name << " " << len;
+  ss << RPC_CreateMV << " " << name;
   SyscallSendMsg(ss.str());
 
   std::string res = SyscallReceiveMsg();
@@ -1028,7 +1034,6 @@ int CreateMV_Syscall(int vaddr, int len) {
   ss >> mv;
 
   DEBUG('o', "Client received the mv #%d from server \n", mv);
-  delete[] name;
   return mv;
 
   /** Without RPCs **/
