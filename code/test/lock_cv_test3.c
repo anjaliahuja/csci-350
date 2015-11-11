@@ -14,7 +14,8 @@ int main() {
   Acquire(lock);
   Write("Test 3 signals lock\n", sizeof("Test 3 signals lock\n"), ConsoleOutput);
   Signal(lock, cv);
-    Write("Test 3 Releases lock\n", sizeof("Test 3 Releases lock\n"), ConsoleOutput);
+  Write("Test 3 Releases lock\n", sizeof("Test 3 Releases lock\n"), ConsoleOutput);
 
   Release(lock);
+  Exit(0);
 }

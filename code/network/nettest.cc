@@ -383,16 +383,23 @@ void Server(){
                     } else if(SLocks->at(lockID)->owner != outPktHdr->to || SCVs->at(cvID)->lockIndex != lockID){
                         reply << -1;
                     } else{
+
+                        if(SCVs->at(cvID)->packetWaiting->empty()){
+                            reply<<-1;
+                        } else{
                         reply<<-2;
                         SCVs->at(cvID)->useCounter--;
                         PacketHeader* tempOutPkt = SCVs->at(cvID)->packetWaiting->front();
+                        SLocks->at(lockID)->packetWaiting->push(tempOutPkt);
                         SCVs->at(cvID)->packetWaiting->pop();
                         MailHeader* tempOutMail = SCVs->at(cvID)->mailWaiting->front();
+                        SLocks->at(lockID)->mailWaiting->push(tempOutMail);
                         SCVs->at(cvID)->mailWaiting->pop();
                         sendMessage(tempOutPkt, tempOutMail, reply);
 
                         if(SCVs->at(cvID)->packetWaiting->empty()){
                             SCVs->at(cvID)->lockIndex = -1; 
+                        }
                         }
                     }
                 }
