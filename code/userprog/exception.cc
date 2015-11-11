@@ -425,6 +425,9 @@ int CreateCV_Syscall(int vaddr, int len) {
   ss >> cv;
 
   DEBUG('o', "Client received the cv #%d from server \n", cv);
+  if (cv == -1) {
+    printf("Error in creating cv\n");
+  }
   return cv;
 
   /** Without RPCs **/
@@ -487,6 +490,7 @@ int DestroyCV_Syscall(int index) {
   ss >> cv;
 
   DEBUG('o', "Client destroyed cv #%d from server \n", cv);
+
   return cv;
 
   /** Without RPCs **/
@@ -542,7 +546,9 @@ int Wait_Syscall(int lockIndex, int CVIndex) {
   ss.str(res);
   int cv = -1; // -1 is error
   ss >> cv;
-
+  if (cv == -1) {
+    printf("Error in waiting cv\n");
+  }
   return cv;
   /** Without RPCs **/
   #else
@@ -628,7 +634,9 @@ int Signal_Syscall(int lockIndex, int CVIndex) {
   ss.str(res);
   int cv = -1; // -1 is error
   ss >> cv;
-
+  if (cv == -1) {
+    printf("Error in signalling cv\n");
+  }
   return cv;
 
   /** Without RPCs **/
@@ -703,7 +711,9 @@ int Broadcast_Syscall(int lockIndex, int CVIndex) {
   ss.str(res);
   int cv = -1; // -1 is error
   ss >> cv;
-
+  if (cv == -1) {
+    printf("Error in broadcasting cv\n");
+  }
   return cv;
 
   /** Without RPCs **/
@@ -785,6 +795,9 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
   ss >> lock;
 
   DEBUG('o', "Client received the lock #%d from server \n", lock);
+    if (lock == -1) {
+    printf("Error in creating lock\n");
+  }
   return lock;
 
   /** Without RPCs **/
@@ -847,6 +860,9 @@ int Acquire_Syscall(int index) {
   int lock = -1; // -1 is error
   ss >> lock;
 
+  if (lock == -1) {
+    printf("Error in acquiring lock\n");
+  }
   return lock;
 
   /** Without RPCs **/
@@ -899,6 +915,9 @@ int Release_Syscall(int index) {
   int lock = -1; // -1 is error
   ss >> lock;
 
+  if (lock == -1) {
+    printf("Error in releasing lock\n");
+  }
   return lock;
 
   /** Without RPCs **/
@@ -1030,7 +1049,9 @@ int CreateMV_Syscall(int vaddr, int len) {
   ss.str(res);
   int mv = -1; // -1 is error
   ss >> mv;
-
+  if (mv == -1) {
+    printf("Error in creating mv\n");
+  }
   DEBUG('o', "Client received the mv #%d from server \n", mv);
   return mv;
 
@@ -1054,7 +1075,9 @@ int GetMV_Syscall(int mv, int index) {
   ss.str(res);
   int rv = -1; // -1 is error
   ss >> rv;
-
+  if (rv == -1) {
+    printf("Error in getting mv\n");
+  }
   return rv;
 
   /** Without RPCs **/
@@ -1077,7 +1100,9 @@ int SetMV_Syscall(int mv, int index, int val) {
   ss.str(res);
   int rv = -1; // -1 is error
   ss >> rv;
-
+  if (rv == -1) {
+    printf("Error in setting mv\n");
+  }
   return rv;
 
   /** Without RPCs **/
