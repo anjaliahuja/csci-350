@@ -375,7 +375,7 @@ void SyscallSendMsg(std::string request) {
 
   outPacketHeader.to = SERVER_ID;
   outMailHeader.to = SERVER_ID;
-  outMailHeader.from = MAILBOX; 
+  outMailHeader.from = netname; 
   outMailHeader.length = strlen(req) + 1;
 
   if(!postOffice->Send(outPacketHeader, outMailHeader, req)) {
@@ -388,7 +388,7 @@ std::string SyscallReceiveMsg() {
   PacketHeader inPacketHeader;
   MailHeader inMailHeader;
   char *res = new char[MaxMailSize];
-  postOffice->Receive(MAILBOX, &inPacketHeader, &inMailHeader, res);
+  postOffice->Receive(netname, &inPacketHeader, &inMailHeader, res);
   cout<<"message received \n" <<res<<endl;
   fflush(stdout);
 

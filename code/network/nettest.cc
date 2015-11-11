@@ -198,6 +198,10 @@ void Server(){
                     }
                 }
                 if(pass){
+                    cout << "lock to acquire goes from: " << endl;
+                    cout << outPktHdr->from << " to " << outPktHdr->to << endl;
+                    cout << "with the reply: " << endl;
+                    cout << reply << endl;
                     sendMessage(outPktHdr, outMailHdr, reply);
                 }
                 lockLock->Release(); 
@@ -230,6 +234,10 @@ void Server(){
                         }
                     }
                 }
+                cout << "lock to release goes from: " << endl;
+                cout << outPktHdr->from << " to " << outPktHdr->to << endl;
+                cout << "with the reply: " << endl;
+                cout << reply << endl;
                 sendMessage(outPktHdr, outMailHdr, reply);
                 lockLock->Release();
                 break;
@@ -363,6 +371,10 @@ void Server(){
                         }
                     }
                 }
+                cout << "lock to unwait goes from: " << endl;
+                cout << outPktHdr->from << " to " << outPktHdr->to << endl;
+                cout << "with the reply: " << endl;
+                cout << reply << endl;
                 sendMessage(outPktHdr, outMailHdr, reply);
                 CVLock->Release();
                 break;       

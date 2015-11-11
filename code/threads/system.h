@@ -29,6 +29,7 @@ extern Scheduler *scheduler;			// the ready list
 extern Interrupt *interrupt;			// interrupt status
 extern Statistics *stats;			// performance metrics
 extern Timer *timer;				// the hardware alarm clock
+extern int netname;	
 
 #ifdef USER_PROGRAM
 #include "machine.h"
@@ -117,7 +118,6 @@ extern SynchDisk   *synchDisk;
 #ifdef NETWORK
 #include "post.h"
 extern PostOffice* postOffice;
-#define MAILBOX 1
 #define SERVER_ID 0
 #define MAX_MV 1000
 
