@@ -18,6 +18,7 @@ Interrupt *interrupt;			// interrupt status
 Statistics *stats;			// performance metrics
 Timer *timer;				// the hardware timer device,
 					// for invoking context switches
+int netname;     // UNIX socket name
 
 
 
@@ -43,21 +44,22 @@ Lock* lockTableLock;
 Table* CVTable;
 Lock* CVTableLock;
 
-#ifdef USE_TLB 
+
+int currentTLB;
+
 InvertedPageTable* ipt;
 PageReplacementPolicy pageReplacementPolicy; 
 List* iptQueue; //for FIFO 
 Lock* iptLock; 
 OpenFile* swapfile;
 BitMap* swapMap; 
-#endif
-#endif
+
 
 
 #ifdef NETWORK
 PostOffice *postOffice;
 #endif
-
+#endif
 
 // External definition, to allow us to take a pointer to this function
 extern void Cleanup();
@@ -112,7 +114,6 @@ Initialize(int argc, char **argv)
 #endif
 #ifdef NETWORK
     double rely = 1;		// network reliability
-    int netname = 0;		// UNIX socket name
 #endif
     
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {

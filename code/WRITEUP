@@ -16,6 +16,9 @@ I. REQUIREMENTS:
   Implement Demand Paged Virtual Memory.  Memory has to be reduced thus memory will be filled up.  When memory is full, a page replacement policy must be implemented to remove pages.  In order to do this, the pages must be kept track of.
 	
   + Part 3:
+  Implement RPCs for all lock and condition variable systems
+  Implement system for handling monitor variables
+  System calls made by clients as user programs running on multiple instances of nachos, sent to one server who handles requests and sends back in form of message through RPCs 
 
 
 II. ASSUMPTIONS:
@@ -45,6 +48,16 @@ III. DESIGN:
     In populateTLB, the dirty bit must be propogated for the current tlb index.
 
   iii. Part 3
+  New Remote procedure calls are added to the nettest.cc file. The server recieves a message from the client with which syscall it needs from the server, along with parameters needed for that syscall. The server then parses the message and enters into a switch statement to handle different requests.
+
+  3 structs are added to the top of nettest, ServerLock, ServerCV and ServerMV. ServerLock stores the lock name, state, owner, wait queues for PacketHeader and MailHeader, whether the lock should be deleted, etc. The serverCV struct contains info about the lockIndex as well as retaining other information from project 2, and the serverMV struct holds the name, array of values, length of name and bool to be deleted.
+
+  RPC Implementation:
+  Create lock- takes in string stream of lock name, if the lock exists already, the index of the lock is sent back to client. If lock doesn't exist, a new lock is created and added to the vector of server locks, and the index of that lock is created. 
+  Destroy Lock- destroy lock checks to see if the lock exists and that it isn't Null. If its available and the lock counter is at 0, the lock is destroyed and the lockID of the destroyed lock is sent back as confirmation.
+  Acquire- Acquire checks if lock exists and that it isn't null, and that the lock owner is the one who is trying to acquire the lock, and that the lock state isn't busy. if lock state is busy, 
+
+
  
 IV. IMPLEMENTATION
 
@@ -133,14 +146,16 @@ IV. IMPLEMENTATION
     StartProcess(char* filename);
 
 V. TESTING
+  All tests must be run from /network.
   Part 1 & Part 2:
-  In order to test parts 1 and 2 we created matmult2.c and sort2.c which exec 2 instances of matmult and sort respectively.  To run these tests with the random page replacement, type in "nachos -x ../test/matmult2 -P RAND" and "nachos -x ../test/sort2 -P RAND".  For FIFO, type in "nachos -x ../test/matmult2 -P FIFO" and "nachos -x ../test/sort2 -P FIFO".  
-  matmult2 test will print: 
+  In order to test parts 1 and 2 we created matmult2exec.c and sort2exec.c which exec 2 instances of matmult and sort respectively.  To run these tests with the random page replacement, type in "nachos -x ../test/matmult2exec -P RAND" and "nachos -x ../test/sort2exec -P RAND".  For FIFO, type in "nachos -x ../test/matmult2exec -P FIFO" and "nachos -x ../test/sort2exec -P FIFO".  
+  We also created matmult2fork.c and sort2fork.c which fork 2 instances of matmult and sort respectively.  To run these tests with the random page replacement, type in "nachos -x ../test/matmult2fork -P RAND" and "nachos -x ../test/sort2fork -P RAND".  For FIFO, type in "nachos -x ../test/matmult2fork -P FIFO" and "nachos -x ../test/sort2fork -P FIFO".  
+  matmult2 tests will print: 
     exit sys: 0
     exit sys: 7220
     exit sys: 7220
   The last two exit printouts come from the two instances of matmult.  The first printout comes from the main in the test.
-  sort2 test will print: 
+  sort2 tests will print: 
     exit sys: 0
     exit sys: 1023
     exit sys: 1023
@@ -148,7 +163,38 @@ V. TESTING
   Additional testing can occur by running a single instance of matmult and sort (in the instruction above, instead of matmult2 use matmult and instead of sort2 use sort).  This will print "exit sys: 7220" and "exit sys: 1023" respectively.
 
   Part 3:
+  Tests for locks and cvs:
 
+  have 6 terminal windows open
+  server: run "nachos -m 0 -server"
+
+  Test 1:
+  This test shows that the first instance will acquire the lock.  
+    see: Test 1 acquiring lock
+         Test 1 acquires lock
+  Each instance after will only say "Test 1 acquiring lock" because it is waiting on the lock to be released from the first instance.  When that happens, it will then say "Test 1 acquires lock".  
+  terminal 1: run "nachos -m 1 -x ../test/lock_cv_test1"
+  terminal 2: run "nachos -m 2 -x ../test/lock_cv_test1"
+  terminal 3: run "nachos -m 3 -x ../test/lock_cv_test1"
+  terminal 4: run "nachos -m 4 -x ../test/lock_cv_test1"
+  terminal 5: run "nachos -m 5 -x ../test/lock_cv_test1"
+
+  Test 2:
+  This test demonstrates the wait, signal, and broadcast.  The first two instances will wait.  The third instance will signal, which will wake up the first waiting instance.  After that we have a fourth instance wait and the fifth instance will broadcast, waking up the second and fourth clients.
+  terminal 1: run "nachos -m 1 -x ../test/lock_cv_test2"
+  terminal 2: run "nachos -m 2 -x ../test/lock_cv_test2"
+  terminal 3: run "nachos -m 3 -x ../test/lock_cv_test3"
+  terminal 4: run "nachos -m 4 -x ../test/lock_cv_test2"
+  terminal 5: run "nachos -m 5 -x ../test/lock_cv_test4"
+
+  Test 3:
+  This test demonstrates the destroying of a lock and cv.  The first instance will create a lock and cv and destroy it.  The second instance will also create the same lock and cv and then try to Acquire the lock and wait on the cv.  This will throw an error.
+  See: 
+    Test 6 tries to acquire lock and wait on cv (both destroyed)
+    Error in acquiring lock
+    Error in waiting cv
+  terminal 1: run "nachos -m 1 -x ../test/lock_cv_test5"
+  terminal 2: run "nachos -m 2 -x ../test/lock_cv_test6"
 
 VI. DISCUSSION: 
 	i. Experiment expectation 

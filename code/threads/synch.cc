@@ -231,8 +231,7 @@ bool Condition::Signal(Lock* conditionLock) {
 
   // If the wait queue is empty, there is no thread to signal, throw error.
   if(this->waitConditionQueue->IsEmpty()) {
-    printf("Condition::Signal -> No thread waiting in condition %s\n",
-      this->name);
+
     (void) interrupt->SetLevel(oldLevel);
     return false;
   }

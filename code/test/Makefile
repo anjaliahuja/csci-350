@@ -31,7 +31,7 @@ CPP = $(GCCDIR)cpp
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR)
 
-all: halt matmult2 matmult sort2 sort testfiles passportsim testexit testexitprogram testprint passporttest1 passporttest2 passporttest3 passporttest4 passporttest5 passporttest6 lock_cv_test1 lock_cv_test2 lock_cv_test3 lock_cv_test4 lock_cv_test5
+all: halt matmult2exec matmult2fork matmult sort2exec sort2fork sort testfiles passportsim testexit testexitprogram testprint passporttest1 passporttest2 passporttest3 passporttest4 passporttest5 passporttest6 lock_cv_test1 lock_cv_test2 lock_cv_test3 lock_cv_test4 lock_cv_test5 lock_cv_test6
 
 start.o: start.s ../userprog/syscall.h
 	$(CPP) $(CPPFLAGS) start.s > strt.s
@@ -120,6 +120,11 @@ lock_cv_test5.o: lock_cv_test5.c
 lock_cv_test5: lock_cv_test5.o start.o
 	$(LD) $(LDFLAGS) start.o lock_cv_test5.o -o lock_cv_test5.coff
 	../bin/coff2noff lock_cv_test5.coff lock_cv_test5
+lock_cv_test6.o: lock_cv_test6.c
+	$(CC) $(CFLAGS) -c lock_cv_test6.c
+lock_cv_test6: lock_cv_test6.o start.o
+	$(LD) $(LDFLAGS) start.o lock_cv_test6.o -o lock_cv_test6.coff
+	../bin/coff2noff lock_cv_test6.coff lock_cv_test6
 
 	
 passporttest3.o: passporttest3.c
@@ -145,16 +150,34 @@ passporttest6: passporttest6.o start.o
 	$(LD) $(LDFLAGS) start.o passporttest6.o -o passporttest6.coff
 	../bin/coff2noff passporttest6.coff passporttest6
 
-matmult2.o: matmult2.c
-	$(CC) $(CFLAGS) -c matmult2.c
-matmult2: matmult2.o start.o
-	$(LD) $(LDFLAGS) start.o matmult2.o -o matmult2.coff
-	../bin/coff2noff matmult2.coff matmult2
-sort2.o: sort2.c
-	$(CC) $(CFLAGS) -c sort2.c
-sort2: sort2.o start.o
-	$(LD) $(LDFLAGS) start.o sort2.o -o sort2.coff
-	../bin/coff2noff sort2.coff sort2
+matmult2exec.o: matmult2exec.c
+	$(CC) $(CFLAGS) -c matmult2exec.c
+matmult2exec: matmult2exec.o start.o
+	$(LD) $(LDFLAGS) start.o matmult2exec.o -o matmult2exec.coff
+	../bin/coff2noff matmult2exec.coff matmult2exec
+sort2exec.o: sort2exec.c
+	$(CC) $(CFLAGS) -c sort2exec.c
+sort2exec: sort2exec.o start.o
+	$(LD) $(LDFLAGS) start.o sort2exec.o -o sort2exec.coff
+	../bin/coff2noff sort2exec.coff sort2exec
+	matmult2exec.o: matmult2exec.c
+	$(CC) $(CFLAGS) -c matmult2exec.c
+matmult2fork.o: matmult2fork.c
+	$(CC) $(CFLAGS) -c matmult2fork.c
+matmult2fork: matmult2fork.o start.o
+	$(LD) $(LDFLAGS) start.o matmult2fork.o -o matmult2fork.coff
+	../bin/coff2noff matmult2fork.coff matmult2fork
+sort2fork.o: sort2fork.c
+	$(CC) $(CFLAGS) -c sort2fork.c
+sort2fork: sort2fork.o start.o
+	$(LD) $(LDFLAGS) start.o sort2fork.o -o sort2fork.coff
+	../bin/coff2noff sort2fork.coff sort2fork
+
+MVtests.o: MVtests.c
+	$(CC) $(CFLAGS) -c MVtests.c
+MVtests: MVtests.o start.o
+	$(LD) $(LDFLAGS) start.o MVtests.o -o MVtests.coff
+	../bin/coff2noff MVtests.coff MVtests
 
 
 clean:
