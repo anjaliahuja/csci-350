@@ -389,7 +389,6 @@ std::string SyscallReceiveMsg() {
   MailHeader inMailHeader;
   char *res = new char[MaxMailSize];
   postOffice->Receive(netname, &inPacketHeader, &inMailHeader, res);
-  cout<<"message received \n" <<res<<endl;
   fflush(stdout);
 
   std::stringstream ss;
@@ -416,7 +415,6 @@ int CreateCV_Syscall(int vaddr, int len) {
 
   std::stringstream ss;
   ss << RPC_CreateCV << " " << name;
-    cout << RPC_CreateCV << " " << name << len <<endl;
 
   SyscallSendMsg(ss.str());
 
@@ -777,7 +775,7 @@ int CreateLock_Syscall(unsigned int vaddr, int len) {
 
   std::stringstream ss;
   ss << RPC_CreateLock << " " << name;
-  cout << RPC_CreateLock << " " << name;
+
   SyscallSendMsg(ss.str());
 
   std::string res = SyscallReceiveMsg();

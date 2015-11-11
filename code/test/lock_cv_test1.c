@@ -4,13 +4,18 @@
 
 #include "syscall.h"
 
-int lock;
+int i, lock;
 
 int main() {
   lock = CreateLock("lock", 4); 
 
+  Write("Test 1 acquiring lock\n", sizeof("Test 1 acquiring lock\n"), ConsoleOutput);
   Acquire(lock);
   Write("Test 1 acquires lock\n", sizeof("Test 1 acquires lock\n"), ConsoleOutput);
+
+  for (i = 0; i < 50000; i++) {
+    Yield();
+  }
 
   Write("Test 1 releases lock\n", sizeof("Test 1 releases lock\n"), ConsoleOutput);
   Release(lock);

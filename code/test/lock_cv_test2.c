@@ -8,7 +8,6 @@ int lock;
 int cv;
 
 int main() {
-  Write("\nTest 2\n", sizeof("\nTest 2\n"), ConsoleOutput);
   lock = CreateLock("lock", 4); 
   cv = CreateCV("cv", 2);
   Write("Test 2 Acquires Lock\n", sizeof("Test 2 Acquires Lock\n"), ConsoleOutput);

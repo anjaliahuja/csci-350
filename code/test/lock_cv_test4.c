@@ -9,9 +9,9 @@ int cv;
 
 int main() {
     lock = CreateLock("lock", 4);
-cv = CreateCV("cv", 2);
+    cv = CreateCV("cv", 2);
     Write("Test 4 broadcasts all locks\n", sizeof("Test 4 broadcasts locks\n"), ConsoleOutput);
-
+  Acquire(lock);
   Broadcast(lock, cv);
   Release(lock);
 }
