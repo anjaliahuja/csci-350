@@ -136,12 +136,10 @@ void Server(){
 
                 SLocks->push_back(lock);
 
-                reply << SLocks -> size() -1;
-
                }
-               else{
-                reply << index; 
-               }
+             cout<<"Index of lock: " << index <<endl;
+            reply << index; 
+               
               sendMessage(outPktHdr, outMailHdr, reply);
               lockLock->Release(); 
               break;
@@ -221,10 +219,12 @@ void Server(){
                         reply << -1;
                     } else{
                         reply << -2; 
-                        if(SLocks->at(lockID)->packetWaiting->empty()){
-                            SLocks->at(lockID)->state = Available;
-                            SLocks->at(lockID)->owner = -1;
-                        } else{
+                        if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->toBeDeleted == true){
+                            ServerLock* lock = SLocks->at(lockID);
+                            SLocks->at(lockID) = NULL;
+                            delete lock;
+                        }
+                        else{
                             PacketHeader* tempOutPkt = SLocks->at(lockID)->packetWaiting->front();
                             SLocks->at(lockID)->packetWaiting->pop();
                             MailHeader* tempOutMail = SLocks->at(lockID)->mailWaiting->front();
@@ -294,9 +294,13 @@ void Server(){
                         reply << -1;
                     } else{
                         reply << cvID;
-                        ServerCV* scv = SCVs->at(cvID);
-                        SCVs->at(cvID) = NULL;
-                        delete scv; 
+                        SCVs->at(cvID)->counter--;
+                        if(SCVs->at(cvID)->counter == 0){
+                            ServerCV* scv = SCVs->at(cvID);
+                            SCVs->at(cvID) = NULL;
+                            delete scv; 
+                        }
+
                     }
                 }
                 sendMessage(outPktHdr, outMailHdr, reply);
@@ -419,7 +423,7 @@ void Server(){
         }
 
         case RPC_CreateMV: {
-
+            lockLock->Acquire(); 
             ss>>name>>mvSize; 
 
             int index = -1;
@@ -450,7 +454,7 @@ void Server(){
             break;
         }
         case RPC_DestroyMV: {
-
+            cout<<"In destroy MV RPC " <<endl;
             ss >> mvID;
             if(mvID < 0 || mvID >= SMVs->size()){
                 reply << -1;
@@ -461,7 +465,7 @@ void Server(){
                    ServerMV *mv = SMVs->at(mvID);
                    SMVs->at(mvID)=NULL;
                    delete mv; 
-                   reply << mv; 
+                   reply << mvID; 
                 }
             }
 

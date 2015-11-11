@@ -1030,18 +1030,24 @@ int DestroyLock_Syscall(int index) {
   #endif
 }
 
-int CreateMV_Syscall(int vaddr, int len) {
+int CreateMV_Syscall(int name, int len, int size) {
   /** With RPCs **/
   #ifdef NETWORK
   DEBUG('o', "Client called CreateMV\n");
-  char *name = new char[len+1];
-  if(copyin(vaddr, len, name) == -1) {
+  std::stringstream ss;
+  ss << RPC_CreateMV;
+  ss << " ";
+  char *buf = new char[len];
+  if(copyin(name, len, buf) == -1) {
     printf("Create Lock: Bad pointer passed \n");
+    delete[] buf;
     return -1;
   }
-
-  std::stringstream ss;
-  ss << RPC_CreateMV << " " << name;
+  ss<<buf; 
+  delete [] buf;
+  ss<< " ";
+  ss<<size; 
+ 
   SyscallSendMsg(ss.str());
 
   std::string res = SyscallReceiveMsg();
@@ -1113,11 +1119,14 @@ int SetMV_Syscall(int mv, int index, int val) {
 }
 
 int DestroyMV_Syscall(int mv) {
+  cout<<"in destroy MV" << endl;
   /** With RPCs **/
   #ifdef NETWORK
   DEBUG('o', "Client called DestroyMV\n");
   std::stringstream ss;
+
   ss << RPC_DestroyMV << " " << mv;
+  cout<<"String stream: "<<ss.str()<<endl;
   SyscallSendMsg(ss.str());
 
   std::string res = SyscallReceiveMsg();
@@ -1511,7 +1520,7 @@ void ExceptionHandler(ExceptionType which) {
         break;
     case SC_CreateMV:
         DEBUG('a', "SC_CreateMV syscall.\n");
-        rv = CreateMV_Syscall(machine->ReadRegister(4), machine->ReadRegister(5));
+        rv = CreateMV_Syscall(machine->ReadRegister(4), machine->ReadRegister(5), machine->ReadRegister(6));
         break;
     case SC_GetMV:
         DEBUG('a', "SC_GetMV syscall.\n");

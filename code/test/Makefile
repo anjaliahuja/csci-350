@@ -150,6 +150,7 @@ passporttest6: passporttest6.o start.o
 	$(LD) $(LDFLAGS) start.o passporttest6.o -o passporttest6.coff
 	../bin/coff2noff passporttest6.coff passporttest6
 
+<<<<<<< HEAD
 matmult2exec.o: matmult2exec.c
 	$(CC) $(CFLAGS) -c matmult2exec.c
 matmult2exec: matmult2exec.o start.o
@@ -172,6 +173,12 @@ sort2fork.o: sort2fork.c
 sort2fork: sort2fork.o start.o
 	$(LD) $(LDFLAGS) start.o sort2fork.o -o sort2fork.coff
 	../bin/coff2noff sort2fork.coff sort2fork
+
+MVtests.o: MVtests.c
+	$(CC) $(CFLAGS) -c MVtests.c
+MVtests: MVtests.o start.o
+	$(LD) $(LDFLAGS) start.o MVtests.o -o MVtests.coff
+	../bin/coff2noff MVtests.coff MVtests
 
 
 clean:
