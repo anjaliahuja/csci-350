@@ -132,6 +132,7 @@ void Server(){
                 lock->state = Available; 
                 lock->toBeDeleted = false;
                 lock->owner = -1; 
+                lock->counter = 1;
 
                 SLocks->push_back(lock);
 
@@ -199,7 +200,7 @@ void Server(){
                     cout << "lock to acquire goes from: " << endl;
                     cout << outPktHdr->from << " to " << outPktHdr->to << endl;
                     cout << "with the reply: " << endl;
-                    cout << reply << endl;
+                    cout << reply.str() << endl;
                     sendMessage(outPktHdr, outMailHdr, reply);
                 }
                 lockLock->Release(); 
@@ -266,6 +267,7 @@ void Server(){
                     scv->mailWaiting = new queue<MailHeader *>();
                     scv->toBeDeleted = false;
                     scv->lockIndex = -1; 
+                    scv->counter = 1;
 
                     SCVs->push_back(scv); 
 
