@@ -389,6 +389,7 @@ std::string SyscallReceiveMsg() {
   MailHeader inMailHeader;
   char *res = new char[MaxMailSize];
   postOffice->Receive(MAILBOX, &inPacketHeader, &inMailHeader, res);
+  cout<<"message received \n" <<res<<endl;
   fflush(stdout);
 
   std::stringstream ss;
