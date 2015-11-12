@@ -86,8 +86,10 @@ IV. IMPLEMENTATION
 
 
   ii. Files added
-  ../code/test/matmult2.c
-  ../code/test/sort2.c
+  ../code/test/matmult2exec.c
+  ../code/test/matmult2fork.c
+  ../code/test/sort2exec.c
+  ../code/test/sort2fork.c
   ../code/test/MVtests.c
   ../code/test/MVtests1.c
 
@@ -205,7 +207,7 @@ IV. IMPLEMENTATION
     StartProcess(char* filename);
 
 V. TESTING
-  All tests must be run from /network.
+  Parts 1&2 tests must be run from /vm.  Part 3 tests must be run from /network.
   Part 1 & Part 2:
   In order to test parts 1 and 2 we created matmult2exec.c and sort2exec.c which exec 2 instances of matmult and sort respectively.  To run these tests with the random page replacement, type in "nachos -x ../test/matmult2exec -P RAND" and "nachos -x ../test/sort2exec -P RAND".  For FIFO, type in "nachos -x ../test/matmult2exec -P FIFO" and "nachos -x ../test/sort2exec -P FIFO".  
   We also created matmult2fork.c and sort2fork.c which fork 2 instances of matmult and sort respectively.  To run these tests with the random page replacement, type in "nachos -x ../test/matmult2fork -P RAND" and "nachos -x ../test/sort2fork -P RAND".  For FIFO, type in "nachos -x ../test/matmult2fork -P FIFO" and "nachos -x ../test/sort2fork -P FIFO".  
