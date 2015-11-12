@@ -24,18 +24,10 @@ int main(){
 
 	value = GetMV(mv1, 0);
 	Printf("Value of monitor variable after broadcast at position 0: %d\n",sizeof("Value of monitor variable after broadcast at position 0: %d\n"), value);
-
-
-
 	
-	/*DestroyLock(lock2);
-	//Write("Lock destroyed\n", sizeof("Lock destroyed\n"), ConsoleOutput);
-	
-
-	//DestroyMV(mv1);
-		//Write("MV destroyed\n", sizeof("MV destroyed\n"), ConsoleOutput);
-	*/
 	Release(lock2);
+
+
 
 	Exit(0);
 

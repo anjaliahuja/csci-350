@@ -176,6 +176,11 @@ IV. IMPLEMENTATION
     TranslationEntry *pageTable --> PageTable *pageTable
 
   v. Functions added and in which file
+
+  In ../code/nettest.cc
+    void Server();
+    void sendMessage(PacketHeader* outPktHdr, MailHeader* outMailheader, stringstream& msg);
+  
   In ../code/userprog/exception.cc
     void populateTLB();
     int handleIPTMiss(int vpn);
@@ -252,7 +257,7 @@ V. TESTING
 
 
   Test 4: MV Tests
-  This test demonstrates the createMV, getMV, setMV and destroyMV RPC calls that were created for this project. The first 4 instances of nachos will get an MV value, increment it and wait. The 5th instance will set a new value to the MV and broadcast the other 4 instances. The other 4 instances will get the new value of the MV and print it to the console, then release the lock. The 5th instance will also destroy the MV after the other 4 instances have terminated. 
+  This test demonstrates the RPC calls for monitor  variables that were created for this project (Create, get, set destroy). The first 4 instances of nachos will get an MV value, increment it and wait. The 5th instance will set a new value to the MV and broadcast the other 4 instances. After the instances are broadcasted, the new value of the monitor variable is printed and locks are released. 
   terminal1: run "nachos -m 0 -server"
   terminal2: run "nachos -m 1 -x ../test/MVtests"
   terminal3: run "nachos -m 2 -x ../test/MVtests"
@@ -270,6 +275,8 @@ VI. DISCUSSION:
 
 	iii. Explanation (Explain how your project proves what its supposed to prove)
   For parts 1 and 2 we were able to use a TLB which is used to speed up address translation.  Through the implementation, we look at the TLB first which has a cache of pages.  Thus if we find what we are looking for a translation can be performed quickly.  We were also able to implement virtual memory using page replacement policies.
+
+  For parts 3, we were successfully able to convert syscalls into RPCs so that the client and server can interact using messages, enabling multiple instances of nachos to be fun at the same time with shared variables. The tests prove that the syscalls that were working from project 2 correctly work as RPCs now in project 3.
 
 VII. MISCELLANEOUS 
 

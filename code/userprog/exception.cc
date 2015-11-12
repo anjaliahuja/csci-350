@@ -1101,13 +1101,14 @@ int SetMV_Syscall(int mv, int index, int val) {
   ss << RPC_SetMV << " " << mv << " " << index << " " << val;
   SyscallSendMsg(ss.str());
 
-  std::string res = SyscallReceiveMsg();
-  ss.str(std::string());
-  ss.str(res);
+
+  ss.str(SyscallReceiveMsg());
   int rv = -1; // -1 is error
+
   ss >> rv;
   if (rv == -1) {
     printf("Error in setting mv\n");
+
   }
   return rv;
 
@@ -1119,23 +1120,22 @@ int SetMV_Syscall(int mv, int index, int val) {
 }
 
 int DestroyMV_Syscall(int mv) {
-  cout<<"in destroy MV" << endl;
   /** With RPCs **/
   #ifdef NETWORK
   DEBUG('o', "Client called DestroyMV\n");
   std::stringstream ss;
 
-  ss << RPC_DestroyMV << " " << mv;
-  cout<<"String stream: "<<ss.str()<<endl;
+  ss << RPC_DestroyMV << " "<< mv;
   SyscallSendMsg(ss.str());
 
+  
   std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);
-  int rv = -1; // -1 is error
-  ss >> rv;
-
-  return rv;
+  int mvres = -1; // -1 is error
+  ss >> mvres;
+  
+  return mvres;
 
   /** Without RPCs **/
   #else

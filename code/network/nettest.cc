@@ -138,7 +138,6 @@ void Server(){
                 SLocks->push_back(lock);
 
                }
-             cout<<"Index of lock: " << index <<endl;
             reply << index; 
                
               sendMessage(outPktHdr, outMailHdr, reply);
@@ -177,7 +176,6 @@ void Server(){
                 lockLock->Acquire(); 
                 ss >> lockID;
                 cout<<"RPC Acquire Lock ID: " << lockID << endl; 
-                cout<<"State of lock is" <<SLocks->at(lockID)->state <<endl;
                 bool pass = true; 
 
                 if(lockID < 0 || lockID >= SLocks->size()){
@@ -191,12 +189,9 @@ void Server(){
                         pass= false;
                         SLocks->at(lockID)->packetWaiting->push(outPktHdr);
                         int sizeofPacket = SLocks->at(lockID)->packetWaiting->size();
-                        cout<<"packet waiting size: "<< sizeofPacket <<endl;
                         SLocks->at(lockID)->mailWaiting->push(outMailHdr);
                     } else{
-                        cout<<"Set lock to busy"<<endl;
                         SLocks->at(lockID)->owner = outPktHdr->to;
-                        cout<<"Lock owner is: " << outPktHdr->to <<endl;
                         SLocks->at(lockID)->state = Busy;
                         reply << -2; 
                     }
@@ -212,30 +207,17 @@ void Server(){
                 ss >> lockID;
                 cout<<"RPC Release Lock ID: " << lockID << endl; 
                 if(lockID < 0 || lockID >= SLocks->size()){
-                    cout<<"error 1"<<endl;
                     reply << -1;
                 } else{
                     if(SLocks->at(lockID)== NULL){
-                        cout<<"error 2"<<endl;
                         reply << -1;
                     } else if(SLocks->at(lockID)->state == Available){
-                        cout<<"Release error 3"<<endl;
-                        if(SLocks->at(lockID)->state == Available){
-                            cout<<"State is available of lock"<<endl;
-                        }else{
-                         
-                            cout<<"owner is not correct"<<endl;
-                            cout<<"Owner is" << SLocks->at(lockID)->owner<<endl;
-                            cout<<"OutPktHdr is "<< outPktHdr->to<<endl;
-                        }
-
                         reply << -1;
                     } else{
                         reply << -2; 
                         if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->mailWaiting->empty()){ 
 
                             SLocks->at(lockID)->state = Available; 
-                            cout<<"Lock number: " <<lockID<<" is now available"<<endl;
                             SLocks->at(lockID)->owner = -1;
                         } else{
                             PacketHeader* tempOutPkt = SLocks->at(lockID)->packetWaiting->front();
@@ -264,7 +246,6 @@ void Server(){
                 int index = -1; 
                 for(unsigned int i = 0; i<SCVs->size(); i++){
                     if(SCVs->at(i) != NULL){
-                        cout << "name: " << SCVs->at(i)->name << std::endl;
                         if(SCVs->at(i)->name == name){
                             SCVs->at(i)->counter++;
                             index = i;
@@ -326,7 +307,6 @@ void Server(){
                 CVLock->Acquire();
                 ss >> lockID >> cvID; 
                 cout<<"RPC Wait : " << cvID << endl; 
-                cout<<"In wait, the lock state of "<<lockID << "is "<<SLocks->at(lockID)->state<<endl;
                 bool pass = true;
 
                 if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
@@ -357,7 +337,6 @@ void Server(){
                             reply << -2;
                             sendMessage(waitOutPkt, waitOutMail, reply);
                         } else{
-                            cout<<"Error 3"<<endl;
                             SLocks->at(lockID)->state = Available; 
                         }
 
@@ -403,10 +382,6 @@ void Server(){
                         }
                     }
                 }
-                cout << "lock to unwait goes from: " << endl;
-                cout << outPktHdr->from << " to " << outPktHdr->to << endl;
-                cout << "with the reply: " << endl;
-                cout << reply << endl;
                 sendMessage(outPktHdr, outMailHdr, reply);
                 CVLock->Release();
                 break;       
@@ -453,6 +428,7 @@ void Server(){
         case RPC_CreateMV: {
             MVLock->Acquire(); 
             ss>>name>>mvSize; 
+            cout<<"RPC CreateMV: " << name << endl;
 
             int index = -1;
 
@@ -484,7 +460,7 @@ void Server(){
         }
         case RPC_DestroyMV: {
             MVLock->Acquire();
-            cout<<"In destroy MV RPC " <<endl;
+            cout<<"RPC Destroy MV: "<<mvID <<endl;
             ss >> mvID;
             if(mvID < 0 || mvID >= SMVs->size()){
                 reply << -1;
@@ -506,6 +482,7 @@ void Server(){
 
         case RPC_GetMV: {
             MVLock->Acquire();
+            cout<<"RPC GetMV: " << mvID << " at index "<<mvIndex<<endl;
             ss >> mvID >> mvIndex; 
             if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
                 reply << -1;
@@ -526,6 +503,7 @@ void Server(){
         case RPC_SetMV: {
             MVLock->Acquire();
             ss >> mvID >> mvIndex >> mvVal;
+            cout<<"RPC SetMV: " << mvID << " at index "<<mvIndex<< " to value "<<mvVal<<endl;
 
             if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
                 reply << -1;
@@ -603,4 +581,3 @@ MailTest(int farAddr)
     // Then we're done!
     interrupt->Halt();
 }
-
