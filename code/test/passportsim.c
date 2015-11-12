@@ -1141,6 +1141,7 @@ void init() {
 
 void fork() {
   int i;
+  Printf("in Fork", sizeof("in Fork"), ConsoleOutput);
   for (i = 0; i < NUM_APPCLERKS; ++i) {
     Fork(startAppClerk, "appclerk", sizeof("appclerk"));
   }
