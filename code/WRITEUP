@@ -55,7 +55,18 @@ III. DESIGN:
   RPC Implementation:
   Create lock- takes in string stream of lock name, if the lock exists already, the index of the lock is sent back to client. If lock doesn't exist, a new lock is created and added to the vector of server locks, and the index of that lock is created. 
   Destroy Lock- destroy lock checks to see if the lock exists and that it isn't Null. If its available and the lock counter is at 0, the lock is destroyed and the lockID of the destroyed lock is sent back as confirmation.
-  Acquire- Acquire checks if lock exists and that it isn't null, and that the lock owner is the one who is trying to acquire the lock, and that the lock state isn't busy. if lock state is busy, 
+  Acquire- Acquire checks if lock exists and that it isn't null, and that the lock owner is the one who is trying to acquire the lock, and that the lock state isn't busy. if lock state is busy, the owner is added to a wait queue of clients requesting to acquire the lock.
+  Release- Release first does validation checks to make sure the lock is being released by the correct owner and the state is busy. It then checks if the wait queues of lock is empty, if it is it sets the lock to available. If it is not, it sends a message to the next client waiting for the lock that the lock is availble for them to use. 
+  CreateCV- create CV will first check if the cv already exists, if it does it returns the index of the cv and increments the cv counter- the number of clients who create the cv. if its not, the cv is created, added to the server CV vector and the index is sent back to the client requesting it. 
+  Destroy CV checks to see if the CV is not null and that it does exist, then checks to make sure that no client is using the CV still. If no client is using the CV, the CV is deleted and the client requesting the destroy is informed.
+  Wait- RPC wait first checks that the lock waited on exists and is not null. Then it increments the use counter for the CVs and sets the lockIndex for the cv if needed. It adds the client mailbox and owner to the cvID packetwaiting and mailwaiting wait queues, then adds the lock associated with the cv to the packetWaiting and mailWaiting lock wait queues that are checked in release. Then, it checks to see whether the wait queues for the lockID are empty, if they aren't, it pops a client from the wait queues and sends the message to the receiving client. If they are empty, then the lock is set to available. 
+  Signal- Signal first checks that the lock being signalled is a valid lock. Then it checks the state and that the owner is correct, then decrements the useCounter for the CV, and notifies the next waiting client in the SCVs mail and packet wait queues. 
+  Broadcast- Broadcast does the same as signal, but signals each waiting client until the packet wait queue and mail wait queue for the SCVs vector is empty. 
+  Create MV- create MV takes in the name and monitor variable size for the monitor varibale to be created. If it already exists, the name and index of the MV is returned. If it doesn't, the new mv is created with an array of values of size mvSize that is passed in by string stream. The MV is then added to the server MVs array and a message is sent with the mv index back to the requesting client.
+  Destroy MV- destroy mvchecks to make sure the MV to be dsstroyed exists, if it does, it deletes the MV and replies with the ID of the deleted MV.
+  Get MV- Get MV takes in the mvID and index and replies back the value of the MV at the requested index.
+  Set MV- Set MV takes in the mvID, the mv index at that ID and the value to be set. It checks to make sure the MV exists, then sets the mv value at the index to the value sent in the string stream. It then replies with the value to  confirm the change. 
+  Default- if the ss has an error, it will return the default "unKnown RPC" error message. 
 
 
  
@@ -71,10 +82,16 @@ IV. IMPLEMENTATION
   ../code/userprog/addrspace.cc
   ../code/userprog/progtest.cc
   ../code/test/Makefile
+  ../code/network/nettest.cc
+
 
   ii. Files added
-  ../code/test/matmult2.c
-  ../code/test/sort2.c
+  ../code/test/matmult2exec.c
+  ../code/test/matmult2fork.c
+  ../code/test/sort2exec.c
+  ../code/test/sort2fork.c
+  ../code/test/MVtests.c
+  ../code/test/MVtests1.c
 
   iii. Data Structures added, file they were added to
   In ../code/threads/system.h
@@ -117,11 +134,55 @@ IV. IMPLEMENTATION
     };
     OpenFile* executable
 
+  In ../code/network/nettest.cc
+      enum ServerState{Busy, Available};
+
+    Lock* lockLock = new Lock("Lock lock");
+    Lock* CVLock = new Lock("CVLock");
+    Lock* MVLock = new Lock("MVLock"); 
+
+    struct ServerLock{
+        string name;
+        ServerState state;
+        int owner;
+        queue<PacketHeader*>* packetWaiting;
+        queue<MailHeader*>* mailWaiting;
+        bool toBeDeleted;
+        int counter; 
+    };
+
+    struct ServerCV{
+        string name;
+        queue<PacketHeader*>* packetWaiting;
+        queue<MailHeader*>* mailWaiting;
+        int lockIndex;
+        bool toBeDeleted;
+        int counter;
+        int useCounter;
+    };
+
+    struct ServerMV{
+        string name;
+        int* values;
+        int len;
+        bool toBeDeleted;
+    };
+     vector<ServerLock*>* SLocks = new vector<ServerLock*>;
+    vector<ServerCV*>* SCVs = new vector<ServerCV*>;
+    vector<ServerMV*>* SMVs = new vector<ServerMV*>; 
+
+
+
   iv. Data structures modified and file they were added to
   In ../code/userprog/addrspace.h
     TranslationEntry *pageTable --> PageTable *pageTable
 
   v. Functions added and in which file
+
+  In ../code/nettest.cc
+    void Server();
+    void sendMessage(PacketHeader* outPktHdr, MailHeader* outMailheader, stringstream& msg);
+  
   In ../code/userprog/exception.cc
     void populateTLB();
     int handleIPTMiss(int vpn);
@@ -146,7 +207,7 @@ IV. IMPLEMENTATION
     StartProcess(char* filename);
 
 V. TESTING
-  All tests must be run from /network.
+  Parts 1&2 tests must be run from /vm.  Part 3 tests must be run from /network.
   Part 1 & Part 2:
   In order to test parts 1 and 2 we created matmult2exec.c and sort2exec.c which exec 2 instances of matmult and sort respectively.  To run these tests with the random page replacement, type in "nachos -x ../test/matmult2exec -P RAND" and "nachos -x ../test/sort2exec -P RAND".  For FIFO, type in "nachos -x ../test/matmult2exec -P FIFO" and "nachos -x ../test/sort2exec -P FIFO".  
   We also created matmult2fork.c and sort2fork.c which fork 2 instances of matmult and sort respectively.  To run these tests with the random page replacement, type in "nachos -x ../test/matmult2fork -P RAND" and "nachos -x ../test/sort2fork -P RAND".  For FIFO, type in "nachos -x ../test/matmult2fork -P FIFO" and "nachos -x ../test/sort2fork -P FIFO".  
@@ -196,6 +257,17 @@ V. TESTING
   terminal 1: run "nachos -m 1 -x ../test/lock_cv_test5"
   terminal 2: run "nachos -m 2 -x ../test/lock_cv_test6"
 
+
+  Test 4: MV Tests
+  This test demonstrates the RPC calls for monitor  variables that were created for this project (Create, get, set destroy). The first 4 instances of nachos will get an MV value, increment it and wait. The 5th instance will set a new value to the MV and broadcast the other 4 instances. After the instances are broadcasted, the new value of the monitor variable is printed and locks are released. 
+  terminal1: run "nachos -m 0 -server"
+  terminal2: run "nachos -m 1 -x ../test/MVtests"
+  terminal3: run "nachos -m 2 -x ../test/MVtests"
+  terminal4: run "nachos -m 3 -x ../test/MVtests"
+  terminal5: run "nachos -m 4 -x ../test/MVtests"
+  terminal6: run "nachos -m 5 -x ../test/MVtests1"
+
+
 VI. DISCUSSION: 
 	i. Experiment expectation 
   For parts 1 and 2 we expected matmult and sort to print out 7220 and 1023 respectively for the status in the exit syscall.
@@ -205,6 +277,8 @@ VI. DISCUSSION:
 
 	iii. Explanation (Explain how your project proves what its supposed to prove)
   For parts 1 and 2 we were able to use a TLB which is used to speed up address translation.  Through the implementation, we look at the TLB first which has a cache of pages.  Thus if we find what we are looking for a translation can be performed quickly.  We were also able to implement virtual memory using page replacement policies.
+
+  For parts 3, we were successfully able to convert syscalls into RPCs so that the client and server can interact using messages, enabling multiple instances of nachos to be fun at the same time with shared variables. The tests prove that the syscalls that were working from project 2 correctly work as RPCs now in project 3.
 
 VII. MISCELLANEOUS 
 

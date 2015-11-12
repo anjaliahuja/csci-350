@@ -1,37 +1,35 @@
 #include "syscall.h"
 
+int lock2, mv1, cv1, value, newVal;
+
 int main(){
-	int lock, mv, cv, value, newVal;
 
-	lock = CreateLock("lock", sizeof("lock"));
-	mv = CreateMV("mv", 2, 1);
-	cv = CreateCV("cv", 2);
+	lock2 = CreateLock("lock2", sizeof("lock2"));
+	mv1 = CreateMV("mv1", 2, 1);
+	cv1 = CreateCV("cv1", 2);
 
-	Acquire(lock);
+	Acquire(lock2);
 	Write("Get value of MV\n", sizeof("Get value of MV\n"), ConsoleOutput);
 
-	value = GetMV(mv, 0);
+	value = GetMV(mv1, 0);
 	Printf("Value of monitor variable at position 0: %d\n",sizeof("Value of monitor variable at position 0: %d\n"), value);
 
 	Write("Setting MV to increment\n", sizeof("Setting MV to increment\n"), ConsoleOutput);
-	SetMV(mv, 0, value+1);
-	newVal = GetMV(mv, 0);
+	SetMV(mv1, 0, value+1);
+	newVal = GetMV(mv1, 0);
 
 	Printf("Value of MV after incrementing: %d\n", sizeof("Value of MV after incrementing: %d\n"), newVal);
 
-	Write("Lock released", sizeof("Lock released"), ConsoleOutput);
-	
-	Wait(lock, cv);
+	Wait(lock2, cv1);
 
-	DestroyLock(lock);
-	Write("Lock destroyed\n", sizeof("Lock destroyed\n"), ConsoleOutput);
+	value = GetMV(mv1, 0);
+	Printf("Value of monitor variable after broadcast at position 0: %d\n",sizeof("Value of monitor variable after broadcast at position 0: %d\n"), value);
 	
-	Release(lock);
+	Release(lock2);
 
-	DestroyMV(mv);
-		Write("MV destroyed\n", sizeof("MV destroyed\n"), ConsoleOutput);
 
 
 	Exit(0);
+
 
 }
