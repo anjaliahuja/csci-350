@@ -1043,6 +1043,7 @@ int CreateMV_Syscall(int name, int len, int size) {
     delete[] buf;
     return -1;
   }
+  buf[len] = '\0';
   ss<<buf; 
   delete [] buf;
   ss<< " ";
