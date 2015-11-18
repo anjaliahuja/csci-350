@@ -63,6 +63,9 @@ extern void MailTest(int networkID);
 #ifdef THREADS
 extern void Problem2(void), TestSuite(void);
 #endif
+#ifdef NETWORK
+extern void Server(void);
+#endif
 
 //----------------------------------------------------------------------
 // main
@@ -146,6 +149,12 @@ main(int argc, char **argv)
 						// start up another nachos
             MailTest(atoi(*(argv + 1)));
             argCount = 2;
+        } else if (!strcmp(*argv, "-server")) {
+            Delay(2); // delay for 2 seconds
+            // to give the user time to 
+            // start up another nachos
+            Server();
+            argCount = 1;
         }
 #endif // NETWORK
     }

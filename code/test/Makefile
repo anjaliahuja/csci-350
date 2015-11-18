@@ -120,6 +120,11 @@ lock_cv_test5.o: lock_cv_test5.c
 lock_cv_test5: lock_cv_test5.o start.o
 	$(LD) $(LDFLAGS) start.o lock_cv_test5.o -o lock_cv_test5.coff
 	../bin/coff2noff lock_cv_test5.coff lock_cv_test5
+lock_cv_test6.o: lock_cv_test6.c
+	$(CC) $(CFLAGS) -c lock_cv_test6.c
+lock_cv_test6: lock_cv_test6.o start.o
+	$(LD) $(LDFLAGS) start.o lock_cv_test6.o -o lock_cv_test6.coff
+	../bin/coff2noff lock_cv_test6.coff lock_cv_test6
 
 	
 passporttest3.o: passporttest3.c
@@ -145,6 +150,40 @@ passporttest6: passporttest6.o start.o
 	$(LD) $(LDFLAGS) start.o passporttest6.o -o passporttest6.coff
 	../bin/coff2noff passporttest6.coff passporttest6
 
+matmult2exec.o: matmult2exec.c
+	$(CC) $(CFLAGS) -c matmult2exec.c
+matmult2exec: matmult2exec.o start.o
+	$(LD) $(LDFLAGS) start.o matmult2exec.o -o matmult2exec.coff
+	../bin/coff2noff matmult2exec.coff matmult2exec
+sort2exec.o: sort2exec.c
+	$(CC) $(CFLAGS) -c sort2exec.c
+sort2exec: sort2exec.o start.o
+	$(LD) $(LDFLAGS) start.o sort2exec.o -o sort2exec.coff
+	../bin/coff2noff sort2exec.coff sort2exec
+	matmult2exec.o: matmult2exec.c
+	$(CC) $(CFLAGS) -c matmult2exec.c
+matmult2fork.o: matmult2fork.c
+	$(CC) $(CFLAGS) -c matmult2fork.c
+matmult2fork: matmult2fork.o start.o
+	$(LD) $(LDFLAGS) start.o matmult2fork.o -o matmult2fork.coff
+	../bin/coff2noff matmult2fork.coff matmult2fork
+sort2fork.o: sort2fork.c
+	$(CC) $(CFLAGS) -c sort2fork.c
+sort2fork: sort2fork.o start.o
+	$(LD) $(LDFLAGS) start.o sort2fork.o -o sort2fork.coff
+	../bin/coff2noff sort2fork.coff sort2fork
+
+MVtests.o: MVtests.c
+	$(CC) $(CFLAGS) -c MVtests.c
+MVtests: MVtests.o start.o
+	$(LD) $(LDFLAGS) start.o MVtests.o -o MVtests.coff
+	../bin/coff2noff MVtests.coff MVtests
+MVtests1.o: MVtests1.c
+	$(CC) $(CFLAGS) -c MVtests1.c
+MVtests1: MVtests1.o start.o
+	$(LD) $(LDFLAGS) start.o MVtests1.o -o MVtests1.coff
+	../bin/coff2noff MVtests1.coff MVtests1
+
 
 clean:
-	rm -f *.o *.coff matmult testfiles testexit testexitprogram testprint passporttest1 passporttest2 passporttest3 passporttest4 passporttest5 passporttest6 passportsim lock_cv_test1 lock_cv_test2 lock_cv_test3 lock_cv_test4 lock_cv_test5 matmult2 sort2
+	rm -f *.o *.coff matmult2exec matmult2fork matmult sort2exec sort2fork sort testfiles passportsim testexit testexitprogram testprint passporttest1 passporttest2 passporttest3 passporttest4 passporttest5 passporttest6 lock_cv_test1 lock_cv_test2 lock_cv_test3 lock_cv_test4 lock_cv_test5 lock_cv_test6 MVtests MVtests1
