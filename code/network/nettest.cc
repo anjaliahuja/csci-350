@@ -482,8 +482,8 @@ void Server(){
 
         case RPC_GetMV: {
             MVLock->Acquire();
-            cout<<"RPC GetMV: " << mvID << " at index "<<mvIndex<<endl;
             ss >> mvID >> mvIndex; 
+            cout<<"RPC GetMV: " << mvID << " at index "<<mvIndex<<endl;
             if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
                 reply << -1;
             } else {
