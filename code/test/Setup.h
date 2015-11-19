@@ -12,24 +12,36 @@ enum bool {false, true};
 #define NUM_CASHIERS 2
 
 
+
+/*Customer MV Indicies */
+#define CustSSN 0
+#define CustAppClerkID 1
+#define CustPicClerkID 2
+#define CustPassClerkID 3
+#define CustMoney 4
+#define CustBackLine 5
+
+/*App Clerk MV Indicies */
+#define ACID 0
+#define ACState 1
+#define ACLock 2
+#define ACCV 3
+#define ACLineCV 4
+#define ACBribeLineCV 5
+#define ACCurrentCust 6
+
+/*Clerk states*/
+#define AVAIL 0
+#define BUSY 1
+#define ONBREAK 2
+
+
 typedef struct {
   int array[NUM_CUSTOMERS + 5];
   int numElements;
   int front;
   int back;
 } Queue;
-
-typedef struct {
-  char* name;
-  int ssn;
-  int money;
-  bool app_clerk;
-  bool pic_clerk;
-  bool passport_clerk;
-  bool cashier;
-  bool sendToBackOfLine;
-  bool isSenator;
-} Customer;
 
 typedef struct {
   char* name;
@@ -95,6 +107,35 @@ void initGlobalData(){
   numActiveCashiers = CreateMV("numActiveCashiers", sizeof("numActiveCashiers"), 0);
 }
 
+void createAppClerks(){
+  appClerks = createMV("appClerks", sizeof("appClerks"), NUM_APPCLERKS);
+
+
+}
+
+void initAppClerks(){
+  int i, lock, cv;
+
+  for(i = 0; i< NUM_APPCLERKS; i++){
+    ac = CreateMV(addNumToString("AC", sizeof("AC"), i), sizeof("AC")+3, 7);
+    SetMV(appClerks, i, ac); 
+    SetMV(ac, ACID, ac); 
+    SetMV(ac, ACState, BUSY);
+
+    lock = CreateLock(addNumToString("ACLock", sizeof("ACLock"), i), 
+      sizeof("ACLock")+3); 
+
+    SetMV(ac, ACLock, lock); 
+
+    cv = CreateCV(addNumToString("ACCV", sizeof("ACCV"), i), sizeof("ACCV")+3);
+    SetMV(ac, ACCV, cv);
+
+    SetMV(ac, ACCurrentCust, -1); 
+
+
+  }
+}
+
 void setup(){
   initGlobalData();
 }
@@ -157,4 +198,17 @@ void queue_push(Queue* q, int e) {
 
 int queue_size(Queue* q) {
   return q->numElements;
+}
+
+char* addNumToString(char* str, int length, int num){
+  int i;
+  for(i = 0; i< length-1; i++){
+    newString[i] = str[i];
+  }
+  newString[length-1] = '0' + num/100;
+  newString[length] = '0' + (num%100) / 10;
+  newString[length+1] = '0' + (num%10);
+  newString[length+2] = '\0'; 
+
+  return newString; 
 }

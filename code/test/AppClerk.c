@@ -1,23 +1,19 @@
 #include "syscall.h"
 #include "Setup.h"
 
-char* name;
-int id;
-int state;
-int lock;
-int cv;
-int lineCV;
-int bribeLineCV;
-int senatorCV;
+void startAppClerk(){
+  int myIndex, myMV; 
 
-int currentCustomer;
-Queue line;
-Queue bribeLine;
+  Acquire(DataLock);
+  myIndex = NumActiveAppClerks++;
+  myMV = GetMV(appClerks, myIndex);
+  Release(DataLock);
 
-int AppClerkLineLock;
-int AppClerkBribeMoney;
-int numActiveAppClerks;
 
+  while(true); 
+  Acquire(GetMV(myMV, ACLock));
+  if(GetMV)
+}
 
 int main() {
   AppClerkLineLock = CreateLock("AppClerkLineLock", sizeof("AppClerkLineLock"));
