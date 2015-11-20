@@ -64,6 +64,11 @@ int CashierMoney;
 
 /* Other values */
 int numCustomers;
+int numAppClerks;
+int numPicClerks;
+int numPassportClerks;
+int numCashiers;
+int manager;
 
 int numActiveCustomers;
 int numActiveAppClerks;
@@ -86,7 +91,12 @@ void initGlobalData(){
   PassportClerkBribeMoney = CreateMV("PassportClerkBribeMoney", sizeof("PassportClerkBribeMoney"), 0);
   CashierMoney = CreateMV("CashierMoney", sizeof("CashierMoney"), 0);
 
-  numCustomers = NUM_CUSTOMERS;
+  numCustomers = CreateMV("numCustomers", sizeof("numCustomers"), NUM_CUSTOMERS);
+  numAppClerks = CreateMV("numAppClerks", sizeof("numAppClerk"), NUM_APPCLERKS);
+  numPicClerks = CreateMV("numPicClerks", sizeof("numPicClerks"), NUM_PICCLERKS);
+  numPassportClerks = CreateMV("numPassportClerks", sizeof("numPassportClerks", NUM_PASSPORTCLERKS));
+  numCashiers = CreateMV("numCashiers", sizeof("numCashiers"), NUM_CASHIERS);
+  manager = CreateMV("manager", sizeof("manager"), 1);
 
   numActiveCustomers = CreateMV("numActiveCustomers", sizeof("numActiveCustomers"), 0);
   numActiveAppClerks = CreateMV("numActiveAppClerks", sizeof("numActiveAppClerks"), 0);
@@ -97,6 +107,8 @@ void initGlobalData(){
 
 void setup(){
   initGlobalData();
+  initCustomers();
+  initAppClerk();
 }
 
 /* Helper Functions */
