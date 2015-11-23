@@ -19,35 +19,10 @@ typedef struct {
   int back;
 } Queue;
 
-typedef struct {
-  char* name;
-  int ssn;
-  int money;
-  bool app_clerk;
-  bool pic_clerk;
-  bool passport_clerk;
-  bool cashier;
-  bool sendToBackOfLine;
-  bool isSenator;
-} Customer;
-
-typedef struct {
-  char* name;
-  int id;
-  int state;
-  int lock;
-  int cv;
-  int lineCV;
-  int bribeLineCV;
-  int senatorCV;
-
-  int currentCustomer;
-  Queue line;
-  Queue bribeLine;
-
-  /* For PictureClerk only*/
-  bool likePicture;
-} Clerk;
+/* Customer MV Indicies */
+#define SSN 0;
+#define Money 1;
+#define SendToBack 2;
 
 /* Locks */
 int AppClerkLineLock;
@@ -64,10 +39,7 @@ int CashierMoney;
 
 /* Other values */
 int numCustomers;
-int numAppClerks;
-int numPicClerks;
-int numPassportClerks;
-int numCashiers;
+int customers;
 int manager;
 
 int numActiveCustomers;
@@ -86,29 +58,56 @@ void initGlobalData(){
   CashierLineLock = CreateLock("CashierLineLock", sizeof("CashierLineLock"));
   DataLock = CreateLock("DataLock", sizeof("DataLock"));
   /* Money */
-  AppClerkBribeMoney = CreateMV("AppClerkBribeMoney", sizeof("AppClerkBribeMoney"), 0);
-  PicClerkBribeMoney = CreateMV("PicClerkBribeMoney", sizeof("PicClerkBribeMoney"), 0);
-  PassportClerkBribeMoney = CreateMV("PassportClerkBribeMoney", sizeof("PassportClerkBribeMoney"), 0);
-  CashierMoney = CreateMV("CashierMoney", sizeof("CashierMoney"), 0);
+  AppClerkBribeMoney = CreateMV("AppClerkBribeMoney", sizeof("AppClerkBribeMoney"), 1);
+  SetMV(AppClerkBribeMoney, 0, 0);
 
-  numCustomers = CreateMV("numCustomers", sizeof("numCustomers"), NUM_CUSTOMERS);
-  numAppClerks = CreateMV("numAppClerks", sizeof("numAppClerk"), NUM_APPCLERKS);
-  numPicClerks = CreateMV("numPicClerks", sizeof("numPicClerks"), NUM_PICCLERKS);
-  numPassportClerks = CreateMV("numPassportClerks", sizeof("numPassportClerks", NUM_PASSPORTCLERKS));
-  numCashiers = CreateMV("numCashiers", sizeof("numCashiers"), NUM_CASHIERS);
-  manager = CreateMV("manager", sizeof("manager"), 1);
+  PicClerkBribeMoney = CreateMV("PicClerkBribeMoney", sizeof("PicClerkBribeMoney"), 1);
+  SetMV(PicClerkBribeMoney, 0, 0);
 
-  numActiveCustomers = CreateMV("numActiveCustomers", sizeof("numActiveCustomers"), 0);
-  numActiveAppClerks = CreateMV("numActiveAppClerks", sizeof("numActiveAppClerks"), 0);
-  numActivePicClerks = CreateMV("numActivePicClerks", sizeof("numActivePicClerks"), 0);
-  numActivePassportClerks = CreateMV("numActivePassportClerks", sizeof("numActivePassportClerks"), 0);
-  numActiveCashiers = CreateMV("numActiveCashiers", sizeof("numActiveCashiers"), 0);
+  PassportClerkBribeMoney = CreateMV("PassportClerkBribeMoney", sizeof("PassportClerkBribeMoney"), 1);
+  SetMV(PassportClerkBribeMoney, 0, 0);
+
+  CashierMoney = CreateMV("CashierMoney", sizeof("CashierMoney"), 1);
+  SetMV(CashierMoney, 0, 0);
+
+  numCustomers = CreateMV("numCustomers", sizeof("numCustomers"), 1);
+  SetMV(numCustomers, 0, 0);
+  customers = CreateMV("customers", sizeof("customers"), NUM_CUSTOMERS);
+  // manager = CreateMV("manager", sizeof("manager"), 1);
+
+  numActiveCustomers = CreateMV("numActiveCustomers", sizeof("numActiveCustomers"), 1);
+  SetMV(numActiveCustomers, 0, 0);
+
+  numActiveAppClerks = CreateMV("numActiveAppClerks", sizeof("numActiveAppClerks"), 1);
+  SetMV(numActiveAppClerks, 0, 0);
+
+  numActivePicClerks = CreateMV("numActivePicClerks", sizeof("numActivePicClerks"), 1);
+  SetMV(numActivePicClerks, 0, 0);
+
+  numActivePassportClerks = CreateMV("numActivePassportClerks", sizeof("numActivePassportClerks"), 1);
+  SetMV(numActivePassportClerks, 0, 0);
+
+  numActiveCashiers = CreateMV("numActiveCashiers", sizeof("numActiveCashiers"), 1);
+  SetMV(numActivePicClerks, 0, 0);
+
+}
+
+initCustomers(){
+  int i, tempCust, money;
+
+  for(i = 0; i < NUM_CUSTOMERS; i++){
+    tempCust = CreateMV(addNumToString("Customer", sizeof("Customer"), i), sizeof("Customer")+3, 3);
+    SetMV(customers, i, tempCust); 
+    SetMV(tempCust, SSN, i); 
+    money = Rand(4, 0)*500+100;
+    SetMV(tempCust, Money, money);
+    SetMV(tempCust, SendToBack, false);
+  }
 }
 
 void setup(){
   initGlobalData();
   initCustomers();
-  initAppClerk();
 }
 
 /* Helper Functions */
