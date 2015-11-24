@@ -372,9 +372,9 @@ void SyscallSendMsg(std::string request) {
   MailHeader outMailHeader;
   char *req = new char[request.length()];
   std::strcpy(req, request.c_str());
-
-  outPacketHeader.to = SERVER_ID;
-  outMailHeader.to = SERVER_ID;
+  int serverId = rand()%5;
+  outPacketHeader.to = serverId;
+  outMailHeader.to = serverId;
   outMailHeader.from = netname; 
   outMailHeader.length = strlen(req) + 1;
 

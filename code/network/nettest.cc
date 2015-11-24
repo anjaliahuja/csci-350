@@ -79,10 +79,33 @@ void sendMessage(PacketHeader* outPktHdr, MailHeader* outMailHdr, stringstream& 
     }
 }
 
+void serverToServer(std::string request) {
+    PacketHeader* outPktHdr = new PacketHeader();
+    PacketHeader* inPktHdr = new PacketHeader();
+    MailHeader* outMailHdr = new MailHeader();
+    MailHeader* inMailHdr = new MailHeader(); 
+
+    for (int i = 0; i < 5; ++i)
+    {
+        if (i != netname)
+        {
+            stringstream ss;
+            outPktHdr->to = i;
+            outMailHdr->to = i;
+            outMailHdr->from = netname; 
+            outMailHdr->length = request.size() + 1;
+            ss << request;
+            sendMessage(outPktHdr, outMailHdr, ss);
+        }
+    }
+}
+
 void Server(){
     vector<ServerLock*>* SLocks = new vector<ServerLock*>;
     vector<ServerCV*>* SCVs = new vector<ServerCV*>;
-    vector<ServerMV*>* SMVs = new vector<ServerMV*>; 
+    vector<ServerMV*>* SMVs = new vector<ServerMV*>;
+     
+    int lockID, cvID, mvID, mvVal, mvIndex, mvSize;
 
     while(true){
         PacketHeader* outPktHdr = new PacketHeader();
@@ -92,443 +115,560 @@ void Server(){
 
         char buffer[MaxMailSize]; 
 
-        postOffice->Receive(SERVER_ID, inPktHdr, inMailHdr, buffer); 
+        postOffice->Receive(netname, inPktHdr, inMailHdr, buffer); 
         fflush(stdout);
 
+        if ((inPktHdr->from) < 5 ) {
+            //0~4, from another server!
 
-        outPktHdr->to = inPktHdr->from;
-        outMailHdr->to = inMailHdr->from;
-        outPktHdr->from - inPktHdr->to;
+            /*message format:
+            -typeOfRequest = 0
+                -serverFrom
+                -found
+            -typeOfRequest = 1
+                -clientFrom
+                -RPCtype
+                ...
+            */
 
-        int type;
-        stringstream ss;
-        ss<<buffer;
-        ss>>type; 
-        
+            int typeOfRequest;
+            int RPCtype;
+            int clientFrom;
+            int serverFrom;
+            stringstream ss;
+            stringstream reply;
+            ss<<buffer;
+            ss>>typeOfRequest;
 
-        string name;
-        int lockID, cvID, mvID, mvVal, mvIndex, mvSize;
-        stringstream reply; 
-
-        switch(type){
-            case RPC_CreateLock: {
-                lockLock->Acquire();
-                ss>>name;
-                cout<<"RPC Create Lock name: " << name << endl; 
-
-               int index = -1;
-               for(int i = 0; i<SLocks->size();i++){
-                if(SLocks->at(i)->name.compare(name) == 0){
-                    index = i;
-                    SLocks->at(i)->counter++;
-                    break;
-                }
-               }
-               if(index == -1){
-                index = SLocks->size(); 
-                ServerLock *lock = new ServerLock;
-                lock->name = name;
-                lock->packetWaiting = new queue<PacketHeader *>();
-                lock->mailWaiting = new queue<MailHeader *>(); 
-                lock->state = Available; 
-                lock->toBeDeleted = false;
-                lock->owner = -1; 
-                lock->counter = 1;
-
-                SLocks->push_back(lock);
-
-               }
-            reply << index; 
-               
-              sendMessage(outPktHdr, outMailHdr, reply);
-              lockLock->Release(); 
-              break;
-            }
-            case RPC_DestroyLock: {
-                lockLock->Acquire();
-                ss >> lockID; 
-                cout<<"RPC Destroy Lock ID: " << lockID << endl; 
-
-                if(lockID < 0 || lockID >= SLocks->size()){
-                    reply << -1;
-                } else {
-                    if(SLocks->at(lockID) == NULL){
-                        reply << -1;
-                    } else{
-                        SLocks->at(lockID)->counter--;
-                        reply<<lockID;
-                        if(SLocks->at(lockID)->state == Available){
-                            ServerLock *lock = SLocks->at(lockID);
-                            SLocks->at(lockID) = NULL;
-                            delete lock;
-                        } else{
-                        SLocks->at(lockID)->toBeDeleted = true;
-                        }
-                    }
-                }
-                sendMessage(outPktHdr, outMailHdr, reply);
-                lockLock->Release(); 
-                break;
-
-            }
-
-            case RPC_Acquire: {
-                lockLock->Acquire(); 
-                ss >> lockID;
-                cout<<"RPC Acquire Lock ID: " << lockID << endl; 
-                bool pass = true; 
-
-                if(lockID < 0 || lockID >= SLocks->size()){
-                    reply << -1;
-                } else {
-                    if(SLocks -> at(lockID) == NULL){
-                        reply << -1;
-                    } else if(SLocks->at(lockID)->owner == outPktHdr->to && SLocks->at(lockID)->state == Busy){
-                        reply << -1; 
-                    } else if(SLocks->at(lockID)->state == Busy){
-                        pass= false;
-                        SLocks->at(lockID)->packetWaiting->push(outPktHdr);
-                        int sizeofPacket = SLocks->at(lockID)->packetWaiting->size();
-                        SLocks->at(lockID)->mailWaiting->push(outMailHdr);
-                    } else{
-                        SLocks->at(lockID)->owner = outPktHdr->to;
-                        SLocks->at(lockID)->state = Busy;
-                        reply << -2; 
-                    }
-                }
-                if(pass){
-                    sendMessage(outPktHdr, outMailHdr, reply);
-                }
-                lockLock->Release(); 
-                break;
-            }
-            case RPC_Release: {
-                lockLock->Acquire(); 
-                ss >> lockID;
-                cout<<"RPC Release Lock ID: " << lockID << endl; 
-                if(lockID < 0 || lockID >= SLocks->size()){
-                    reply << -1;
-                } else{
-                    if(SLocks->at(lockID)== NULL){
-                        reply << -1;
-                    } else if(SLocks->at(lockID)->state == Available){
-                        reply << -1;
-                    } else{
-                        reply << -2; 
-                        if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->mailWaiting->empty()){ 
-
-                            SLocks->at(lockID)->state = Available; 
-                            SLocks->at(lockID)->owner = -1;
-                        } else{
-                            PacketHeader* tempOutPkt = SLocks->at(lockID)->packetWaiting->front();
-                            SLocks->at(lockID)->packetWaiting->pop();
-                            MailHeader* tempOutMail = SLocks->at(lockID)->mailWaiting->front();
-                            SLocks->at(lockID)->mailWaiting->pop();
-
-                            SLocks->at(lockID)->owner = tempOutPkt->to;
-                            sendMessage(tempOutPkt, tempOutMail, reply);
-                            /*if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->toBeDeleted == true){
-                                ServerLock* lock = SLocks->at(lockID);
-                                SLocks->at(lockID) = NULL;
-                                delete lock;
-                            }*/
-                        }
-                    }
-                }
-                sendMessage(outPktHdr, outMailHdr, reply);
-                lockLock->Release();
-                break;
-            }
-            case RPC_CreateCV: {
-                CVLock->Acquire(); 
-                ss>>name;
-                cout<<"RPC CreateCV: " << name << endl; 
-                int index = -1; 
-                for(unsigned int i = 0; i<SCVs->size(); i++){
-                    if(SCVs->at(i) != NULL){
-                        if(SCVs->at(i)->name == name){
-                            SCVs->at(i)->counter++;
-                            index = i;
-                            break;
-
-                        }
-                    }
-                }
-                if(index == -1){
-                    index = SCVs->size();
-                    ServerCV* scv = new ServerCV; 
-                    scv->name = name;
-                    scv->packetWaiting = new queue<PacketHeader *>();
-                    scv->mailWaiting = new queue<MailHeader *>();
-                    scv->toBeDeleted = false;
-                    scv->lockIndex = -1; 
-                    scv->counter = 1;
-                    scv->useCounter = 0;
-
-                    SCVs->push_back(scv); 
-
-                    reply << SCVs->size() -1;
-
-                }
-                else {
-                    reply << index; 
-                }
-                sendMessage(outPktHdr, outMailHdr, reply);
-                CVLock->Release(); 
-                break;
-
-            }
-            case RPC_DestroyCV: {
-                CVLock->Acquire();
-                ss >> cvID; 
-                cout<<"RPC Destroy CV : " << cvID << endl; 
-
-                if(cvID < 0 || cvID >= SCVs->size()){
-                    reply << -1;
-                } else{
-                    if(SCVs->at(cvID) == NULL){
-                        reply << -1;
-                    } else{
-                        reply << cvID;
-                        SCVs->at(cvID)->counter--;
-                        if(SCVs->at(cvID)->useCounter == 0){
-                            ServerCV* scv = SCVs->at(cvID);
-                            SCVs->at(cvID) = NULL;
-                            delete scv; 
-                        }
+            cout<<"message from another server"<< endl; 
+            if (typeOfRequest == 0)  //0 means it is a server responding to a request you sent out
+            {
+                //if you get 5 replies in your table, then go create a new lock
+                ss>>serverFrom;
+                bool found = false;
+                ss>>found;
+                //go check table, if 5 entries all false, then create lock, else just do nothing
+            
+            } else { //1 means it needs you to search your table
+                bool found = false;
+                ss>>clientFrom;
+                ss>>RPCtype;
+                //got type, now looking through for it
+                switch(RPCtype) {
+                    case RPC_CreateLock: {
 
                     }
-                }
-                sendMessage(outPktHdr, outMailHdr, reply);
-                CVLock->Release();
-                break;
-            }
-            case RPC_Wait: {
-                CVLock->Acquire();
-                ss >> lockID >> cvID; 
-                cout<<"RPC Wait : " << cvID << endl; 
-                bool pass = true;
 
-                if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
-                    reply << -1;
-                }
-                else{
-                    if(SLocks->at(lockID)==NULL || SCVs->at(cvID)==NULL){
-                        reply<<-1;
-                    } else if (SLocks->at(lockID)->owner != outPktHdr->to || (SCVs->at(cvID)->lockIndex != lockID && SCVs->at(cvID)->lockIndex != -1)){
-                        reply << -1;
-                    }else {
-                        SCVs->at(cvID)->useCounter++;
-                        pass = false;
-                        if(SCVs->at(cvID)->lockIndex == -1){
-                            SCVs->at(cvID)->lockIndex = lockID;
-                        }
-                        SCVs->at(cvID)->packetWaiting->push(outPktHdr);
-                        SCVs->at(cvID)->mailWaiting->push(outMailHdr);
-
-
-                        PacketHeader* waitOutPkt = SLocks->at(lockID)->packetWaiting->front();
-                        MailHeader* waitOutMail = SLocks->at(lockID)->mailWaiting->front();
-
-                        if(!(waitOutPkt == NULL)){
-                            SLocks->at(lockID)->packetWaiting->pop();
-                            SLocks->at(lockID)->mailWaiting->pop();
-                            SLocks->at(lockID)->owner = waitOutPkt->to;
-                            reply << -2;
-                            sendMessage(waitOutPkt, waitOutMail, reply);
-                        } else{
-                            SLocks->at(lockID)->state = Available; 
-                        }
+                    case RPC_DestroyLock: {
 
                     }
-                }
-                if(pass){
-                    sendMessage(outPktHdr, outMailHdr, reply);
-                }
-                CVLock->Release();
-                break;
-            }
-        case RPC_Signal: {
-                CVLock->Acquire();
-                ss>> lockID >> cvID;
-                cout<<"RPC Signal: " << cvID << endl; 
 
-                if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
-                    reply << -1;
-                } 
-                else{
-                    if(SLocks->at(lockID)==NULL||SCVs->at(cvID)== NULL){
-                        reply << -1;
-                    } else if(SLocks->at(lockID)->owner != outPktHdr->to || SCVs->at(cvID)->lockIndex != lockID){
-                        reply << -1;
-                    } else{
-
-                        if(SCVs->at(cvID)->packetWaiting->empty()){
-                            reply<<-1;
-                        } else{
-                        reply<<-2;
-                        SCVs->at(cvID)->useCounter--;
-                        PacketHeader* tempOutPkt = SCVs->at(cvID)->packetWaiting->front();
-                        SLocks->at(lockID)->packetWaiting->push(tempOutPkt);
-                        SCVs->at(cvID)->packetWaiting->pop();
-                        MailHeader* tempOutMail = SCVs->at(cvID)->mailWaiting->front();
-                        SLocks->at(lockID)->mailWaiting->push(tempOutMail);
-                        SCVs->at(cvID)->mailWaiting->pop();
-                        sendMessage(tempOutPkt, tempOutMail, reply);
-
-                        if(SCVs->at(cvID)->packetWaiting->empty()){
-                            SCVs->at(cvID)->lockIndex = -1; 
-                        }
-                        }
-                    }
-                }
-                sendMessage(outPktHdr, outMailHdr, reply);
-                CVLock->Release();
-                break;       
-
-        }
-        case RPC_Broadcast: {
-            CVLock->Acquire();
-            ss>>lockID >> cvID;
-            cout<<"RPC Broadcast cv ID lock ID: " << cvID << " " << lockID<< endl; 
-
-            if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
-                    reply << -1;
-                } 
-                else{
-                    if(SLocks->at(lockID)==NULL||SCVs->at(cvID)== NULL){
-                        reply << -1;
-                    } else if(SLocks->at(lockID)->owner != outPktHdr->to || SCVs->at(cvID)->lockIndex != lockID){
-                        reply << -1;
-                    } else{
-                        if(SCVs->at(cvID)->packetWaiting->empty()){
-                            reply<<-1;
-                        } else{
-                            while(!SCVs->at(cvID)->packetWaiting->empty()){
-                                reply << -2;
-                               PacketHeader* tempOutPkt = SCVs->at(cvID)->packetWaiting->front();
-                                SLocks->at(lockID)->packetWaiting->push(tempOutPkt);
-                                SCVs->at(cvID)->packetWaiting->pop();
-                                MailHeader* tempOutMail = SCVs->at(cvID)->mailWaiting->front();
-                                SLocks->at(lockID)->mailWaiting->push(tempOutMail);
-                                SCVs->at(cvID)->mailWaiting->pop();
-                                sendMessage(tempOutPkt, tempOutMail, reply);
-                            }
-                            SCVs->at(cvID)->lockIndex = -1;
-                        }
+                    case RPC_Acquire: {
 
                     }
-                }
 
-                sendMessage(outPktHdr, outMailHdr, reply);
-                CVLock->Release();
-                break;       
-        }
+                    case RPC_Release: {
 
-        case RPC_CreateMV: {
-            MVLock->Acquire(); 
-            ss>>name>>mvSize; 
-            cout<<"RPC CreateMV: " << name << endl;
+                    }
+                    case RPC_CreateCV: {
 
-            int index = -1;
+                    }
 
-            for(int i = 0; i < SMVs->size(); i++){
-                if(SMVs->at(i) != NULL){
-                    if(SMVs->at(i)->name == name){
-                        index = i;
-                        reply << i; 
+                    case RPC_DestroyCV: {
+                        
+                    }
+
+                    case RPC_Wait: {
+                        
+                    }
+
+                    case RPC_Signal: {
+         
+                    }
+
+                    case RPC_Broadcast: {
+                       
+                    }
+
+                    case RPC_CreateMV: {
+                        
+                    }
+
+                    case RPC_DestroyMV: {
+                        
+                    }
+
+                    case RPC_GetMV: {
+                        
+                    }
+
+                    case RPC_SetMV: {
+
+                    }
+
+                    default: {
+                        std::cout<<"Unknown RPC \n" << RPCtype << std::endl;
+                        continue;
                         break;
                     }
                 }
-            }
-            if(index == -1){ // MV doesnt already exist
-                ServerMV *mv = new ServerMV;
-                mv->name = name;
-                mv->values = new int[mvSize];
-                mv->len = mvSize;
-                for(unsigned int i = 0; i < mvSize; i++){
-                    mv->values[i] = 0;
-                }
-                mv->toBeDeleted = false;
-                SMVs->push_back(mv);
-
-                reply <<SMVs->size()-1;
-            }
-            sendMessage(outPktHdr, outMailHdr, reply);
-            MVLock->Release();
-            break;
-        }
-        case RPC_DestroyMV: {
-            MVLock->Acquire();
-            cout<<"RPC Destroy MV: "<<mvID <<endl;
-            ss >> mvID;
-            if(mvID < 0 || mvID >= SMVs->size()){
-                reply << -1;
-            } else{
-                if(SMVs->at(mvID)==NULL){
-                    reply << -1;
-                } else{
-                   ServerMV *mv = SMVs->at(mvID);
-                   SMVs->at(mvID)=NULL;
-                   delete mv; 
-                   reply << mvID; 
+                if (found)
+                {
+                    //Found the specific structure, reply to the client
+                    outPktHdr->to = clientFrom;
+                    outMailHdr->to = clientFrom;
+                    outPktHdr->from = netname;
+                    sendMessage(outPktHdr, outMailHdr, reply);
+                    
+                } else {
+                    //Couldn't find, reply to the server saying no
+                    outPktHdr->to = inPktHdr->from;
+                    outMailHdr->to = inMailHdr->from;
+                    outPktHdr->from = inPktHdr->to;
+                    reply << 0;
+                    reply << netname;
+                    reply << false;
+                    sendMessage(outPktHdr, outMailHdr, reply);
                 }
             }
+        } else {
+            //From a client
+            outPktHdr->to = inPktHdr->from;
+            outMailHdr->to = inMailHdr->from;
+            outPktHdr->from = inPktHdr->to;
 
-            sendMessage(outPktHdr, outMailHdr, reply);
-            MVLock->Release();
-            break;
-        }
+            int type;
+            stringstream ss;
+            ss<<buffer;
+            ss>>type; 
+            
+            string name;
+            stringstream reply; 
+            switch(type){            
+                case RPC_CreateLock: {
+                    lockLock->Acquire();
+                    ss>>name;
+                    cout<<"RPC Create Lock name: " << name << endl; 
 
-        case RPC_GetMV: {
-            MVLock->Acquire();
-            ss >> mvID >> mvIndex; 
-            cout<<"RPC GetMV: " << mvID << " at index "<<mvIndex<<endl;
-            if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
-                reply << -1;
-            } else {
-                if(SMVs->at(mvID)==NULL){
-                    reply << -1;
-                } else if(mvIndex >= SMVs->at(mvID)->len){
-                    reply << -1;
-                } else{
-                    reply << SMVs->at(mvID)->values[mvIndex];
+                   int index = -1;
+                   for(int i = 0; i<SLocks->size();i++){
+                    if(SLocks->at(i)->name.compare(name) == 0){
+                        index = i;
+                        SLocks->at(i)->counter++;
+                        break;
+                    }
+                   }
+                   if(index == -1){
+                    index = SLocks->size(); 
+                    ServerLock *lock = new ServerLock;
+                    lock->name = name;
+                    lock->packetWaiting = new queue<PacketHeader *>();
+                    lock->mailWaiting = new queue<MailHeader *>(); 
+                    lock->state = Available; 
+                    lock->toBeDeleted = false;
+                    lock->owner = -1; 
+                    lock->counter = 1;
+
+                    SLocks->push_back(lock);
+
+                   }
+                   reply << index; 
+                   
+                   sendMessage(outPktHdr, outMailHdr, reply);
+                   lockLock->Release(); 
+                   break;
+                }
+
+                case RPC_DestroyLock: {
+                    lockLock->Acquire();
+                    ss >> lockID; 
+                    cout<<"RPC Destroy Lock ID: " << lockID << endl; 
+
+                    if(lockID < 0 || lockID >= SLocks->size()){
+                        reply << -1;
+                    } else {
+                        if(SLocks->at(lockID) == NULL){
+                            reply << -1;
+                        } else{
+                            SLocks->at(lockID)->counter--;
+                            reply<<lockID;
+                            if(SLocks->at(lockID)->state == Available){
+                                ServerLock *lock = SLocks->at(lockID);
+                                SLocks->at(lockID) = NULL;
+                                delete lock;
+                            } else{
+                            SLocks->at(lockID)->toBeDeleted = true;
+                            }
+                        }
+                    }
+                    sendMessage(outPktHdr, outMailHdr, reply);
+                    lockLock->Release(); 
+                    break;
+                }
+
+                case RPC_Acquire: {
+                    lockLock->Acquire(); 
+                    ss >> lockID;
+                    cout<<"RPC Acquire Lock ID: " << lockID << endl; 
+                    bool pass = true; 
+
+                    if(lockID < 0 || lockID >= SLocks->size()){
+                        reply << -1;
+                    } else {
+                        if(SLocks -> at(lockID) == NULL){
+                            reply << -1;
+                        } else if(SLocks->at(lockID)->owner == outPktHdr->to && SLocks->at(lockID)->state == Busy){
+                            reply << -1; 
+                        } else if(SLocks->at(lockID)->state == Busy){
+                            pass= false;
+                            SLocks->at(lockID)->packetWaiting->push(outPktHdr);
+                            int sizeofPacket = SLocks->at(lockID)->packetWaiting->size();
+                            SLocks->at(lockID)->mailWaiting->push(outMailHdr);
+                        } else{
+                            SLocks->at(lockID)->owner = outPktHdr->to;
+                            SLocks->at(lockID)->state = Busy;
+                            reply << -2; 
+                        }
+                    }
+                    if(pass){
+                        sendMessage(outPktHdr, outMailHdr, reply);
+                    }
+                    lockLock->Release(); 
+                    break;
+                }
+
+                case RPC_Release: {
+                    lockLock->Acquire(); 
+                    ss >> lockID;
+                    cout<<"RPC Release Lock ID: " << lockID << endl; 
+                    if(lockID < 0 || lockID >= SLocks->size()){
+                        reply << -1;
+                    } else{
+                        if(SLocks->at(lockID)== NULL){
+                            reply << -1;
+                        } else if(SLocks->at(lockID)->state == Available){
+                            reply << -1;
+                        } else{
+                            reply << -2; 
+                            if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->mailWaiting->empty()){ 
+
+                                SLocks->at(lockID)->state = Available; 
+                                SLocks->at(lockID)->owner = -1;
+                            } else{
+                                PacketHeader* tempOutPkt = SLocks->at(lockID)->packetWaiting->front();
+                                SLocks->at(lockID)->packetWaiting->pop();
+                                MailHeader* tempOutMail = SLocks->at(lockID)->mailWaiting->front();
+                                SLocks->at(lockID)->mailWaiting->pop();
+
+                                SLocks->at(lockID)->owner = tempOutPkt->to;
+                                sendMessage(tempOutPkt, tempOutMail, reply);
+                            }
+                        }
+                    }
+                    sendMessage(outPktHdr, outMailHdr, reply);
+                    lockLock->Release();
+                    break;
+                }
+
+                case RPC_CreateCV: {
+                    CVLock->Acquire(); 
+                    ss>>name;
+                    cout<<"RPC CreateCV: " << name << endl; 
+                    int index = -1; 
+                    for(unsigned int i = 0; i<SCVs->size(); i++){
+                        if(SCVs->at(i) != NULL){
+                            if(SCVs->at(i)->name == name){
+                                SCVs->at(i)->counter++;
+                                index = i;
+                                break;
+
+                            }
+                        }
+                    }
+                    if(index == -1){
+                        index = SCVs->size();
+                        ServerCV* scv = new ServerCV; 
+                        scv->name = name;
+                        scv->packetWaiting = new queue<PacketHeader *>();
+                        scv->mailWaiting = new queue<MailHeader *>();
+                        scv->toBeDeleted = false;
+                        scv->lockIndex = -1; 
+                        scv->counter = 1;
+                        scv->useCounter = 0;
+
+                        SCVs->push_back(scv); 
+
+                        reply << SCVs->size() -1;
+
+                    }
+                    else {
+                        reply << index; 
+                    }
+                    sendMessage(outPktHdr, outMailHdr, reply);
+                    CVLock->Release(); 
+                    break;
+                }
+
+                case RPC_DestroyCV: {
+                    CVLock->Acquire();
+                    ss >> cvID; 
+                    cout<<"RPC Destroy CV : " << cvID << endl; 
+
+                    if(cvID < 0 || cvID >= SCVs->size()){
+                        reply << -1;
+                    } else{
+                        if(SCVs->at(cvID) == NULL){
+                            reply << -1;
+                        } else{
+                            reply << cvID;
+                            SCVs->at(cvID)->counter--;
+                            if(SCVs->at(cvID)->useCounter == 0){
+                                ServerCV* scv = SCVs->at(cvID);
+                                SCVs->at(cvID) = NULL;
+                                delete scv; 
+                            }
+
+                        }
+                    }
+                    sendMessage(outPktHdr, outMailHdr, reply);
+                    CVLock->Release();
+                    break;
+                }
+
+                case RPC_Wait: {
+                    CVLock->Acquire();
+                    ss >> lockID >> cvID; 
+                    cout<<"RPC Wait : " << cvID << endl; 
+                    bool pass = true;
+
+                    if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
+                        reply << -1;
+                    }
+                    else{
+                        if(SLocks->at(lockID)==NULL || SCVs->at(cvID)==NULL){
+                            reply<<-1;
+                        } else if (SLocks->at(lockID)->owner != outPktHdr->to || (SCVs->at(cvID)->lockIndex != lockID && SCVs->at(cvID)->lockIndex != -1)){
+                            reply << -1;
+                        }else {
+                            SCVs->at(cvID)->useCounter++;
+                            pass = false;
+                            if(SCVs->at(cvID)->lockIndex == -1){
+                                SCVs->at(cvID)->lockIndex = lockID;
+                            }
+                            SCVs->at(cvID)->packetWaiting->push(outPktHdr);
+                            SCVs->at(cvID)->mailWaiting->push(outMailHdr);
+
+
+                            PacketHeader* waitOutPkt = SLocks->at(lockID)->packetWaiting->front();
+                            MailHeader* waitOutMail = SLocks->at(lockID)->mailWaiting->front();
+
+                            if(!(waitOutPkt == NULL)){
+                                SLocks->at(lockID)->packetWaiting->pop();
+                                SLocks->at(lockID)->mailWaiting->pop();
+                                SLocks->at(lockID)->owner = waitOutPkt->to;
+                                reply << -2;
+                                sendMessage(waitOutPkt, waitOutMail, reply);
+                            } else{
+                                SLocks->at(lockID)->state = Available; 
+                            }
+
+                        }
+                    }
+                    if(pass){
+                        sendMessage(outPktHdr, outMailHdr, reply);
+                    }
+                    CVLock->Release();
+                    break;
+                }
+
+                case RPC_Signal: {
+                    CVLock->Acquire();
+                    ss>> lockID >> cvID;
+                    cout<<"RPC Signal: " << cvID << endl; 
+
+                    if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
+                        reply << -1;
+                    } 
+                    else{
+                        if(SLocks->at(lockID)==NULL||SCVs->at(cvID)== NULL){
+                            reply << -1;
+                        } else if(SLocks->at(lockID)->owner != outPktHdr->to || SCVs->at(cvID)->lockIndex != lockID){
+                            reply << -1;
+                        } else{
+
+                            if(SCVs->at(cvID)->packetWaiting->empty()){
+                                reply<<-1;
+                            } else{
+                            reply<<-2;
+                            SCVs->at(cvID)->useCounter--;
+                            PacketHeader* tempOutPkt = SCVs->at(cvID)->packetWaiting->front();
+                            SLocks->at(lockID)->packetWaiting->push(tempOutPkt);
+                            SCVs->at(cvID)->packetWaiting->pop();
+                            MailHeader* tempOutMail = SCVs->at(cvID)->mailWaiting->front();
+                            SLocks->at(lockID)->mailWaiting->push(tempOutMail);
+                            SCVs->at(cvID)->mailWaiting->pop();
+                            sendMessage(tempOutPkt, tempOutMail, reply);
+
+                            if(SCVs->at(cvID)->packetWaiting->empty()){
+                                SCVs->at(cvID)->lockIndex = -1; 
+                            }
+                            }
+                        }
+                    }
+                    sendMessage(outPktHdr, outMailHdr, reply);
+                    CVLock->Release();
+                    break;       
+                }
+
+                case RPC_Broadcast: {
+                    CVLock->Acquire();
+                    ss>>lockID >> cvID;
+                    cout<<"RPC Broadcast cv ID lock ID: " << cvID << " " << lockID<< endl; 
+
+                    if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
+                            reply << -1;
+                        } 
+                        else{
+                            if(SLocks->at(lockID)==NULL||SCVs->at(cvID)== NULL){
+                                reply << -1;
+                            } else if(SLocks->at(lockID)->owner != outPktHdr->to || SCVs->at(cvID)->lockIndex != lockID){
+                                reply << -1;
+                            } else{
+                                if(SCVs->at(cvID)->packetWaiting->empty()){
+                                    reply<<-1;
+                                } else{
+                                    while(!SCVs->at(cvID)->packetWaiting->empty()){
+                                        reply << -2;
+                                       PacketHeader* tempOutPkt = SCVs->at(cvID)->packetWaiting->front();
+                                        SLocks->at(lockID)->packetWaiting->push(tempOutPkt);
+                                        SCVs->at(cvID)->packetWaiting->pop();
+                                        MailHeader* tempOutMail = SCVs->at(cvID)->mailWaiting->front();
+                                        SLocks->at(lockID)->mailWaiting->push(tempOutMail);
+                                        SCVs->at(cvID)->mailWaiting->pop();
+                                        sendMessage(tempOutPkt, tempOutMail, reply);
+                                    }
+                                    SCVs->at(cvID)->lockIndex = -1;
+                                }
+
+                            }
+                        }
+
+                        sendMessage(outPktHdr, outMailHdr, reply);
+                        CVLock->Release();
+                        break;       
+                }
+
+                case RPC_CreateMV: {
+                    MVLock->Acquire(); 
+                    ss>>name>>mvSize; 
+                    cout<<"RPC CreateMV: " << name << endl;
+
+                    int index = -1;
+
+                    for(int i = 0; i < SMVs->size(); i++){
+                        if(SMVs->at(i) != NULL){
+                            if(SMVs->at(i)->name == name){
+                                index = i;
+                                reply << i; 
+                                break;
+                            }
+                        }
+                    }
+                    if(index == -1){ // MV doesnt already exist
+                        ServerMV *mv = new ServerMV;
+                        mv->name = name;
+                        mv->values = new int[mvSize];
+                        mv->len = mvSize;
+                        for(unsigned int i = 0; i < mvSize; i++){
+                            mv->values[i] = 0;
+                        }
+                        mv->toBeDeleted = false;
+                        SMVs->push_back(mv);
+
+                        reply <<SMVs->size()-1;
+                    }
+                    sendMessage(outPktHdr, outMailHdr, reply);
+                    MVLock->Release();
+                    break;
+                }
+
+                case RPC_DestroyMV: {
+                    MVLock->Acquire();
+                    cout<<"RPC Destroy MV: "<<mvID <<endl;
+                    ss >> mvID;
+                    if(mvID < 0 || mvID >= SMVs->size()){
+                        reply << -1;
+                    } else{
+                        if(SMVs->at(mvID)==NULL){
+                            reply << -1;
+                        } else{
+                           ServerMV *mv = SMVs->at(mvID);
+                           SMVs->at(mvID)=NULL;
+                           delete mv; 
+                           reply << mvID; 
+                        }
+                    }
+
+                    sendMessage(outPktHdr, outMailHdr, reply);
+                    MVLock->Release();
+                    break;
+                }
+
+                case RPC_GetMV: {
+                    MVLock->Acquire();
+                    ss >> mvID >> mvIndex; 
+                    cout<<"RPC GetMV: " << mvID << " at index "<<mvIndex<<endl;
+                    if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
+                        reply << -1;
+                    } else {
+                        if(SMVs->at(mvID)==NULL){
+                            reply << -1;
+                        } else if(mvIndex >= SMVs->at(mvID)->len){
+                            reply << -1;
+                        } else{
+                            reply << SMVs->at(mvID)->values[mvIndex];
+                        }
+                    }
+                    sendMessage(outPktHdr, outMailHdr, reply);
+                    MVLock->Release();
+                    break;
+                }
+
+                case RPC_SetMV: {
+                    MVLock->Acquire();
+                    ss >> mvID >> mvIndex >> mvVal;
+                    cout<<"RPC SetMV: " << mvID << " at index "<<mvIndex<< " to value "<<mvVal<<endl;
+
+                    if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
+                        reply << -1;
+                    }
+                    else{
+                        if(SMVs->at(mvID)==NULL){
+                            reply << -1;
+                        } else if (mvIndex >= SMVs->at(mvID)->len){
+                            reply << -1;
+                        } else{
+                            SMVs->at(mvID)->values[mvIndex] = mvVal; 
+                            reply << mvVal; 
+                        }
+                    }
+                    sendMessage(outPktHdr, outMailHdr, reply);
+                    MVLock->Release();
+                    break;
+                }
+
+                default: {
+                    std::cout<<"Unknown RPC \n" << type << std::endl;
+                    continue;
+                    break;
                 }
             }
-            sendMessage(outPktHdr, outMailHdr, reply);
-            MVLock->Release();
-            break;
         }
-
-        case RPC_SetMV: {
-            MVLock->Acquire();
-            ss >> mvID >> mvIndex >> mvVal;
-            cout<<"RPC SetMV: " << mvID << " at index "<<mvIndex<< " to value "<<mvVal<<endl;
-
-            if(mvID < 0 || mvID >= SMVs->size() || mvIndex < 0){
-                reply << -1;
-            }
-            else{
-                if(SMVs->at(mvID)==NULL){
-                    reply << -1;
-                } else if (mvIndex >= SMVs->at(mvID)->len){
-                    reply << -1;
-                } else{
-                    SMVs->at(mvID)->values[mvIndex] = mvVal; 
-                    reply << mvVal; 
-                }
-            }
-            sendMessage(outPktHdr, outMailHdr, reply);
-            MVLock->Release();
-            break;
-        }
-    default:
-        std::cout<<"Unknown RPC \n" << type << std::endl;
-        continue;
-        break;
     }
 }
-}
+
+
+//////////////////////////////////////////////////////////////////////////////////// Mail Test ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 void
