@@ -3,8 +3,6 @@
 typedef int bool;
 enum bool {false, true};
 
-#define NULL 0
-
 #define NUM_CUSTOMERS 6
 #define NUM_APPCLERKS 4
 #define NUM_PICCLERKS 2
@@ -22,10 +20,12 @@ enum bool {false, true};
 #define Lock 2
 #define CV 3
 #define LineCV 4
-#define BribeLineCV 5
-#define CurrentCust 6
+#define LineCount 5
+#define BribeLineCV 6
+#define BribeLineCount 7
+#define CurrentCust 8
 /* used only for PictureClerk */
-#define LikePicture 7
+#define LikePicture 9
 
 /* Clerk States */
 #define AVAIL 0
@@ -127,7 +127,7 @@ void initAppClerks(){
   int i, tempClerk, lock, cv, bribeLineCV, lineCV;
 
   for(i = 0; i < NUM_APPCLERKS; i++){
-    tempClerk = CreateMV(addNumToString("AppClerk", sizeof("AppClerk"), i), sizeof("AppClerk")+3, 8);
+    tempClerk = CreateMV(addNumToString("AppClerk", sizeof("AppClerk"), i), sizeof("AppClerk")+3, 10);
     SetMV(appClerks, i, tempClerk); 
     SetMV(tempClerk, ID, i); 
     SetMV(tempClerk, State, AVAIL);
@@ -140,6 +140,8 @@ void initAppClerks(){
     SetMV(tempClerk, CV, cv);
     SetMV(tempClerk, BribeLineCV, bribeLineCV);
     SetMV(tempClerk, LineCV, lineCV);
+    SetMV(tempClerk, LineCount, 0);
+    SetMV(tempClerk, BribeLineCount, 0);
     SetMV(tempClerk, CurrentCust, -1);
     SetMV(tempClerk, LikePicture, false);
   }
@@ -149,7 +151,7 @@ void initPicClerks(){
   int i, tempClerk, lock, cv, bribeLineCV, lineCV;
 
   for(i = 0; i < NUM_PICCLERKS; i++){
-    tempClerk = CreateMV(addNumToString("PicClerk", sizeof("PicClerk"), i), sizeof("PicClerk")+3, 8);
+    tempClerk = CreateMV(addNumToString("PicClerk", sizeof("PicClerk"), i), sizeof("PicClerk")+3, 10);
     SetMV(picClerks, i, tempClerk); 
     SetMV(tempClerk, ID, i); 
     SetMV(tempClerk, State, AVAIL);
@@ -162,6 +164,8 @@ void initPicClerks(){
     SetMV(tempClerk, CV, cv);
     SetMV(tempClerk, BribeLineCV, bribeLineCV);
     SetMV(tempClerk, LineCV, lineCV);
+    SetMV(tempClerk, LineCount, 0);
+    SetMV(tempClerk, BribeLineCount, 0);
     SetMV(tempClerk, CurrentCust, -1);
     SetMV(tempClerk, LikePicture, false);
   }
@@ -171,7 +175,7 @@ void initPassportClerks(){
   int i, tempClerk, lock, cv, bribeLineCV, lineCV;
 
   for(i = 0; i < NUM_PASSPORTCLERKS; i++){
-    tempClerk = CreateMV(addNumToString("PassportClerk", sizeof("PassportClerk"), i), sizeof("PassportClerk")+3, 8);
+    tempClerk = CreateMV(addNumToString("PassportClerk", sizeof("PassportClerk"), i), sizeof("PassportClerk")+3, 10);
     SetMV(passportClerks, i, tempClerk); 
     SetMV(tempClerk, ID, i); 
     SetMV(tempClerk, State, AVAIL);
@@ -184,6 +188,8 @@ void initPassportClerks(){
     SetMV(tempClerk, CV, cv);
     SetMV(tempClerk, BribeLineCV, bribeLineCV);
     SetMV(tempClerk, LineCV, lineCV);
+    SetMV(tempClerk, LineCount, 0);
+    SetMV(tempClerk, BribeLineCount, 0);
     SetMV(tempClerk, CurrentCust, -1);
     SetMV(tempClerk, LikePicture, false);
   }
@@ -193,7 +199,7 @@ void initCashier(){
   int i, tempClerk, lock, cv, bribeLineCV, lineCV;
 
   for(i = 0; i < NUM_CASHIERS; i++){
-    tempClerk = CreateMV(addNumToString("Cashier", sizeof("Cashier"), i), sizeof("Cashier")+3, 8);
+    tempClerk = CreateMV(addNumToString("Cashier", sizeof("Cashier"), i), sizeof("Cashier")+3, 10);
     SetMV(cashiers, i, tempClerk); 
     SetMV(tempClerk, ID, i); 
     SetMV(tempClerk, State, AVAIL);
@@ -206,6 +212,8 @@ void initCashier(){
     SetMV(tempClerk, CV, cv);
     SetMV(tempClerk, BribeLineCV, bribeLineCV);
     SetMV(tempClerk, LineCV, lineCV);
+    SetMV(tempClerk, LineCount, 0);
+    SetMV(tempClerk, BribeLineCount, 0);
     SetMV(tempClerk, CurrentCust, -1);
     SetMV(tempClerk, LikePicture, false);
   }

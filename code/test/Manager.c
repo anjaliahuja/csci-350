@@ -23,7 +23,7 @@ void startManager() {
       /*If the clerk is on break, aka their state is 2 and their line has more than 3 people
       Wake up the thread*/
       currClerkI = GetMV(appClerks, i);
-      lineSizeI = GetMV(currClerkI, Count)
+      lineSizeI = GetMV(currClerkI, LineCount)
       if(lineSizeI > 2) {
           for(j = 0; j < NUM_APPCLERKS; j++) {
             currClerkJ = GetMV(appClerks, j);
@@ -40,7 +40,7 @@ void startManager() {
         for(j = 0; j < NUM_APPCLERKS; j++) {
           currClerkJ = GetMV(appClerks, j);
           state = GetMV(currClerkJ, State);
-          lineSizeJ = GetMV(currClerkJ, Count);
+          lineSizeJ = GetMV(currClerkJ, LineCount);
 
           if (lineSizeJ > 0 && state == ONBREAK) {
             managerWakeup(currClerkJ, "ApplicationClerk");
@@ -51,7 +51,7 @@ void startManager() {
 
     for(i = 0; i < NUM_PICCLERKS; i++) {
       currClerkI = GetMV(picClerks, i);
-      lineSizeI = GetMV(currClerkI, Count)
+      lineSizeI = GetMV(currClerkI, LineCount)
       if(lineSizeI) > 2) {
           for(j = 0; j < NUM_PICCLERKS; j++) {
             currClerkJ = GetMV(picClerks, j);
@@ -68,7 +68,7 @@ void startManager() {
         for(j = 0; j < NUM_PICCLERKS; j++) {
           currClerkJ = GetMV(appClerks, j);
           state = GetMV(currClerkJ, State);
-          lineSizeJ = GetMV(currClerkJ, Count);
+          lineSizeJ = GetMV(currClerkJ, LineCount);
           if (lineSizeJ > 0 && state == ONBREAK) {
               managerWakeup(currClerkJ, "PictureClerk");
           }
@@ -78,7 +78,7 @@ void startManager() {
 
     for(i = 0; i < NUM_PASSPORTCLERKS; i++) {
       currClerkI = GetMV(passportClerks, i);
-      lineSizeI = GetMV(currClerkI, Count)
+      lineSizeI = GetMV(currClerkI, LineCount)
       if(lineSizeI > 2) {
           for(j = 0; j < NUM_PASSPORTCLERKS; j++) {
             currClerkJ = GetMV(passportClerks, j);
@@ -94,7 +94,7 @@ void startManager() {
         for(j = 0; j < NUM_PASSPORTCLERKS; j++) {
           currClerkJ = GetMV(passportClerks, j);
           state = GetMV(currClerkJ, State);
-          lineSizeJ = GetMV(currClerkJ, Count);
+          lineSizeJ = GetMV(currClerkJ, LineCount);
           if (lineSizeJ > 0 && state == ONBREAK) {
             managerWakeup(currClerkJ, "PassportClerk");
           }
@@ -104,7 +104,7 @@ void startManager() {
 
     for(i = 0; i < NUM_CASHIERS; i++) {
       currClerkI = GetMV(cashiers, i);
-      lineSizeI = GetMV(currClerkI, Count)
+      lineSizeI = GetMV(currClerkI, LineCount)
       if(lineSizeI > 2) {
         for(j = 0; j < NUM_CASHIERS; j++) {
           currClerkJ = GetMV(cashiers, j);
@@ -120,7 +120,7 @@ void startManager() {
         for(j = 0; j < NUM_CASHIERS; j++) {
           currClerkJ = GetMV(cashiers, j);
           state = GetMV(currClerkJ, State);
-          lineSizeJ = GetMV(currClerkJ, Count);
+          lineSizeJ = GetMV(currClerkJ, LineCount);
           if (lineSizeJ > 0 && state == 2) {
             managerWakeup(currClerkJ, "Cashier");
           }

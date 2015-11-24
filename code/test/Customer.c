@@ -18,7 +18,7 @@ int findLine(char type, int customer) {
     Acquire(AppClerkLineLock);
     for(i = 0; i < NUM_APPCLERKS; i++) {
       currClerkI = GetMV(appClerks, i);
-      lineSizeI = GetMV(currClerkI, Count);
+      lineSizeI = GetMV(currClerkI, LineCount);
       if(lineSizeI < line_size) {
         line_size = lineSizeI;
         my_line = i;
@@ -32,19 +32,27 @@ int findLine(char type, int customer) {
     myClerk = GetMV(appClerks, my_line);
 
     if (GetMV(me, Money) >= 600 && GetMV(myClerk, State) == BUSY && random < 3) {
+      SetMV(myClerk, BribeLineCount, GetMV(myClerk, BribeLineCount)+1);
       Printf("Customer %d has gotten in bribe line for ApplicationClerk %d\n", 
         sizeof("Customer %d has gotten in bribe line for ApplicationClerk %d\n"),
         GetMV(me, SSN)*1000+GetMV(myClerk, ID));
       Wait(AppClerkLineLock, GetMV(myClerk, BribeLineCV));
+      SetMV(myClerk, BribeLineCount, GetMV(myClerk, BribeLineCount)-1);
+      SetMV(myClerk, CurrentCust, customer);
       SetMV(me, Money, GetMV(me, Money)-500);
+      Signal(AppClerkLineLock, GetMV(myClerk, BribeLineCV));
     } else {
       if (GetMV(myClerk, State) == BUSY || GetMV(myClerk, State) == ONBREAK) {
+        SetMV(myClerk, LineCount, GetMV(myClerk, LineCount)+1);
         Printf("Customer %d has gotten in regular line for ApplicationClerk %d\n", 
           sizeof("Customer %d has gotten in regular line for ApplicationClerk %d\n"), 
           GetMV(me, SSN)*1000+GetMV(myClerk, ID));
         Wait(AppClerkLineLock, GetMV(myClerk, LineCV));
+        SetMV(myClerk, LineCount, GetMV(myClerk, LineCount)-1);
+        SetMV(myClerk, CurrentCust, customer);
+        Signal(AppClerkLineLock, GetMV(myClerk, LineCV));
       } else {
-        SetMV(myClerk, CurrentCust, me);
+        SetMV(myClerk, CurrentCust, customer);
       }
     }
 
@@ -57,7 +65,7 @@ int findLine(char type, int customer) {
     Acquire(PicClerkLineLock);
     for(i = 0; i < NUM_PICCLERKS; i++) {
       currClerkI = GetMV(picClerks, i);
-      lineSizeI = GetMV(currClerkI, Count);
+      lineSizeI = GetMV(currClerkI, LineCount);
       if(lineSizeI < line_size) {
         line_size = lineSizeI;
         my_line = i;
@@ -71,19 +79,27 @@ int findLine(char type, int customer) {
     myClerk = GetMV(picClerks, my_line);
 
     if (GetMV(me, Money) >= 600 && GetMV(myClerk, State) == BUSY && random < 3) {
+      SetMV(myClerk, BribeLineCount, GetMV(myClerk, BribeLineCount)+1);      
       Printf("Customer %d has gotten in bribe line for PictureClerk %d\n", 
         sizeof("Customer %d has gotten in bribe line for PictureClerk %d\n"),
         GetMV(me, SSN)*1000+GetMV(myClerk, ID));
       Wait(PicClerkLineLock, GetMV(myClerk, BribeLineCV));
+      SetMV(myClerk, BribeLineCount, GetMV(myClerk, BribeLineCount)-1);
+      SetMV(myClerk, CurrentCust, customer);
       SetMV(me, Money, GetMV(me, Money)-500);
+      Signal(PicClerkLineLock, GetMV(myClerk, BribeLineCV));
     } else {
       if (GetMV(myClerk, State) == BUSY || GetMV(myClerk, State) == ONBREAK) {
+        SetMV(myClerk, LineCount, GetMV(myClerk, LineCount)+1);
         Printf("Customer %d has gotten in regular line for PictureClerk %d\n", 
           sizeof("Customer %d has gotten in regular line for PictureClerk %d\n"), 
           GetMV(me, SSN)*1000+GetMV(myClerk, ID));
         Wait(PicClerkLineLock, GetMV(myClerk, LineCV));
+        SetMV(myClerk, LineCount, GetMV(myClerk, LineCount)-1);
+        SetMV(myClerk, CurrentCust, customer);
+        Signal(PicClerkLineLock, GetMV(myClerk, LineCV));
       } else {
-        SetMV(myClerk, CurrentCust, me);
+        SetMV(myClerk, CurrentCust, customer);
       }
     }
 
@@ -96,7 +112,7 @@ int findLine(char type, int customer) {
     Acquire(PassportClerkLineLock);
     for(i = 0; i < NUM_PASSPORTCLERKS; i++) {
       currClerkI = GetMV(passportClerks, i);
-      lineSizeI = GetMV(currClerkI, Count);
+      lineSizeI = GetMV(currClerkI, LineCount);
       if(lineSizeI < line_size) {
         line_size = lineSizeI;
         my_line = i;
@@ -110,19 +126,27 @@ int findLine(char type, int customer) {
     myClerk = GetMV(passportClerks, my_line);
 
     if (GetMV(me, Money) >= 600 && GetMV(myClerk, State) == BUSY && random < 3) {
+      SetMV(myClerk, BribeLineCount, GetMV(myClerk, BribeLineCount)+1);
       Printf("Customer %d has gotten in bribe line for PassportClerk %d\n", 
         sizeof("Customer %d has gotten in bribe line for PassportClerk %d\n"),
         GetMV(me, SSN)*1000+GetMV(myClerk, ID));
       Wait(PassportClerkLineLock, GetMV(myClerk, BribeLineCV));
+      SetMV(myClerk, BribeLineCount, GetMV(myClerk, BribeLineCount)-1);
+      SetMV(myClerk, CurrentCust, customer);
       SetMV(me, Money, GetMV(me, Money)-500);
+      Signal(PassportClerkLineLock, GetMV(myClerk, BribeLineCV));
     } else {
       if (GetMV(myClerk, State) == BUSY || GetMV(myClerk, State) == ONBREAK) {
+        SetMV(myClerk, LineCount, GetMV(myClerk, LineCount)+1);
         Printf("Customer %d has gotten in regular line for PassportClerk %d\n", 
           sizeof("Customer %d has gotten in regular line for PassportClerk %d\n"), 
           GetMV(me, SSN)*1000+GetMV(myClerk, ID));
         Wait(PassportClerkLineLock, GetMV(myClerk, LineCV));
+        SetMV(myClerk, LineCount, GetMV(myClerk, LineCount)-1);
+        SetMV(myClerk, CurrentCust, customer);
+        Signal(PassportClerkLineLock, GetMV(myClerk, LineCV));
       } else {
-        SetMV(myClerk, CurrentCust, me);
+        SetMV(myClerk, CurrentCust, customer);
       }
     }
 
@@ -135,7 +159,7 @@ int findLine(char type, int customer) {
     Acquire(CashierLineLock);
     for(i = 0; i < NUM_CASHIERS; i++) {
       currClerkI = GetMV(cashiers, i);
-      lineSizeI = GetMV(currClerkI, Count);
+      lineSizeI = GetMV(currClerkI, LineCount);
       if(lineSizeI < line_size) {
         line_size = lineSizeI;
         my_line = i;
@@ -149,19 +173,27 @@ int findLine(char type, int customer) {
     myClerk = GetMV(cashiers, my_line);
 
     if (GetMV(me, Money) >= 600 && GetMV(myClerk, State) == BUSY && random < 3) {
+      SetMV(myClerk, BribeLineCount, GetMV(myClerk, BribeLineCount)+1);
       Printf("Customer %d has gotten in bribe line for Cashier %d\n", 
         sizeof("Customer %d has gotten in bribe line for Cashier %d\n"),
         GetMV(me, SSN)*1000+GetMV(myClerk, ID));
       Wait(CashierLineLock, GetMV(myClerk, BribeLineCV));
+      SetMV(myClerk, BribeLineCount, GetMV(myClerk, BribeLineCount)-1);
+      SetMV(myClerk, CurrentCust, customer);
       SetMV(me, Money, GetMV(me, Money)-500);
+      Signal(CashierLineLock, GetMV(myClerk, BribeLineCV));
     } else {
       if (GetMV(myClerk, State) == BUSY || GetMV(myClerk, State) == ONBREAK) {
+        SetMV(myClerk, LineCount, GetMV(myClerk, LineCount)+1);
         Printf("Customer %d has gotten in regular line for Cashier %d\n", 
           sizeof("Customer %d has gotten in regular line for Cashier %d\n"), 
          GetMV(me, SSN)*1000+GetMV(myClerk, ID));
-      Wait(AppClerkLineLock, GetMV(myClerk, LineCV));
+        Wait(CashierLineLock, GetMV(myClerk, LineCV));
+        SetMV(myClerk, LineCount, GetMV(myClerk, LineCount)-1);
+        SetMV(myClerk, CurrentCust, customer);
+        Signal(CashierLineLock, GetMV(myClerk, LineCV));
       } else {
-        SetMV(myClerk, CurrentCust, me);
+        SetMV(myClerk, CurrentCust, customer);
       }
     }
 
