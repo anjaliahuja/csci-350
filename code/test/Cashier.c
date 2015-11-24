@@ -99,3 +99,8 @@ void startCashier() {
   }
   Exit(0);
 }
+
+void main() {
+  setup();
+  startCashier();
+}

@@ -217,7 +217,7 @@ void getAppFiled(int my_line, int customer) {
   Wait(GetMV(myClerk, Lock), GetMV(myClerk, CV));
 
   Signal(GetMV(myClerk, Lock), GetMV(myClerk, CV));
-  Release(GetMV(myClerk, Lock))
+  Release(GetMV(myClerk, Lock));
 }
 
 void getPicTaken(int my_line, int customer) {
@@ -234,7 +234,7 @@ void getPicTaken(int my_line, int customer) {
 
   /* Waits for PictureClerk to take picture */
   Wait(GetMV(myClerk, Lock), GetMV(myClerk, CV));
-  dislikePicture = Rand () % 100 + 1; /*chooses percentage between 1-99*/
+  dislikePicture = Rand(100, 1); /*chooses percentage between 1-99*/
   if (dislikePicture > 50)  {
     Printf("Customer %d does not like their picture from PicClerk %d\n", sizeof("Customer %d does not like their picture from PicClerk %d\n"), customer*1000+GetMV(myClerk, ID));
 
@@ -285,13 +285,17 @@ void getPassport(int my_line, int customer) {
   Acquire(GetMV(myClerk, Lock));
   Signal(GetMV(myClerk, Lock), GetMV(myClerk, CV));
 
-  Printf("Customer %d has given SSN %d to PassportClerk %d\n", sizeof("Customer %d has given SSN %d to PassportClerk %d\n"), customer*1000000+customer*1000+GetMV(myClerk, ID);
+  Printf("Customer %d has given SSN %d to PassportClerk %d\n", 
+    sizeof("Customer %d has given SSN %d to PassportClerk %d\n"), 
+    customer*1000000+customer*1000+GetMV(myClerk, ID));
  
   /* Wait to determine whether they go back in line */
   Wait(GetMV(myClerk, Lock), GetMV(myClerk, CV));
 
   if(GetMV(me, SendToBack)){
-    Printf("Customer %d has gone to PassportClerk %d too soon. They are going to back of line\n", sizeof("Customer %d has gone to PassportClerk %d too soon. They are going to back of line\n"), customer*1000+GetMV(myClerk, ID);
+    Printf("Customer %d has gone to PassportClerk %d too soon. They are going to back of line\n", 
+      sizeof("Customer %d has gone to PassportClerk %d too soon. They are going to back of line\n"), 
+      customer*1000+GetMV(myClerk, ID));
    
 
     /* Signal clerk that I'm leaving */
@@ -301,7 +305,7 @@ void getPassport(int my_line, int customer) {
         Yield();
     }
 
-    GetMV(me, SendToBack) = false;
+    SetMV(me, SendToBack, false);
     /* Assuming back of line does not mean their current line */
     getPassport(findLine('s', customer), customer);
     return;
@@ -325,15 +329,21 @@ void payCashier(int my_line, int customer) {
   Acquire(GetMV(myClerk, Lock));
   Signal(GetMV(myClerk, Lock), GetMV(myClerk, CV));
 
-  Printf("Customer_%d has given SSN %d to Cashier_%d \n", sizeof("Customer_%d has given SSN %d to Cashier_%d \n"), (customer*1000000+Customers[customer].ssn*1000+my_line));
+  Printf("Customer_%d has given SSN %d to Cashier_%d \n", 
+    sizeof("Customer_%d has given SSN %d to Cashier_%d \n"), 
+    (customer*1000000+GetMV(me, SSN)*1000+my_line));
 
   /* Wait to determine whether they go back in line */
   Wait(GetMV(myClerk, Lock), GetMV(myClerk, CV));
 
   if(GetMV(me, SendToBack)){
     /* send customer to back of line after yield */
-    Printf("Customer_%d has gone to Cashier_%d too soon \n", sizeof("Customer_%d has gone to Cashier_%d too soon \n"), (customer*1000+my_line));
-    Write("They are going to the back of the line \n", sizeof("They are going to the back of the line \n"), ConsoleOutput);
+    Printf("Customer_%d has gone to Cashier_%d too soon \n", 
+      sizeof("Customer_%d has gone to Cashier_%d too soon \n"), 
+      (customer*1000+my_line));
+    Write("They are going to the back of the line \n", 
+      sizeof("They are going to the back of the line \n"), 
+      ConsoleOutput);
 
     /* Signal cashier that I'm leaving */
     Signal(GetMV(myClerk, Lock), GetMV(myClerk, CV));
@@ -343,7 +353,7 @@ void payCashier(int my_line, int customer) {
         Yield();
     }
 
-    GetMV(me, SendToBack) = false;
+    SetMV(me, SendToBack, false);
     payCashier(findLine('c', customer), customer);
     return;
   }
