@@ -104,7 +104,7 @@ void Server(){
     vector<ServerLock*>* SLocks = new vector<ServerLock*>;
     vector<ServerCV*>* SCVs = new vector<ServerCV*>;
     vector<ServerMV*>* SMVs = new vector<ServerMV*>;
-     
+
     int lockID, cvID, mvID, mvVal, mvIndex, mvSize;
 
     while(true){
@@ -124,6 +124,7 @@ void Server(){
             /*message format:
             -typeOfRequest = 0
                 -serverFrom
+                -RPCtype
                 -found
             -typeOfRequest = 1
                 -clientFrom
@@ -145,10 +146,69 @@ void Server(){
             {
                 //if you get 5 replies in your table, then go create a new lock
                 ss>>serverFrom;
+                ss>>RPCtype;
                 bool found = false;
                 ss>>found;
-                //go check table, if 5 entries all false, then create lock, else just do nothing
-            
+                if(/*numReplies == 4 and none are true?*/) {
+                    switch(RPCType) {
+                        case RPC_CreateLock: {
+                            //create the lock
+                        }
+
+                        case RPC_DestroyLock: {
+
+                        }
+
+                        case RPC_Acquire: {
+
+                        }
+
+                        case RPC_Release: {
+
+                        }
+                        case RPC_CreateCV: {
+
+                        }
+
+                        case RPC_DestroyCV: {
+                            
+                        }
+
+                        case RPC_Wait: {
+                            
+                        }
+
+                        case RPC_Signal: {
+             
+                        }
+
+                        case RPC_Broadcast: {
+                           
+                        }
+
+                        case RPC_CreateMV: {
+                            
+                        }
+
+                        case RPC_DestroyMV: {
+                            
+                        }
+
+                        case RPC_GetMV: {
+                            
+                        }
+
+                        case RPC_SetMV: {
+
+                        }
+
+                        default: {
+                            std::cout<<"Unknown RPC \n" << RPCtype << std::endl;
+                            continue;
+                            break;
+                        }
+                    }
+                }
             } else { //1 means it needs you to search your table
                 bool found = false;
                 ss>>clientFrom;
@@ -170,6 +230,7 @@ void Server(){
                     case RPC_Release: {
 
                     }
+                    
                     case RPC_CreateCV: {
 
                     }
