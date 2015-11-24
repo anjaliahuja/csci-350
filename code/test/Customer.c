@@ -29,7 +29,6 @@ int findLine(char type, int customer) {
 
     me = GetMV(customers, customer);
     myClerk = GetMV(appClerks, my_line);
-
     if (GetMV(me, Money) >= 600 && GetMV(myClerk, State) == BUSY && random < 3) {
       SetMV(myClerk, BribeLineCount, GetMV(myClerk, BribeLineCount)+1);
       Printf("Customer %d has gotten in bribe line for ApplicationClerk %d\n", 
@@ -213,7 +212,7 @@ void getAppFiled(int my_line, int customer) {
   Signal(GetMV(myClerk, Lock), GetMV(myClerk, CV));
   Printf("Customer %d has given SSN %d to ApplicationClerk %d\n",
     sizeof("Customer %d has given SSN %d to ApplicationClerk %d\n"),
-    customer*1000000+customer*1000+GetMV(appClerks, ID));
+    customer*1000000+customer*1000+GetMV(myClerk, ID));
   Wait(GetMV(myClerk, Lock), GetMV(myClerk, CV));
 
   Signal(GetMV(myClerk, Lock), GetMV(myClerk, CV));
@@ -230,13 +229,17 @@ void getPicTaken(int my_line, int customer) {
   Acquire(GetMV(myClerk, Lock));
 
   Signal(GetMV(myClerk, Lock), GetMV(myClerk, CV));
-  Printf("Customer %d has given SSN %d to PictureClerk %d\n", sizeof("Customer %d has given SSN %d to PictureClerk %d\n"), customer*1000000+customer*1000+GetMV(myClerk, ID));
+  Printf("Customer %d has given SSN %d to PictureClerk %d\n", 
+    sizeof("Customer %d has given SSN %d to PictureClerk %d\n"), 
+    customer*1000000+customer*1000+GetMV(myClerk, ID));
 
   /* Waits for PictureClerk to take picture */
   Wait(GetMV(myClerk, Lock), GetMV(myClerk, CV));
   dislikePicture = Rand(100, 1); /*chooses percentage between 1-99*/
   if (dislikePicture > 50)  {
-    Printf("Customer %d does not like their picture from PicClerk %d\n", sizeof("Customer %d does not like their picture from PicClerk %d\n"), customer*1000+GetMV(myClerk, ID));
+    Printf("Customer %d does not like their picture from PicClerk %d\n", 
+      sizeof("Customer %d does not like their picture from PicClerk %d\n"), 
+      customer*1000+GetMV(myClerk, ID));
 
       SetMV(myClerk, LikePicture, false);
       Signal(GetMV(myClerk, Lock), GetMV(myClerk, CV));
@@ -262,7 +265,9 @@ void getPicTaken(int my_line, int customer) {
 
   SetMV(myClerk, LikePicture, true);
 
-  Printf("Customer %d likes their picture from PicClerk %d\n", sizeof("Customer %d likes their picture from PicClerk %d\n"), customer*1000+GetMV(myClerk, ID));
+  Printf("Customer %d likes their picture from PicClerk %d\n", 
+    sizeof("Customer %d likes their picture from PicClerk %d\n"), 
+    customer*1000+GetMV(myClerk, ID));
 
   /* 
   Signal clerk and Wait to make sure that clerk acknowledges.
@@ -381,29 +386,28 @@ void startCustomer(){
   int my_line = -1;
 
   Acquire(DataLock);
-  id = numActiveCustomers;
-  value = GetMV(numActiveCustomers, 0);
-  SetMV(numActiveCustomers, 0, value+1);
+  id = GetMV(numActiveCustomers, 0);
+  SetMV(numActiveCustomers, 0, GetMV(numActiveCustomers, 0)+1);
   Release(DataLock);
 
   /*implementation */
   task = Rand(1, 0);
   if (task == 0){
     my_line = findLine('a', id);
-    getAppFiled(my_line, id);
+    /*getAppFiled(my_line, id);
     my_line = findLine('p', id);
-    getPicTaken(my_line, id);
+    getPicTaken(my_line, id);*/
   } else if (task == 1) {
-    my_line = findLine('p', id);
+    /*my_line = findLine('p', id);
     getPicTaken(my_line, id);
     my_line = findLine('a', id);
-    getAppFiled(my_line, id);
+    getAppFiled(my_line, id);*/
   }
-
+/*
   my_line = findLine('s', id);
   getPassport(my_line, id);
   my_line = findLine('c', id);
-  payCashier(my_line, id);
+  payCashier(my_line, id);*/
 
   Printf("Customer %d is leaving the Passport Office\n", 
     sizeof("Customer %d is leaving the Passport Office\n"), 
@@ -416,5 +420,6 @@ void startCustomer(){
 
 int main() {
   setup();
+  initCustomers();
   startCustomer();
 }

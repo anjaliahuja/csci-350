@@ -4,7 +4,7 @@
 void startAppClerk() {
   int i, id, me;
   Acquire(DataLock);
-  id = numActiveAppClerks;
+  id = GetMV(numActiveAppClerks, 0);
   SetMV(numActiveAppClerks, 0, GetMV(numActiveAppClerks, 0)+1);
   Release(DataLock);
 
@@ -67,7 +67,7 @@ void startAppClerk() {
 
     Wait(GetMV(me, Lock), GetMV(me, CV));
 
-    SetMV(me, CurrentCust, -1);
+    SetMV(me, CurrentCust, NULL);
     Release(GetMV(me, Lock));
   }
   Exit(0);
@@ -75,5 +75,6 @@ void startAppClerk() {
 
 int main(){
   setup();
+  initAppClerks();
   startAppClerk();
 }

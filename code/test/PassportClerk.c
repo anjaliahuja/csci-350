@@ -4,7 +4,7 @@
 void startPassportClerk() {
   int i, id, random, me, customer;
   Acquire(DataLock);
-  id = numActivePassportClerks;
+  id = GetMV(numActivePassportClerks, 0);
   SetMV(numActivePassportClerks, 0, GetMV(numActivePassportClerks, 0)+1);
   Release(DataLock);
 
@@ -77,7 +77,7 @@ void startPassportClerk() {
 
     Wait(GetMV(me, Lock), GetMV(me, CV));
 
-    SetMV(me, CurrentCust, -1);
+    SetMV(me, CurrentCust, NULL);
     Release(GetMV(me, Lock));
   }
   Exit(0);

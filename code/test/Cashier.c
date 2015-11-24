@@ -4,7 +4,7 @@
 void startCashier() {
   int i, id, random, me, customer;
   Acquire(DataLock);
-  id = numActiveCashiers;
+  id = GetMV(numActiveCashiers, 0);
   SetMV(numActiveCashiers, 0, GetMV(numActiveCashiers, 0)+1);
   Release(DataLock);
 
@@ -94,7 +94,7 @@ void startCashier() {
 
     Wait(GetMV(me, Lock), GetMV(me, CV));
 
-    SetMV(me, CurrentCust, -1);
+    SetMV(me, CurrentCust, NULL);
     Release(GetMV(me, Lock));
   }
   Exit(0);

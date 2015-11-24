@@ -3,11 +3,13 @@
 typedef int bool;
 enum bool {false, true};
 
-#define NUM_CUSTOMERS 6
-#define NUM_APPCLERKS 4
-#define NUM_PICCLERKS 2
-#define NUM_PASSPORTCLERKS 2
-#define NUM_CASHIERS 2
+#define NULL -10
+
+#define NUM_CUSTOMERS 2
+#define NUM_APPCLERKS 1
+#define NUM_PICCLERKS 0
+#define NUM_PASSPORTCLERKS 0
+#define NUM_CASHIERS 0
 
 /* Customer MV Indicies */
 #define SSN 0
@@ -126,22 +128,27 @@ void initAppClerks(){
   int i, tempClerk, lock, cv, bribeLineCV, lineCV;
 
   for(i = 0; i < NUM_APPCLERKS; i++){
-    tempClerk = CreateMV(numString("AppClerk", sizeof("AppClerk"), i), sizeof("AppClerk")+3, 10);
+    tempClerk = CreateMV(numString("AppClerk", sizeof("AppClerk"), i), 
+      sizeof("AppClerk")+3, 10);
     SetMV(appClerks, i, tempClerk); 
     SetMV(tempClerk, ID, i); 
     SetMV(tempClerk, State, AVAIL);
 
-    lock = CreateLock("Lock", sizeof("Lock"));
-    cv = CreateCV("CV", sizeof("CV"));
-    bribeLineCV = CreateCV("BribeLineCV", sizeof("BribeLineCV"));
-    lineCV = CreateCV("LineCV", sizeof("LineCV"));
+    lock = CreateLock(numString("AppClerkLock", sizeof("AppClerkLock"), i), 
+      sizeof("AppClerkLock")+3);
+    cv = CreateCV(numString("AppClerkCV", sizeof("AppClerkCV"), i), 
+      sizeof("AppClerkCV")+3);
+    bribeLineCV = CreateCV(numString("AppClerkBribeLineCV", sizeof("AppClerkBribeLineCV"), i), 
+      sizeof("AppClerkBribeLineCV")+3);
+    lineCV = CreateCV(numString("AppClerkLineCV", sizeof("AppClerkLineCV"), i), 
+      sizeof("AppClerkLineCV")+3);
     SetMV(tempClerk, Lock, lock);
     SetMV(tempClerk, CV, cv);
     SetMV(tempClerk, BribeLineCV, bribeLineCV);
     SetMV(tempClerk, LineCV, lineCV);
     SetMV(tempClerk, LineCount, 0);
     SetMV(tempClerk, BribeLineCount, 0);
-    SetMV(tempClerk, CurrentCust, -1);
+    SetMV(tempClerk, CurrentCust, NULL);
     SetMV(tempClerk, LikePicture, false);
   }
 }
@@ -155,17 +162,21 @@ void initPicClerks(){
     SetMV(tempClerk, ID, i); 
     SetMV(tempClerk, State, AVAIL);
 
-    lock = CreateLock("Lock", sizeof("Lock"));
-    cv = CreateCV("CV", sizeof("CV"));
-    bribeLineCV = CreateCV("BribeLineCV", sizeof("BribeLineCV"));
-    lineCV = CreateCV("LineCV", sizeof("LineCV"));
+    lock = CreateLock(numString("PicClerkLock", sizeof("PicClerkLock"), i), 
+      sizeof("PicClerkLock")+3);
+    cv = CreateCV(numString("PicClerkCV", sizeof("PicClerkCV"), i), 
+      sizeof("PicClerkCV")+3);
+    bribeLineCV = CreateCV(numString("PicClerkBribeLineCV", sizeof("PicClerkBribeLineCV"), i), 
+      sizeof("PicClerkBribeLineCV")+3);
+    lineCV = CreateCV(numString("PicClerkLineCV", sizeof("PicClerkLineCV"), i), 
+      sizeof("PicClerkLineCV")+3);
     SetMV(tempClerk, Lock, lock);
     SetMV(tempClerk, CV, cv);
     SetMV(tempClerk, BribeLineCV, bribeLineCV);
     SetMV(tempClerk, LineCV, lineCV);
     SetMV(tempClerk, LineCount, 0);
     SetMV(tempClerk, BribeLineCount, 0);
-    SetMV(tempClerk, CurrentCust, -1);
+    SetMV(tempClerk, CurrentCust, NULL);
     SetMV(tempClerk, LikePicture, false);
   }
 }
@@ -179,17 +190,21 @@ void initPassportClerks(){
     SetMV(tempClerk, ID, i); 
     SetMV(tempClerk, State, AVAIL);
 
-    lock = CreateLock("Lock", sizeof("Lock"));
-    cv = CreateCV("CV", sizeof("CV"));
-    bribeLineCV = CreateCV("BribeLineCV", sizeof("BribeLineCV"));
-    lineCV = CreateCV("LineCV", sizeof("LineCV"));
+    lock = CreateLock(numString("PassportClerkLock", sizeof("PassportClerkLock"), i), 
+      sizeof("PassportClerkLock")+3);
+    cv = CreateCV(numString("PassportClerkCV", sizeof("PassportClerkCV"), i), 
+      sizeof("PassportClerkCV")+3);
+    bribeLineCV = CreateCV(numString("PassportClerkBribeLineCV", sizeof("PassportClerkBribeLineCV"), i), 
+      sizeof("PassportClerkBribeLineCV")+3);
+    lineCV = CreateCV(numString("PassportClerkLineCV", sizeof("PassportClerkLineCV"), i), 
+      sizeof("PassportClerkLineCV")+3);
     SetMV(tempClerk, Lock, lock);
     SetMV(tempClerk, CV, cv);
     SetMV(tempClerk, BribeLineCV, bribeLineCV);
     SetMV(tempClerk, LineCV, lineCV);
     SetMV(tempClerk, LineCount, 0);
     SetMV(tempClerk, BribeLineCount, 0);
-    SetMV(tempClerk, CurrentCust, -1);
+    SetMV(tempClerk, CurrentCust, NULL);
     SetMV(tempClerk, LikePicture, false);
   }
 }
@@ -203,28 +218,27 @@ void initCashiers(){
     SetMV(tempClerk, ID, i); 
     SetMV(tempClerk, State, AVAIL);
 
-    lock = CreateLock("Lock", sizeof("Lock"));
-    cv = CreateCV("CV", sizeof("CV"));
-    bribeLineCV = CreateCV("BribeLineCV", sizeof("BribeLineCV"));
-    lineCV = CreateCV("LineCV", sizeof("LineCV"));
+    lock = CreateLock(numString("CashierLock", sizeof("CashierLock"), i), 
+      sizeof("CashierLock")+3);
+    cv = CreateCV(numString("CashierCV", sizeof("CashierCV"), i), 
+      sizeof("CashierCV")+3);
+    bribeLineCV = CreateCV(numString("CashierBribeLineCV", sizeof("CashierBribeLineCV"), i), 
+      sizeof("CashierBribeLineCV")+3);
+    lineCV = CreateCV(numString("CashierLineCV", sizeof("CashierLineCV"), i), 
+      sizeof("CashierLineCV")+3);
     SetMV(tempClerk, Lock, lock);
     SetMV(tempClerk, CV, cv);
     SetMV(tempClerk, BribeLineCV, bribeLineCV);
     SetMV(tempClerk, LineCV, lineCV);
     SetMV(tempClerk, LineCount, 0);
     SetMV(tempClerk, BribeLineCount, 0);
-    SetMV(tempClerk, CurrentCust, -1);
+    SetMV(tempClerk, CurrentCust, NULL);
     SetMV(tempClerk, LikePicture, false);
   }
 }
 
 void setup(){
   initGlobalData();
-  initCustomers();
-  initAppClerks();
-  initPicClerks();
-  initPassportClerks();
-  initCashiers();
 }
 
 /* Helper Functions */

@@ -9,7 +9,7 @@ void managerWakeup(int clerk, char* clerkType) {
   Acquire(lock);
   Signal(lock, cv);
   Write("Manager has woken up ", sizeof("Manager has woken up "), ConsoleOutput);
-  Write(clerkType, sizeof(clerkType), ConsoleOutput);
+  Write(clerkType, 16, ConsoleOutput);
   Printf(" %d\n", sizeof(" %d\n"), clerk);
   Wait(lock, cv);
   Release(lock);

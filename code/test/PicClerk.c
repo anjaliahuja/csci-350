@@ -4,7 +4,7 @@
 void startPicClerk() {
   int i, id, me;
   Acquire(DataLock);
-  id = numActivePicClerks;
+  id = GetMV(numActivePicClerks, 0);
   SetMV(numActivePicClerks, 0, GetMV(numActivePicClerks, 0)+1);
   Release(DataLock);
 
@@ -78,7 +78,7 @@ void startPicClerk() {
     }
     Wait(GetMV(me, Lock), GetMV(me, CV));
 
-    SetMV(me, CurrentCust, -1);
+    SetMV(me, CurrentCust, NULL);
     Release(GetMV(me, Lock));
   }
   Exit(0);

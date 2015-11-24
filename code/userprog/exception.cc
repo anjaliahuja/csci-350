@@ -1083,7 +1083,7 @@ int GetMV_Syscall(int mv, int index) {
   int rv = -1; // -1 is error
   ss >> rv;
   if (rv == -1) {
-    printf("Error in getting mv\n");
+    printf("Error in getting mv %d at index %d\n", mv, index);
   }
   return rv;
 
@@ -1108,7 +1108,7 @@ int SetMV_Syscall(int mv, int index, int val) {
 
   ss >> rv;
   if (rv == -1) {
-    printf("Error in setting mv\n");
+    printf("Error in setting mv %d at index %d to value %d\n", mv, index, val);
 
   }
   return rv;
