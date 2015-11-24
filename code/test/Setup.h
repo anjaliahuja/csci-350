@@ -11,18 +11,26 @@ enum bool {false, true};
 #define NUM_PASSPORTCLERKS 2
 #define NUM_CASHIERS 2
 
-
-typedef struct {
-  int array[NUM_CUSTOMERS + 5];
-  int numElements;
-  int front;
-  int back;
-} Queue;
-
 /* Customer MV Indicies */
 #define SSN 0;
 #define Money 1;
 #define SendToBack 2;
+
+/* Clerk MV Indices */
+#define ID 0
+#define State 1
+#define Lock 2
+#define CV 3
+#define LineCV 4
+#define BribeLineCV 5
+#define CurrentCust 6
+/* used only for PictureClerk */
+#define LikePicture 7
+
+/* Clerk States */
+#define AVAIL 0
+#define BUSY 1
+#define ONBREAK 2
 
 /* Locks */
 int AppClerkLineLock;
@@ -41,6 +49,10 @@ int CashierMoney;
 int numCustomers;
 int customers;
 int manager;
+int appClerks;
+int picClerks;
+int passportClerks;
+int cashiers;
 
 int numActiveCustomers;
 int numActiveAppClerks;
@@ -57,6 +69,7 @@ void initGlobalData(){
   PassportClerkLineLock = CreateLock("PassportClerkLineLock", sizeof("PassportClerkLineLock"));
   CashierLineLock = CreateLock("CashierLineLock", sizeof("CashierLineLock"));
   DataLock = CreateLock("DataLock", sizeof("DataLock"));
+
   /* Money */
   AppClerkBribeMoney = CreateMV("AppClerkBribeMoney", sizeof("AppClerkBribeMoney"), 1);
   SetMV(AppClerkBribeMoney, 0, 0);
@@ -70,10 +83,15 @@ void initGlobalData(){
   CashierMoney = CreateMV("CashierMoney", sizeof("CashierMoney"), 1);
   SetMV(CashierMoney, 0, 0);
 
+  /* declare each Customer/Clerk */
   numCustomers = CreateMV("numCustomers", sizeof("numCustomers"), 1);
-  SetMV(numCustomers, 0, 0);
+  SetMV(numCustomers, 0, NUM_CUSTOMERS);
   customers = CreateMV("customers", sizeof("customers"), NUM_CUSTOMERS);
   // manager = CreateMV("manager", sizeof("manager"), 1);
+  appClerks = CreateMV("appClerks", sizeof("appClerks"), NUM_APPCLERKS);
+  picClerks = CreateMV("picClerks", sizeof("picClerks"), NUM_PICCLERKS);
+  passportClerks = CreateMV("passportClerks", sizeof("passportClerks"), NUM_PASSPORTCLERKS);
+  cashiers = CreateMV("cashiers", sizeof("cashiers"), NUM_CASHIERS);
 
   numActiveCustomers = CreateMV("numActiveCustomers", sizeof("numActiveCustomers"), 1);
   SetMV(numActiveCustomers, 0, 0);
@@ -92,7 +110,7 @@ void initGlobalData(){
 
 }
 
-initCustomers(){
+void initCustomers(){
   int i, tempCust, money;
 
   for(i = 0; i < NUM_CUSTOMERS; i++){
@@ -105,9 +123,101 @@ initCustomers(){
   }
 }
 
+void initAppClerks(){
+  int i, tempClerk, lock, cv, bribeLineCV, lineCV;
+
+  for(i = 0; i < NUM_APPCLERKS; i++){
+    tempClerk = CreateMV(addNumToString("AppClerk", sizeof("AppClerk"), i), sizeof("AppClerk")+3, 8);
+    SetMV(appClerks, i, tempClerk); 
+    SetMV(tempClerk, ID, i); 
+    SetMV(tempClerk, State, AVAIL);
+
+    lock = CreateLock("Lock", sizeof("Lock"));
+    cv = CreateCV("CV", sizeof("CV"));
+    bribeLineCV = CreateCV("BribeLineCV", sizeof("BribeLineCV"));
+    lineCV = CreateCV("LineCV", sizeof("LineCV"));
+    SetMV(tempClerk, Lock, lock);
+    SetMV(tempClerk, CV, cv);
+    SetMV(tempClerk, BribeLineCV, bribeLineCV);
+    SetMV(tempClerk, LineCV, lineCV);
+    SetMV(tempClerk, CurrentCust, -1);
+    SetMV(tempClerk, LikePicture, false);
+  }
+}
+
+void initPicClerks(){
+  int i, tempClerk, lock, cv, bribeLineCV, lineCV;
+
+  for(i = 0; i < NUM_PICCLERKS; i++){
+    tempClerk = CreateMV(addNumToString("PicClerk", sizeof("PicClerk"), i), sizeof("PicClerk")+3, 8);
+    SetMV(picClerks, i, tempClerk); 
+    SetMV(tempClerk, ID, i); 
+    SetMV(tempClerk, State, AVAIL);
+
+    lock = CreateLock("Lock", sizeof("Lock"));
+    cv = CreateCV("CV", sizeof("CV"));
+    bribeLineCV = CreateCV("BribeLineCV", sizeof("BribeLineCV"));
+    lineCV = CreateCV("LineCV", sizeof("LineCV"));
+    SetMV(tempClerk, Lock, lock);
+    SetMV(tempClerk, CV, cv);
+    SetMV(tempClerk, BribeLineCV, bribeLineCV);
+    SetMV(tempClerk, LineCV, lineCV);
+    SetMV(tempClerk, CurrentCust, -1);
+    SetMV(tempClerk, LikePicture, false);
+  }
+}
+
+void initPassportClerks(){
+  int i, tempClerk, lock, cv, bribeLineCV, lineCV;
+
+  for(i = 0; i < NUM_PASSPORTCLERKS; i++){
+    tempClerk = CreateMV(addNumToString("PassportClerk", sizeof("PassportClerk"), i), sizeof("PassportClerk")+3, 8);
+    SetMV(passportClerks, i, tempClerk); 
+    SetMV(tempClerk, ID, i); 
+    SetMV(tempClerk, State, AVAIL);
+
+    lock = CreateLock("Lock", sizeof("Lock"));
+    cv = CreateCV("CV", sizeof("CV"));
+    bribeLineCV = CreateCV("BribeLineCV", sizeof("BribeLineCV"));
+    lineCV = CreateCV("LineCV", sizeof("LineCV"));
+    SetMV(tempClerk, Lock, lock);
+    SetMV(tempClerk, CV, cv);
+    SetMV(tempClerk, BribeLineCV, bribeLineCV);
+    SetMV(tempClerk, LineCV, lineCV);
+    SetMV(tempClerk, CurrentCust, -1);
+    SetMV(tempClerk, LikePicture, false);
+  }
+}
+
+void initCashier(){
+  int i, tempClerk, lock, cv, bribeLineCV, lineCV;
+
+  for(i = 0; i < NUM_CASHIERS; i++){
+    tempClerk = CreateMV(addNumToString("Cashier", sizeof("Cashier"), i), sizeof("Cashier")+3, 8);
+    SetMV(cashiers, i, tempClerk); 
+    SetMV(tempClerk, ID, i); 
+    SetMV(tempClerk, State, AVAIL);
+
+    lock = CreateLock("Lock", sizeof("Lock"));
+    cv = CreateCV("CV", sizeof("CV"));
+    bribeLineCV = CreateCV("BribeLineCV", sizeof("BribeLineCV"));
+    lineCV = CreateCV("LineCV", sizeof("LineCV"));
+    SetMV(tempClerk, Lock, lock);
+    SetMV(tempClerk, CV, cv);
+    SetMV(tempClerk, BribeLineCV, bribeLineCV);
+    SetMV(tempClerk, LineCV, lineCV);
+    SetMV(tempClerk, CurrentCust, -1);
+    SetMV(tempClerk, LikePicture, false);
+  }
+}
+
 void setup(){
   initGlobalData();
   initCustomers();
+  initAppClerks();
+  initPicClerks();
+  initPassportClerks();
+  initCashiers();
 }
 
 /* Helper Functions */
