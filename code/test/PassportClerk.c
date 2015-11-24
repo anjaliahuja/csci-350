@@ -1,12 +1,10 @@
 #include "syscall.h"
 #include "Setup.h"
-#include <string>
 
 void startPassportClerk() {
   int i, id, random, me, customer;
   Acquire(DataLock);
   id = numActivePassportClerks;
-  // numActivePassportClerks++;
   SetMV(numActivePassportClerks, 0, GetMV(numActivePassportClerks, 0)+1);
   Release(DataLock);
 
@@ -63,7 +61,8 @@ void startPassportClerk() {
     }
     else {
       Printf("Passport clerk %d has determined that Customer %d has both their application and picture completed\n", 
-        sizeof("Passport clerk %d has determined that Customer %d has both their application and picture completed\n"), id*1000+(Customers[PassportClerks[id].currentCustomer].ssn));
+        sizeof("Passport clerk %d has determined that Customer %d has both their application and picture completed\n"), 
+        id*1000+GetMV(me, CurrentCust));
       Signal(GetMV(me, Lock), GetMV(me, CV));
       Release(GetMV(me, Lock));
       for(i =20; i<100; ++i){
@@ -71,7 +70,8 @@ void startPassportClerk() {
       }
       Acquire(GetMV(me, Lock));
       Signal(GetMV(me, Lock), GetMV(me, CV));
-      Printf("Passport clerk %d has recorded Customer %d passport documentation\n", sizeof("Passport clerk %d has recorded Customer %d passport documentation\n"), id*1000+(Customers[PassportClerks[id].currentCustomer].ssn));
+      Printf("Passport clerk %d has recorded Customer %d passport documentation\n", sizeof("Passport clerk %d has recorded Customer %d passport documentation\n"), 
+        id*1000+GetMV(me, CurrentCust));
       
     }
 

@@ -1,15 +1,16 @@
 #include "syscall.h"
 #include "Setup.h"
-#include <string>
 
-void managerWakeup(int clerk, std::string clerkType) {
+void managerWakeup(int clerk, char* clerkType) {
   int lock, cv;
   lock = GetMV(clerk, Lock);
   cv = GetMV(clerk, CV);
 
   Acquire(lock);
   Signal(lock, cv);
-  Printf("Manager has woken up " + clerkType + " %d \n", sizeof("Manager has woken up " + clerkType + " %d \n"), (clerk->id));
+  Write("Manager has woken up ", sizeof("Manager has woken up "), ConsoleOutput);
+  Write(clerkType, sizeof(clerkType), ConsoleOutput);
+  Printf(" %d\n", sizeof(" %d\n"), clerk);
   Wait(lock, cv);
   Release(lock);
 }
@@ -23,7 +24,7 @@ void startManager() {
       /*If the clerk is on break, aka their state is 2 and their line has more than 3 people
       Wake up the thread*/
       currClerkI = GetMV(appClerks, i);
-      lineSizeI = GetMV(currClerkI, LineCount)
+      lineSizeI = GetMV(currClerkI, LineCount);
       if(lineSizeI > 2) {
           for(j = 0; j < NUM_APPCLERKS; j++) {
             currClerkJ = GetMV(appClerks, j);
@@ -51,8 +52,8 @@ void startManager() {
 
     for(i = 0; i < NUM_PICCLERKS; i++) {
       currClerkI = GetMV(picClerks, i);
-      lineSizeI = GetMV(currClerkI, LineCount)
-      if(lineSizeI) > 2) {
+      lineSizeI = GetMV(currClerkI, LineCount);
+      if(lineSizeI > 2) {
           for(j = 0; j < NUM_PICCLERKS; j++) {
             currClerkJ = GetMV(picClerks, j);
             state = GetMV(currClerkJ, State);
@@ -78,7 +79,7 @@ void startManager() {
 
     for(i = 0; i < NUM_PASSPORTCLERKS; i++) {
       currClerkI = GetMV(passportClerks, i);
-      lineSizeI = GetMV(currClerkI, LineCount)
+      lineSizeI = GetMV(currClerkI, LineCount);
       if(lineSizeI > 2) {
           for(j = 0; j < NUM_PASSPORTCLERKS; j++) {
             currClerkJ = GetMV(passportClerks, j);
@@ -104,7 +105,7 @@ void startManager() {
 
     for(i = 0; i < NUM_CASHIERS; i++) {
       currClerkI = GetMV(cashiers, i);
-      lineSizeI = GetMV(currClerkI, LineCount)
+      lineSizeI = GetMV(currClerkI, LineCount);
       if(lineSizeI > 2) {
         for(j = 0; j < NUM_CASHIERS; j++) {
           currClerkJ = GetMV(cashiers, j);

@@ -1,6 +1,5 @@
 #include "syscall.h"
 #include "Setup.h"
-#include <string>
 
 int findLine(char type, int customer) {
   /* variable declarations */
@@ -373,7 +372,6 @@ void startCustomer(){
 
   Acquire(DataLock);
   id = numActiveCustomers;
-  // numActiveCustomers++;
   value = GetMV(numActiveCustomers, 0);
   SetMV(numActiveCustomers, 0, value+1);
   Release(DataLock);
@@ -401,7 +399,6 @@ void startCustomer(){
     sizeof("Customer %d is leaving the Passport Office\n"), 
     id);
 
-  // numCustomers--;
   value = GetMV(numCustomers, 0);
   SetMV(numCustomers, 0, value-1);
   Exit(0);

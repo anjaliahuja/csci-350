@@ -1,12 +1,10 @@
 #include "syscall.h"
 #include "Setup.h"
-#include <string>
 
 void startCashier() {
   int i, id, random, me, customer;
   Acquire(DataLock);
   id = numActiveCashiers;
-  // numActiveCashiers++;
   SetMV(numActiveCashiers, 0, GetMV(numActiveCashiers, 0)+1);
   Release(DataLock);
 

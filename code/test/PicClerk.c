@@ -1,12 +1,10 @@
 #include "syscall.h"
 #include "Setup.h"
-#include <string>
 
 void startPicClerk() {
   int i, id, me;
   Acquire(DataLock);
   id = numActivePicClerks;
-  // numActivePicClerks++;
   SetMV(numActivePicClerks, 0, GetMV(numActivePicClerks, 0)+1);
   Release(DataLock);
 
@@ -29,7 +27,8 @@ void startPicClerk() {
       /* wait so that CurrentCust can be set by Customer */
       Wait(PicClerkLineLock, GetMV(me, LineCV));
       SetMV(me, State, BUSY);
-      Printf("PictureClerk %d has signalled customer %d to come to their counter\n", sizeof("PictureClerk %d has signalled customer %d to come to their counter\n"), id*1000+(PicClerks[id].currentCustomer));
+      Printf("PictureClerk %d has signalled customer %d to come to their counter\n", sizeof("PictureClerk %d has signalled customer %d to come to their counter\n"), 
+        id*1000+GetMV(me, CurrentCust));
     } else {
       Acquire(GetMV(me, Lock));
       Release(PicClerkLineLock);
@@ -49,22 +48,26 @@ void startPicClerk() {
 
     /* Wait for customer data */
     Wait(GetMV(me, Lock), GetMV(me, CV));
-    Printf("PictureClerk %d has received SSN %d from customer %d\n", sizeof("PictureClerk %d has received SSN %d from customer %d\n"), id*1000000+(Customers[PicClerks[id].currentCustomer].ssn)*1000+PicClerks[id].currentCustomer);
+    Printf("PictureClerk %d has received SSN %d from customer %d\n", sizeof("PictureClerk %d has received SSN %d from customer %d\n"), 
+      id*1000000+GetMV(me, CurrentCust)*1000+GetMV(me, CurrentCust));
    
     /* Do my job, customer now waiting */
     Signal(GetMV(me, Lock), GetMV(me, CV));
-    Printf("PictureClerk %d has taken picture of customer %d\n", sizeof("PictureClerk %d has taken picture of customer %d\n"), id*1000+ PicClerks[id].currentCustomer);
+    Printf("PictureClerk %d has taken picture of customer %d\n", sizeof("PictureClerk %d has taken picture of customer %d\n"), 
+      id*1000+ GetMV(me, CurrentCust));
    
 
     /* waiting for approval */
     Wait(GetMV(me, Lock), GetMV(me, CV));
 
     if (!GetMV(me, LikePicture)) {
-      Printf("PictureClerk %d has been told that customer %d does not like their picture.\n", sizeof("PictureClerk %d has been told that customer %d does not like their picture.\n"), id*1000+ PicClerks[id].currentCustomer);
+      Printf("PictureClerk %d has been told that customer %d does not like their picture.\n", sizeof("PictureClerk %d has been told that customer %d does not like their picture.\n"), 
+        id*1000+ GetMV(me, CurrentCust));
       Signal(GetMV(me, Lock), GetMV(me, CV));
     }
     else {
-      Printf("PictureClerk %d has been told that customer %d does like their picture.\n", sizeof("PictureClerk %d has been told that customer %d does like their picture.\n"), id*1000+ PicClerks[id].currentCustomer);
+      Printf("PictureClerk %d has been told that customer %d does like their picture.\n", sizeof("PictureClerk %d has been told that customer %d does like their picture.\n"), 
+        id*1000+GetMV(me, CurrentCust));
 
       Release(GetMV(me, Lock));
       for(i =20; i<100; ++i){

@@ -1,14 +1,11 @@
 #include "syscall.h"
 #include "Setup.h"
-#include <string>
 
 void startAppClerk() {
   int i, id, me;
   Acquire(DataLock);
   id = numActiveAppClerks;
-  // numActiveAppClerks++;
-  value = GetMV(numActiveAppClerks, 0);
-  SetMV(numActiveAppClerks, 0, value+1);
+  SetMV(numActiveAppClerks, 0, GetMV(numActiveAppClerks, 0)+1);
   Release(DataLock);
 
   while(true) {

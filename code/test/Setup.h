@@ -10,9 +10,9 @@ enum bool {false, true};
 #define NUM_CASHIERS 2
 
 /* Customer MV Indicies */
-#define SSN 0;
-#define Money 1;
-#define SendToBack 2;
+#define SSN 0
+#define Money 1
+#define SendToBack 2
 
 /* Clerk MV Indices */
 #define ID 0
@@ -87,7 +87,6 @@ void initGlobalData(){
   numCustomers = CreateMV("numCustomers", sizeof("numCustomers"), 1);
   SetMV(numCustomers, 0, NUM_CUSTOMERS);
   customers = CreateMV("customers", sizeof("customers"), NUM_CUSTOMERS);
-  // manager = CreateMV("manager", sizeof("manager"), 1);
   appClerks = CreateMV("appClerks", sizeof("appClerks"), NUM_APPCLERKS);
   picClerks = CreateMV("picClerks", sizeof("picClerks"), NUM_PICCLERKS);
   passportClerks = CreateMV("passportClerks", sizeof("passportClerks"), NUM_PASSPORTCLERKS);
@@ -114,8 +113,8 @@ void initCustomers(){
   int i, tempCust, money;
 
   for(i = 0; i < NUM_CUSTOMERS; i++){
-    tempCust = CreateMV(addNumToString("Customer", sizeof("Customer"), i), sizeof("Customer")+3, 3);
-    SetMV(customers, i, tempCust); 
+    tempCust = CreateMV(numString("Customer", sizeof("Customer"), i), sizeof("Customer")+3, 3);
+    SetMV(customers, i, tempCust);
     SetMV(tempCust, SSN, i); 
     money = Rand(4, 0)*500+100;
     SetMV(tempCust, Money, money);
@@ -127,7 +126,7 @@ void initAppClerks(){
   int i, tempClerk, lock, cv, bribeLineCV, lineCV;
 
   for(i = 0; i < NUM_APPCLERKS; i++){
-    tempClerk = CreateMV(addNumToString("AppClerk", sizeof("AppClerk"), i), sizeof("AppClerk")+3, 10);
+    tempClerk = CreateMV(numString("AppClerk", sizeof("AppClerk"), i), sizeof("AppClerk")+3, 10);
     SetMV(appClerks, i, tempClerk); 
     SetMV(tempClerk, ID, i); 
     SetMV(tempClerk, State, AVAIL);
@@ -151,7 +150,7 @@ void initPicClerks(){
   int i, tempClerk, lock, cv, bribeLineCV, lineCV;
 
   for(i = 0; i < NUM_PICCLERKS; i++){
-    tempClerk = CreateMV(addNumToString("PicClerk", sizeof("PicClerk"), i), sizeof("PicClerk")+3, 10);
+    tempClerk = CreateMV(numString("PicClerk", sizeof("PicClerk"), i), sizeof("PicClerk")+3, 10);
     SetMV(picClerks, i, tempClerk); 
     SetMV(tempClerk, ID, i); 
     SetMV(tempClerk, State, AVAIL);
@@ -175,7 +174,7 @@ void initPassportClerks(){
   int i, tempClerk, lock, cv, bribeLineCV, lineCV;
 
   for(i = 0; i < NUM_PASSPORTCLERKS; i++){
-    tempClerk = CreateMV(addNumToString("PassportClerk", sizeof("PassportClerk"), i), sizeof("PassportClerk")+3, 10);
+    tempClerk = CreateMV(numString("PassportClerk", sizeof("PassportClerk"), i), sizeof("PassportClerk")+3, 10);
     SetMV(passportClerks, i, tempClerk); 
     SetMV(tempClerk, ID, i); 
     SetMV(tempClerk, State, AVAIL);
@@ -195,11 +194,11 @@ void initPassportClerks(){
   }
 }
 
-void initCashier(){
+void initCashiers(){
   int i, tempClerk, lock, cv, bribeLineCV, lineCV;
 
   for(i = 0; i < NUM_CASHIERS; i++){
-    tempClerk = CreateMV(addNumToString("Cashier", sizeof("Cashier"), i), sizeof("Cashier")+3, 10);
+    tempClerk = CreateMV(numString("Cashier", sizeof("Cashier"), i), sizeof("Cashier")+3, 10);
     SetMV(cashiers, i, tempClerk); 
     SetMV(tempClerk, ID, i); 
     SetMV(tempClerk, State, AVAIL);
@@ -244,46 +243,4 @@ char* numString(char* str, int length, int num) {
     cstring[length+2] = '\0';
   }
   return cstring;
-}
-
-/* Implementing a Queue */
-void queue_init(Queue* q) {
-  int i;
-  for (i = 0; i < (NUM_CUSTOMERS+5); i++) {
-    q->array[i] = -1;
-  }
-
-  q->numElements = 0;
-  q->front = -1;
-  q->back = -1;
-}
-
-int queue_pop(Queue* q) {
-  int i;
-  int returnVal; 
-  if(q->numElements == 0) {
-    return -1;
-  }
-  for (i = 0; i < (NUM_CUSTOMERS+4); i++) {
-    q->array[i] = q->array[i+1];
-  }
-  q->array[NUM_CUSTOMERS+4] = -1;
-  returnVal = q->front;
-  q->front = q->array[0];
-  q->numElements--;
-  q->back = q->array[q->numElements-1];
-  return returnVal;
-}
-
-void queue_push(Queue* q, int e) {
-  q->array[q->numElements] = e;
-  q->back = e;
-  if(q->numElements == 0){
-    q->front = e;
-  }
-  q->numElements++;
-}
-
-int queue_size(Queue* q) {
-  return q->numElements;
 }

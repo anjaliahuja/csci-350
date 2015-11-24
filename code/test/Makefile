@@ -31,7 +31,7 @@ CPP = $(GCCDIR)cpp
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR)
 
-all: halt matmult sort testfiles passportsim
+all: halt matmult sort Manager AppClerk PicClerk PassportClerk Cashier Customer
 
 start.o: start.s ../userprog/syscall.h
 	$(CPP) $(CPPFLAGS) start.s > strt.s
@@ -56,134 +56,41 @@ matmult: matmult.o start.o
 	$(LD) $(LDFLAGS) start.o matmult.o -o matmult.coff
 	../bin/coff2noff matmult.coff matmult
 
-testfiles.o: testfiles.c
-	$(CC) $(CFLAGS) -c testfiles.c
-testfiles: testfiles.o start.o
-	$(LD) $(LDFLAGS) start.o testfiles.o -o testfiles.coff
-	../bin/coff2noff testfiles.coff testfiles
+Manager.o: Manager.c
+	$(CC) $(CFLAGS) -c Manager.c
+Manager: Manager.o start.o
+	$(LD) $(LDFLAGS) start.o Manager.o -o Manager.coff
+	../bin/coff2noff Manager.coff Manager
 
-passportsim.o: passportsim.c
-	$(CC) $(CFLAGS) -c passportsim.c
-passportsim: passportsim.o start.o
-	$(LD) $(LDFLAGS) start.o passportsim.o -o passportsim.coff
-	../bin/coff2noff passportsim.coff passportsim
-testexit.o: testexit.c
-	$(CC) $(CFLAGS) -c testexit.c
-testexit: testexit.o start.o
-	$(LD) $(LDFLAGS) start.o testexit.o -o testexit.coff
-	../bin/coff2noff testexit.coff testexit
-testexitprogram.o: testexitprogram.c
-	$(CC) $(CFLAGS) -c testexitprogram.c
-testexitprogram: testexitprogram.o start.o
-	$(LD) $(LDFLAGS) start.o testexitprogram.o -o testexitprogram.coff
-	../bin/coff2noff testexitprogram.coff testexitprogram
-testprint.o: testprint.c
-	$(CC) $(CFLAGS) -c testprint.c
-testprint: testprint.o start.o
-	$(LD) $(LDFLAGS) start.o testprint.o -o testprint.coff
-	../bin/coff2noff testprint.coff testprint
+AppClerk.o: AppClerk.c
+	$(CC) $(CFLAGS) -c AppClerk.c
+AppClerk: AppClerk.o start.o
+	$(LD) $(LDFLAGS) start.o AppClerk.o -o AppClerk.coff
+	../bin/coff2noff AppClerk.coff AppClerk
 
-passporttest1.o: passporttest1.c
-	$(CC) $(CFLAGS) -c passporttest1.c
-passporttest1: passporttest1.o start.o
-	$(LD) $(LDFLAGS) start.o passporttest1.o -o passporttest1.coff
-	../bin/coff2noff passporttest1.coff passporttest1
+PicClerk.o: PicClerk.c
+	$(CC) $(CFLAGS) -c PicClerk.c
+PicClerk: PicClerk.o start.o
+	$(LD) $(LDFLAGS) start.o PicClerk.o -o PicClerk.coff
+	../bin/coff2noff PicClerk.coff PicClerk
 
-passporttest2.o: passporttest2.c
-	$(CC) $(CFLAGS) -c passporttest2.c
-passporttest2: passporttest2.o start.o
-	$(LD) $(LDFLAGS) start.o passporttest2.o -o passporttest2.coff
-	../bin/coff2noff passporttest2.coff passporttest2
+PassportClerk.o: PassportClerk.c
+	$(CC) $(CFLAGS) -c PassportClerk.c
+PassportClerk: PassportClerk.o start.o
+	$(LD) $(LDFLAGS) start.o PassportClerk.o -o PassportClerk.coff
+	../bin/coff2noff PassportClerk.coff PassportClerk
 
-lock_cv_test1.o: lock_cv_test1.c
-	$(CC) $(CFLAGS) -c lock_cv_test1.c
-lock_cv_test1: lock_cv_test1.o start.o
-	$(LD) $(LDFLAGS) start.o lock_cv_test1.o -o lock_cv_test1.coff
-	../bin/coff2noff lock_cv_test1.coff lock_cv_test1
-lock_cv_test2.o: lock_cv_test2.c
-	$(CC) $(CFLAGS) -c lock_cv_test2.c
-lock_cv_test2: lock_cv_test2.o start.o
-	$(LD) $(LDFLAGS) start.o lock_cv_test2.o -o lock_cv_test2.coff
-	../bin/coff2noff lock_cv_test2.coff lock_cv_test2
-lock_cv_test3.o: lock_cv_test3.c
-	$(CC) $(CFLAGS) -c lock_cv_test3.c
-lock_cv_test3: lock_cv_test3.o start.o
-	$(LD) $(LDFLAGS) start.o lock_cv_test3.o -o lock_cv_test3.coff
-	../bin/coff2noff lock_cv_test3.coff lock_cv_test3
-lock_cv_test4.o: lock_cv_test4.c
-	$(CC) $(CFLAGS) -c lock_cv_test4.c
-lock_cv_test4: lock_cv_test4.o start.o
-	$(LD) $(LDFLAGS) start.o lock_cv_test4.o -o lock_cv_test4.coff
-	../bin/coff2noff lock_cv_test4.coff lock_cv_test4
-lock_cv_test5.o: lock_cv_test5.c
-	$(CC) $(CFLAGS) -c lock_cv_test5.c
-lock_cv_test5: lock_cv_test5.o start.o
-	$(LD) $(LDFLAGS) start.o lock_cv_test5.o -o lock_cv_test5.coff
-	../bin/coff2noff lock_cv_test5.coff lock_cv_test5
-lock_cv_test6.o: lock_cv_test6.c
-	$(CC) $(CFLAGS) -c lock_cv_test6.c
-lock_cv_test6: lock_cv_test6.o start.o
-	$(LD) $(LDFLAGS) start.o lock_cv_test6.o -o lock_cv_test6.coff
-	../bin/coff2noff lock_cv_test6.coff lock_cv_test6
+Cashier.o: Cashier.c
+	$(CC) $(CFLAGS) -c Cashier.c
+Cashier: Cashier.o start.o
+	$(LD) $(LDFLAGS) start.o Cashier.o -o Cashier.coff
+	../bin/coff2noff Cashier.coff Cashier
 
-	
-passporttest3.o: passporttest3.c
-	$(CC) $(CFLAGS) -c passporttest3.c
-passporttest3: passporttest3.o start.o
-	$(LD) $(LDFLAGS) start.o passporttest3.o -o passporttest3.coff
-	../bin/coff2noff passporttest3.coff passporttest3
-
-passporttest4.o: passporttest4.c
-	$(CC) $(CFLAGS) -c passporttest4.c
-passporttest4: passporttest4.o start.o
-	$(LD) $(LDFLAGS) start.o passporttest4.o -o passporttest4.coff
-	../bin/coff2noff passporttest4.coff passporttest4
-
-passporttest5.o: passporttest5.c
-	$(CC) $(CFLAGS) -c passporttest5.c
-passporttest5: passporttest5.o start.o
-	$(LD) $(LDFLAGS) start.o passporttest5.o -o passporttest5.coff
-	../bin/coff2noff passporttest5.coff passporttest5
-passporttest6.o: passporttest6.c
-	$(CC) $(CFLAGS) -c passporttest6.c
-passporttest6: passporttest6.o start.o
-	$(LD) $(LDFLAGS) start.o passporttest6.o -o passporttest6.coff
-	../bin/coff2noff passporttest6.coff passporttest6
-
-matmult2exec.o: matmult2exec.c
-	$(CC) $(CFLAGS) -c matmult2exec.c
-matmult2exec: matmult2exec.o start.o
-	$(LD) $(LDFLAGS) start.o matmult2exec.o -o matmult2exec.coff
-	../bin/coff2noff matmult2exec.coff matmult2exec
-sort2exec.o: sort2exec.c
-	$(CC) $(CFLAGS) -c sort2exec.c
-sort2exec: sort2exec.o start.o
-	$(LD) $(LDFLAGS) start.o sort2exec.o -o sort2exec.coff
-	../bin/coff2noff sort2exec.coff sort2exec
-	matmult2exec.o: matmult2exec.c
-	$(CC) $(CFLAGS) -c matmult2exec.c
-matmult2fork.o: matmult2fork.c
-	$(CC) $(CFLAGS) -c matmult2fork.c
-matmult2fork: matmult2fork.o start.o
-	$(LD) $(LDFLAGS) start.o matmult2fork.o -o matmult2fork.coff
-	../bin/coff2noff matmult2fork.coff matmult2fork
-sort2fork.o: sort2fork.c
-	$(CC) $(CFLAGS) -c sort2fork.c
-sort2fork: sort2fork.o start.o
-	$(LD) $(LDFLAGS) start.o sort2fork.o -o sort2fork.coff
-	../bin/coff2noff sort2fork.coff sort2fork
-
-MVtests.o: MVtests.c
-	$(CC) $(CFLAGS) -c MVtests.c
-MVtests: MVtests.o start.o
-	$(LD) $(LDFLAGS) start.o MVtests.o -o MVtests.coff
-	../bin/coff2noff MVtests.coff MVtests
-MVtests1.o: MVtests1.c
-	$(CC) $(CFLAGS) -c MVtests1.c
-MVtests1: MVtests1.o start.o
-	$(LD) $(LDFLAGS) start.o MVtests1.o -o MVtests1.coff
-	../bin/coff2noff MVtests1.coff MVtests1
-
+Customer.o: Customer.c
+	$(CC) $(CFLAGS) -c Customer.c
+Customer: Customer.o start.o
+	$(LD) $(LDFLAGS) start.o Customer.o -o Customer.coff
+	../bin/coff2noff Customer.coff Customer
 
 clean:
-	rm -f *.o *.coff matmult2exec matmult2fork matmult sort2exec sort2fork sort testfiles passportsim testexit testexitprogram testprint passporttest1 passporttest2 passporttest3 passporttest4 passporttest5 passporttest6 lock_cv_test1 lock_cv_test2 lock_cv_test3 lock_cv_test4 lock_cv_test5 lock_cv_test6 MVtests MVtests1
+	rm -f *.o *.coff halt matmult sort Manager AppClerk PicClerk PassportClerk Cashier Customer
