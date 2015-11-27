@@ -185,7 +185,7 @@ void Server(){
                                 sendMessage(outPktHdr, outMailHdr, reply);
                             }
                         } else {                                
-                            cout << "found by another server for: " << requestID << endl;
+                            cout << "CREATELOCK found by another server for: " << requestID << endl;
                             requestTable.erase(requestID);
                         }
                         ss.clear();
@@ -255,7 +255,7 @@ void Server(){
                 //got type, now looking through for it
                 switch(RPCType) {
                     case RPC_CreateLock: {
-                        loclLock->Acquire();
+                        lockLock->Acquire();
                         outPktHdr->to = inPktHdr->from;
                         outMailHdr->to = inMailHdr->from;
                         outPktHdr->from = inPktHdr->to;
@@ -275,6 +275,7 @@ void Server(){
 
                         if (index != -1)
                         {
+                            /* reply to client with index*/
                             reply << index;
                             outPktHdr->to = clientFrom;
                             outMailHdr->to = clientFrom;
@@ -286,10 +287,7 @@ void Server(){
                             outPktHdr->to = inPktHdr->from;
                             outMailHdr->to = inMailHdr->from;
                             outPktHdr->from = inPktHdr->to;
-                            reply << 0;
-                            reply << requestID;
-                            reply << clientFrom;
-                            reply << true;
+                            reply << 0 << requestID << clientFrom << true;
                             cout << "CREATELOCK found! replying to the client: " << clientFrom << " now with! index " << endl;
                             sendMessage(outPktHdr, outMailHdr, reply);
                             reply.clear();
@@ -299,11 +297,7 @@ void Server(){
                             outMailHdr->to = inMailHdr->from;
                             outPktHdr->from = inPktHdr->to;
 
-                            reply << 0;
-                            reply << requestID;
-                            reply << clientFrom;
-                            reply << name;
-                            reply << false;
+                            reply << 0 << requestID << clientFrom << name << false;
                             cout << "CREATELOCK not found << replying to server" << endl;
                             sendMessage(outPktHdr, outMailHdr, reply);
                             reply.clear();
@@ -398,12 +392,8 @@ void Server(){
                         //not found, send to other servers!
                         requestNum++;
                         stringstream req;
-                        req << 1;
-                        req << requestNum;
-                        req << inPktHdr->from;
-                        req << RPC_CreateLock;
-                        req << name;
-                        requestTable.insert ( std::pair<int,int>(requestNum, 0) );
+                        req << 1 << requestNum << inPktHdr->from << RPC_CreateLock << name;
+                        requestTable.insert (std::pair<int,int>(requestNum, 0));
                         serverToServer(req);
                         cout << "CREATELOCK not found in this server: " << netname << " sending to other servers " << endl;
                         req.clear();
