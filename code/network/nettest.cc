@@ -49,6 +49,7 @@ struct ServerLock{
     queue<MailHeader*>* mailWaiting;
     bool toBeDeleted;
     int counter; 
+    int index;
 };
 
 struct ServerCV{
@@ -59,6 +60,7 @@ struct ServerCV{
     bool toBeDeleted;
     int counter;
     int useCounter;
+    int index;
 };
 
 struct ServerMV{
@@ -66,6 +68,7 @@ struct ServerMV{
     int* values;
     int len;
     bool toBeDeleted;
+    int index;
 };
 
 void sendMessage(PacketHeader* outPktHdr, MailHeader* outMailHdr, stringstream& msg){
@@ -144,7 +147,7 @@ void Server(){
             ss>>typeOfRequest;
 
             cout<<"message from another server"<< endl; 
-            if (typeOfRequest == 0)  //0 means it is a server responding to a request you sent out
+            if (typeOfRequest == 0)  //0 means you're receiving a message responding to a request you sent out
             {
                 //if you get 5 replies in your table, then go create a new lock
                 ss>>clientFrom;
@@ -172,6 +175,7 @@ void Server(){
                                 int index = netname*100+SLocks->size(); 
                                 ServerLock *lock = new ServerLock;
                                 lock->name = name;
+                                lock->index = index;
                                 lock->packetWaiting = new queue<PacketHeader *>();
                                 lock->mailWaiting = new queue<MailHeader *>(); 
                                 lock->state = Available; 
@@ -183,6 +187,7 @@ void Server(){
                                 cout << "all servers responded! creating lock with index: " << index << endl;
 
                                 sendMessage(outPktHdr, outMailHdr, reply);
+                                requestTable.erase(requestID);
                             }
                         } else {                                
                             cout << "CREATELOCK found by another server for: " << requestID << endl;
@@ -195,7 +200,33 @@ void Server(){
                     }
 
                     case RPC_DestroyLock: {
+                        lockLock->Acquire();
+                        if (found == false)
+                        {
+                            /* update Map, if it hits 4 replies of false, create newLock */
+                            cout << "not found! updating request table for request: " << requestID << endl;
+                            requestTable[requestID]++;
 
+                            if (requestTable[requestID] == 4)
+                            {   
+                                outPktHdr->to = clientFrom;
+                                outMailHdr->to = clientFrom;
+                                outPktHdr->from = netname;
+
+                                reply << -1;
+                                cout << "all servers responded! couldn't find lock to destroy for: " << requestID << endl;
+
+                                sendMessage(outPktHdr, outMailHdr, reply);
+                                requestTable.erase(requestID);
+                            }
+                        } else {                                
+                            cout << "DESTROYLOCK found by another server for: " << requestID << endl;
+                            requestTable.erase(requestID);
+                        }
+                        ss.clear();
+                        reply.clear();
+                        lockLock->Release(); 
+                        break;
                     }
 
                     case RPC_Acquire: {
@@ -306,7 +337,61 @@ void Server(){
                     }
 
                     case RPC_DestroyLock: {
+                        lockLock->Acquire();
+                        outPktHdr->to = inPktHdr->from;
+                        outMailHdr->to = inMailHdr->from;
+                        outPktHdr->from = inPktHdr->to;
 
+                        ss>>lockID;
+
+                        cout<<"DESTROYLOCK server: " << netname << "looking for lock: " << lockID << endl; 
+                        int index = -1;
+                        for(int i = 0; i< SLocks->size();i++){
+                            if(SLocks->at(i)->index == lockID){
+                                index = i;
+                                SLocks->at(i)->counter++;
+                                break;
+                            }
+                        }
+
+                        if (index != -1)
+                        {
+                            /* reply to client with index*/
+                            SLocks->at(lockID)->counter--;
+                            reply<<lockID;
+                            if(SLocks->at(lockID)->state == Available){
+                                ServerLock *lock = SLocks->at(lockID);
+                                SLocks->at(lockID) = NULL;
+                                delete lock;
+                            } else{
+                                SLocks->at(lockID)->toBeDeleted = true;
+                            }
+                            outPktHdr->to = clientFrom;
+                            outMailHdr->to = clientFrom;
+                            outPktHdr->from = netname;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+
+                            /* reply to the server saying it was found! */
+                            outPktHdr->to = inPktHdr->from;
+                            outMailHdr->to = inMailHdr->from;
+                            outPktHdr->from = inPktHdr->to;
+                            reply << 0 << requestID << clientFrom << true;
+                            cout << "DESTROYLOCK found! replying to the client: " << clientFrom << " now with! index " << endl;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+                        } else {
+                            /* not found! */
+                            outPktHdr->to = inPktHdr->from;
+                            outMailHdr->to = inMailHdr->from;
+                            outPktHdr->from = inPktHdr->to;
+
+                            reply << 0 << requestID << clientFrom << lockID << false;
+                            cout << "DESTROYLOCK not found << replying to server" << endl;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+                        }
+                        lockLock->Release();
                     }
 
                     case RPC_Acquire: {
@@ -377,6 +462,7 @@ void Server(){
             switch(RPCType){            
                 case RPC_CreateLock: {
                     lockLock->Acquire();
+                    requestNum++;
                     ss>>name;
                     cout<<"RPC Create Lock name: " << name << endl; 
 
@@ -390,7 +476,6 @@ void Server(){
                     }
                     if(index == -1){
                         //not found, send to other servers!
-                        requestNum++;
                         stringstream req;
                         req << 1 << requestNum << inPktHdr->from << RPC_CreateLock << name;
                         requestTable.insert (std::pair<int,int>(requestNum, 0));
@@ -409,27 +494,40 @@ void Server(){
 
                 case RPC_DestroyLock: {
                     lockLock->Acquire();
+                    requestNum++;
                     ss >> lockID; 
                     cout<<"RPC Destroy Lock ID: " << lockID << endl; 
 
-                    if(lockID < 0 || lockID >= SLocks->size()){
-                        reply << -1;
-                    } else {
-                        if(SLocks->at(lockID) == NULL){
-                            reply << -1;
-                        } else{
-                            SLocks->at(lockID)->counter--;
-                            reply<<lockID;
-                            if(SLocks->at(lockID)->state == Available){
-                                ServerLock *lock = SLocks->at(lockID);
-                                SLocks->at(lockID) = NULL;
-                                delete lock;
-                            } else{
-                            SLocks->at(lockID)->toBeDeleted = true;
-                            }
+                    int index = -1;
+                    for(int i = 0; i<SLocks->size();i++){
+                        if(SLocks->at(i)->index == lockID){
+                            index = i;
+                            SLocks->at(i)->counter++;
+                            break;
                         }
                     }
-                    sendMessage(outPktHdr, outMailHdr, reply);
+
+                    if(index == -1){
+                        stringstream req;
+                        req << 1 << requestNum << inPktHdr->from << RPC_DestroyLock << lockID;
+                        requestTable.insert (std::pair<int,int>(requestNum, 0));
+                        serverToServer(req);
+                        cout << "DESTROYLOCK not found in this server: " << netname << " sending to other servers " << endl;
+                        req.clear();
+                    } 
+                    else {
+                        SLocks->at(lockID)->counter--;
+                        reply<<lockID;
+                        if(SLocks->at(lockID)->state == Available){
+                            ServerLock *lock = SLocks->at(lockID);
+                            SLocks->at(lockID) = NULL;
+                            delete lock;
+                        } else{
+                            SLocks->at(lockID)->toBeDeleted = true;
+                        }
+                        sendMessage(outPktHdr, outMailHdr, reply);
+                        reply.clear();
+                    }
                     lockLock->Release(); 
                     break;
                 }
