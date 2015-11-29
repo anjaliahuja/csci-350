@@ -230,18 +230,136 @@ void Server(){
                     }
 
                     case RPC_Acquire: {
+                        lockLock->Acquire();
+                        if (found == false)
+                        {
+                            /* update Map, if it hits 4 replies of false, create newLock */
+                            cout << "not found! updating request table for request: " << requestID << endl;
+                            requestTable[requestID]++;
 
+                            if (requestTable[requestID] == 4)
+                            {   
+                                outPktHdr->to = clientFrom;
+                                outMailHdr->to = clientFrom;
+                                outPktHdr->from = netname;
+
+                                reply << -1;
+                                cout << "all servers responded! couldn't find lock to acquire for: " << requestID << endl;
+
+                                sendMessage(outPktHdr, outMailHdr, reply);
+                                requestTable.erase(requestID);
+                            }
+                        } else {                                
+                            cout << "ACQUIRE found by another server for: " << requestID << endl;
+                            requestTable.erase(requestID);
+                        }
+                        ss.clear();
+                        reply.clear();
+                        lockLock->Release(); 
+                        break;
                     }
 
                     case RPC_Release: {
+                        lockLock->Acquire();
+                        if (found == false)
+                        {
+                            /* update Map, if it hits 4 replies of false, create newLock */
+                            cout << "not found! updating request table for request: " << requestID << endl;
+                            requestTable[requestID]++;
 
+                            if (requestTable[requestID] == 4)
+                            {   
+                                outPktHdr->to = clientFrom;
+                                outMailHdr->to = clientFrom;
+                                outPktHdr->from = netname;
+
+                                reply << -1;
+                                cout << "all servers responded! couldn't find lock to release for: " << requestID << endl;
+
+                                sendMessage(outPktHdr, outMailHdr, reply);
+                                requestTable.erase(requestID);
+                            }
+                        } else {                                
+                            cout << "RELEASE found by another server for: " << requestID << endl;
+                            requestTable.erase(requestID);
+                        }
+                        ss.clear();
+                        reply.clear();
+                        lockLock->Release(); 
+                        break;
                     }
-                    case RPC_CreateCV: {
 
+                    case RPC_CreateCV: {
+                        CVLock->Acquire();
+                        if (found == false)
+                        {
+                            /* update Map, if it hits 4 replies of false, create newLock */
+                            cout << "not found! updating request table for request: " << requestID << endl;
+                            requestTable[requestID]++;
+
+                            if (requestTable[requestID] == 4)
+                            {   
+                                outPktHdr->to = clientFrom;
+                                outMailHdr->to = clientFrom;
+                                outPktHdr->from = netname;
+
+                                string name = "";
+                                ss>>name;
+                                int index = netname*100+SCVs->size();
+                                ServerCV* scv = new ServerCV; 
+                                scv->name = name;
+                                scv->packetWaiting = new queue<PacketHeader *>();
+                                scv->mailWaiting = new queue<MailHeader *>();
+                                scv->toBeDeleted = false;
+                                scv->lockIndex = -1; 
+                                scv->counter = 1;
+                                scv->useCounter = 0;
+                                scv->index = index;
+                                SCVs->push_back(scv); 
+                                reply << index;
+                                cout << "all servers responded! creating cv with index: " << index << endl;
+
+                                sendMessage(outPktHdr, outMailHdr, reply);
+                                requestTable.erase(requestID);
+                            }
+                        } else {                                
+                            cout << "CREATECV found by another server for: " << requestID << endl;
+                            requestTable.erase(requestID);
+                        }
+                        ss.clear();
+                        reply.clear();
+                        CVLock->Release(); 
+                        break;
                     }
 
                     case RPC_DestroyCV: {
-                        
+                        CVLock->Acquire();
+                        if (found == false)
+                        {
+                            /* update Map, if it hits 4 replies of false, create newLock */
+                            cout << "not found! updating request table for request: " << requestID << endl;
+                            requestTable[requestID]++;
+
+                            if (requestTable[requestID] == 4)
+                            {   
+                                outPktHdr->to = clientFrom;
+                                outMailHdr->to = clientFrom;
+                                outPktHdr->from = netname;
+
+                                reply << -1;
+                                cout << "all servers responded! couldn't find cv to destroy for: " << requestID << endl;
+
+                                sendMessage(outPktHdr, outMailHdr, reply);
+                                requestTable.erase(requestID);
+                            }
+                        } else {                                
+                            cout << "DESTROYCV found by another server for: " << requestID << endl;
+                            requestTable.erase(requestID);
+                        }
+                        ss.clear();
+                        reply.clear();
+                        CVLock->Release(); 
+                        break;          
                     }
 
                     case RPC_Wait: {
@@ -357,14 +475,14 @@ void Server(){
                         if (index != -1)
                         {
                             /* reply to client with index*/
-                            SLocks->at(lockID)->counter--;
+                            SLocks->at(index)->counter--;
                             reply<<lockID;
-                            if(SLocks->at(lockID)->state == Available){
-                                ServerLock *lock = SLocks->at(lockID);
-                                SLocks->at(lockID) = NULL;
+                            if(SLocks->at(index)->state == Available){
+                                ServerLock *lock = SLocks->at(index);
+                                SLocks->at(index) = NULL;
                                 delete lock;
                             } else{
-                                SLocks->at(lockID)->toBeDeleted = true;
+                                SLocks->at(index)->toBeDeleted = true;
                             }
                             outPktHdr->to = clientFrom;
                             outMailHdr->to = clientFrom;
@@ -395,19 +513,242 @@ void Server(){
                     }
 
                     case RPC_Acquire: {
+                        lockLock->Acquire();
+                        outPktHdr->to = inPktHdr->from;
+                        outMailHdr->to = inMailHdr->from;
+                        outPktHdr->from = inPktHdr->to;
 
+                        ss>>lockID;
+
+                        cout<<"Acquire server: " << netname << "looking for lock: " << lockID << endl; 
+                        int index = -1;
+                        for(int i = 0; i< SLocks->size();i++){
+                            if(SLocks->at(i)->index == lockID){
+                                index = i;
+                                SLocks->at(i)->counter++;
+                                break;
+                            }
+                        }
+
+                        if (index != -1)
+                        {
+                            /* reply to client with index*/
+                            bool pass = true; 
+                            if(SLocks->at(index)->owner == outPktHdr->to && SLocks->at(index)->state == Busy){
+                                reply << -1; 
+                            } else if(SLocks->at(index)->state == Busy){
+                                pass= false;
+                                SLocks->at(index)->packetWaiting->push(outPktHdr);
+                                int sizeofPacket = SLocks->at(index)->packetWaiting->size();
+                                SLocks->at(index)->mailWaiting->push(outMailHdr);
+                            } else{
+                                SLocks->at(index)->owner = outPktHdr->to;
+                                SLocks->at(index)->state = Busy;
+                                reply << -2; 
+                            }
+                            outPktHdr->to = clientFrom;
+                            outMailHdr->to = clientFrom;
+                            outPktHdr->from = netname;
+                            if(pass){
+                                sendMessage(outPktHdr, outMailHdr, reply);
+                                reply.clear();
+                            }
+                            reply.clear();
+
+                            /* reply to the server saying it was found! */
+                            outPktHdr->to = inPktHdr->from;
+                            outMailHdr->to = inMailHdr->from;
+                            outPktHdr->from = inPktHdr->to;
+                            reply << 0 << requestID << clientFrom << true;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+                        } else {
+                            /* not found! */
+                            outPktHdr->to = inPktHdr->from;
+                            outMailHdr->to = inMailHdr->from;
+                            outPktHdr->from = inPktHdr->to;
+
+                            reply << 0 << requestID << clientFrom << lockID << false;
+                            cout << "Acquire not found << replying to server" << endl;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+                        }
+                        lockLock->Release();
                     }
 
                     case RPC_Release: {
+                        lockLock->Acquire();
+                        outPktHdr->to = inPktHdr->from;
+                        outMailHdr->to = inMailHdr->from;
+                        outPktHdr->from = inPktHdr->to;
 
+                        ss>>lockID;
+
+                        cout<<"Release server: " << netname << "looking for lock: " << lockID << endl; 
+                        int index = -1;
+                        for(int i = 0; i< SLocks->size();i++){
+                            if(SLocks->at(i)->index == lockID){
+                                index = i;
+                                SLocks->at(i)->counter++;
+                                break;
+                            }
+                        }
+
+                        if (index != -1)
+                        {
+                            /* reply to client with index*/
+                            if(SLocks->at(index)->state == Available){
+                                reply << -1;
+                            } else{
+                                reply << -2; 
+                                if(SLocks->at(index)->packetWaiting->empty() && SLocks->at(index)->mailWaiting->empty()){ 
+                                    SLocks->at(index)->state = Available; 
+                                    SLocks->at(index)->owner = -1;
+                                } else{
+                                    PacketHeader* tempOutPkt = SLocks->at(index)->packetWaiting->front();
+                                    SLocks->at(index)->packetWaiting->pop();
+                                    MailHeader* tempOutMail = SLocks->at(index)->mailWaiting->front();
+                                    SLocks->at(index)->mailWaiting->pop();
+
+                                    SLocks->at(index)->owner = tempOutPkt->to;
+                                    sendMessage(tempOutPkt, tempOutMail, reply);
+                                    reply.clear();
+                                }
+                            }
+                            outPktHdr->to = clientFrom;
+                            outMailHdr->to = clientFrom;
+                            outPktHdr->from = netname;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+
+                            /* reply to the server saying it was found! */
+                            outPktHdr->to = inPktHdr->from;
+                            outMailHdr->to = inMailHdr->from;
+                            outPktHdr->from = inPktHdr->to;
+                            reply << 0 << requestID << clientFrom << true;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+                        } else {
+                            /* not found! */
+                            outPktHdr->to = inPktHdr->from;
+                            outMailHdr->to = inMailHdr->from;
+                            outPktHdr->from = inPktHdr->to;
+
+                            reply << 0 << requestID << clientFrom << lockID << false;
+                            cout << "Acquire not found << replying to server" << endl;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+                        }
+                        lockLock->Release();
                     }
                     
                     case RPC_CreateCV: {
+                        CVLock->Acquire();
+                        outPktHdr->to = inPktHdr->from;
+                        outMailHdr->to = inMailHdr->from;
+                        outPktHdr->from = inPktHdr->to;
 
+                        string name;
+                        ss>>name;
+
+                        cout<<"CREATECV server: " << netname << "looking for: " << name << endl; 
+                        int index = -1;
+                        for(unsigned int i = 0; i<SCVs->size(); i++){
+                            if(SCVs->at(i) != NULL){
+                                if(SCVs->at(i)->name == name){
+                                    index = i;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (index != -1)
+                        {
+                            /* reply to client with index*/
+                            reply << index;
+                            outPktHdr->to = clientFrom;
+                            outMailHdr->to = clientFrom;
+                            outPktHdr->from = netname;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+
+                            /* reply to the server saying it was found! */
+                            outPktHdr->to = inPktHdr->from;
+                            outMailHdr->to = inMailHdr->from;
+                            outPktHdr->from = inPktHdr->to;
+                            reply << 0 << requestID << clientFrom << true;
+                            cout << "CREATECV found! replying to the client: " << clientFrom << " now with! index " << endl;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+                        } else {
+                            /* not found! */
+                            outPktHdr->to = inPktHdr->from;
+                            outMailHdr->to = inMailHdr->from;
+                            outPktHdr->from = inPktHdr->to;
+
+                            reply << 0 << requestID << clientFrom << name << false;
+                            cout << "CREATECV not found << replying to server" << endl;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+                        }
+                        CVLock->Release();
                     }
 
                     case RPC_DestroyCV: {
-                        
+                        CVLock->Acquire();
+                        outPktHdr->to = inPktHdr->from;
+                        outMailHdr->to = inMailHdr->from;
+                        outPktHdr->from = inPktHdr->to;
+
+                        ss>>cvID;
+
+                        cout<<"DESTROYCV server: " << netname << "looking for cv: " << cvID << endl; 
+                        int index = -1;
+                        for(unsigned int i = 0; i<SCVs->size(); i++){
+                            if(SCVs->at(i) != NULL){
+                                if(SCVs->at(i)->index == cvID){
+                                    index = i;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (index != -1)
+                        {
+                            /* reply to client with index*/
+                            reply << cvID;
+                            SCVs->at(index)->counter--;
+                            if(SCVs->at(index)->useCounter == 0){
+                                ServerCV* scv = SCVs->at(index);
+                                SCVs->at(index) = NULL;
+                                delete scv; 
+                            }
+                            outPktHdr->to = clientFrom;
+                            outMailHdr->to = clientFrom;
+                            outPktHdr->from = netname;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+
+                            /* reply to the server saying it was found! */
+                            outPktHdr->to = inPktHdr->from;
+                            outMailHdr->to = inMailHdr->from;
+                            outPktHdr->from = inPktHdr->to;
+                            reply << 0 << requestID << clientFrom << true;
+                            cout << "DESTROYCV found! replying to the client: " << clientFrom << " now with! index " << endl;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+                        } else {
+                            /* not found! */
+                            outPktHdr->to = inPktHdr->from;
+                            outMailHdr->to = inMailHdr->from;
+                            outPktHdr->from = inPktHdr->to;
+
+                            reply << 0 << requestID << clientFrom << lockID << false;
+                            cout << "DESTROYCVnot found << replying to server" << endl;
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+                        }
+                        CVLock->Release();            
                     }
 
                     case RPC_Wait: {
@@ -516,14 +857,14 @@ void Server(){
                         req.clear();
                     } 
                     else {
-                        SLocks->at(lockID)->counter--;
+                        SLocks->at(index)->counter--;
                         reply<<lockID;
-                        if(SLocks->at(lockID)->state == Available){
-                            ServerLock *lock = SLocks->at(lockID);
-                            SLocks->at(lockID) = NULL;
+                        if(SLocks->at(index)->state == Available){
+                            ServerLock *lock = SLocks->at(index);
+                            SLocks->at(index) = NULL;
                             delete lock;
                         } else{
-                            SLocks->at(lockID)->toBeDeleted = true;
+                            SLocks->at(index)->toBeDeleted = true;
                         }
                         sendMessage(outPktHdr, outMailHdr, reply);
                         reply.clear();
@@ -533,134 +874,177 @@ void Server(){
                 }
 
                 case RPC_Acquire: {
-                    lockLock->Acquire(); 
-                    ss >> lockID;
-                    cout<<"RPC Acquire Lock ID: " << lockID << endl; 
-                    bool pass = true; 
+                    lockLock->Acquire();
+                    requestNum++;
+                    ss >> lockID; 
+                    cout<<"RPC ACQUIRE Lock ID: " << lockID << endl;
+                    bool pass = true;  
 
-                    if(lockID < 0 || lockID >= SLocks->size()){
-                        reply << -1;
-                    } else {
-                        if(SLocks -> at(lockID) == NULL){
-                            reply << -1;
-                        } else if(SLocks->at(lockID)->owner == outPktHdr->to && SLocks->at(lockID)->state == Busy){
-                            reply << -1; 
-                        } else if(SLocks->at(lockID)->state == Busy){
-                            pass= false;
-                            SLocks->at(lockID)->packetWaiting->push(outPktHdr);
-                            int sizeofPacket = SLocks->at(lockID)->packetWaiting->size();
-                            SLocks->at(lockID)->mailWaiting->push(outMailHdr);
-                        } else{
-                            SLocks->at(lockID)->owner = outPktHdr->to;
-                            SLocks->at(lockID)->state = Busy;
-                            reply << -2; 
+                    int index = -1;
+                    for(int i = 0; i<SLocks->size();i++){
+                        if(SLocks->at(i)->index == lockID){
+                            index = i;
+                            SLocks->at(i)->counter++;
+                            break;
                         }
                     }
-                    if(pass){
-                        sendMessage(outPktHdr, outMailHdr, reply);
+
+                    if(index == -1){
+                        stringstream req;
+                        req << 1 << requestNum << inPktHdr->from << RPC_Acquire << lockID;
+                        requestTable.insert (std::pair<int,int>(requestNum, 0));
+                        serverToServer(req);
+                        cout << "ACQUIRE not found in this server: " << netname << " sending to other servers " << endl;
+                        req.clear();
+                    } 
+                    else {
+                        if(SLocks->at(index)->owner == outPktHdr->to && SLocks->at(index)->state == Busy){
+                            reply << -1; 
+                        } else if(SLocks->at(index)->state == Busy){
+                            pass= false;
+                            SLocks->at(index)->packetWaiting->push(outPktHdr);
+                            int sizeofPacket = SLocks->at(index)->packetWaiting->size();
+                            SLocks->at(index)->mailWaiting->push(outMailHdr);
+                        } else{
+                            SLocks->at(index)->owner = outPktHdr->to;
+                            SLocks->at(index)->state = Busy;
+                            reply << -2; 
+                        }
+                        if(pass){
+                            sendMessage(outPktHdr, outMailHdr, reply);
+                            reply.clear();
+                        }
                     }
+
                     lockLock->Release(); 
                     break;
                 }
 
                 case RPC_Release: {
-                    lockLock->Acquire(); 
-                    ss >> lockID;
-                    cout<<"RPC Release Lock ID: " << lockID << endl; 
-                    if(lockID < 0 || lockID >= SLocks->size()){
-                        reply << -1;
-                    } else{
-                        if(SLocks->at(lockID)== NULL){
-                            reply << -1;
-                        } else if(SLocks->at(lockID)->state == Available){
+                    lockLock->Acquire();
+                    requestNum++;
+                    ss >> lockID; 
+                    cout<<"RPC RELEASE Lock ID: " << lockID << endl;
+                    bool pass = true;  
+
+                    int index = -1;
+                    for(int i = 0; i<SLocks->size();i++){
+                        if(SLocks->at(i)->index == lockID){
+                            index = i;
+                            SLocks->at(i)->counter++;
+                            break;
+                        }
+                    }
+
+                    if(index == -1){
+                        stringstream req;
+                        req << 1 << requestNum << inPktHdr->from << RPC_Release << lockID;
+                        requestTable.insert (std::pair<int,int>(requestNum, 0));
+                        serverToServer(req);
+                        cout << "RELEASE not found in this server: " << netname << " sending to other servers " << endl;
+                        req.clear();
+                    } 
+                    else {
+                        if(SLocks->at(index)->state == Available){
                             reply << -1;
                         } else{
                             reply << -2; 
-                            if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->mailWaiting->empty()){ 
+                            if(SLocks->at(index)->packetWaiting->empty() && SLocks->at(index)->mailWaiting->empty()){ 
 
-                                SLocks->at(lockID)->state = Available; 
-                                SLocks->at(lockID)->owner = -1;
+                                SLocks->at(index)->state = Available; 
+                                SLocks->at(index)->owner = -1;
                             } else{
-                                PacketHeader* tempOutPkt = SLocks->at(lockID)->packetWaiting->front();
-                                SLocks->at(lockID)->packetWaiting->pop();
-                                MailHeader* tempOutMail = SLocks->at(lockID)->mailWaiting->front();
-                                SLocks->at(lockID)->mailWaiting->pop();
+                                PacketHeader* tempOutPkt = SLocks->at(index)->packetWaiting->front();
+                                SLocks->at(index)->packetWaiting->pop();
+                                MailHeader* tempOutMail = SLocks->at(index)->mailWaiting->front();
+                                SLocks->at(index)->mailWaiting->pop();
 
-                                SLocks->at(lockID)->owner = tempOutPkt->to;
+                                SLocks->at(index)->owner = tempOutPkt->to;
                                 sendMessage(tempOutPkt, tempOutMail, reply);
+                                reply.clear();
                             }
                         }
                     }
                     sendMessage(outPktHdr, outMailHdr, reply);
-                    lockLock->Release();
+                    reply.clear();
+                    lockLock->Release(); 
                     break;
                 }
 
                 case RPC_CreateCV: {
-                    CVLock->Acquire(); 
+                    CVLock->Acquire();
+                    requestNum++;
                     ss>>name;
-                    cout<<"RPC CreateCV: " << name << endl; 
-                    int index = -1; 
+                    cout<<"RPC Create Lock name: " << name << endl; 
+
+                    int index = -1;
                     for(unsigned int i = 0; i<SCVs->size(); i++){
                         if(SCVs->at(i) != NULL){
                             if(SCVs->at(i)->name == name){
-                                SCVs->at(i)->counter++;
                                 index = i;
                                 break;
-
                             }
                         }
                     }
+
                     if(index == -1){
-                        index = netname*100+SCVs->size();
-                        ServerCV* scv = new ServerCV; 
-                        scv->name = name;
-                        scv->packetWaiting = new queue<PacketHeader *>();
-                        scv->mailWaiting = new queue<MailHeader *>();
-                        scv->toBeDeleted = false;
-                        scv->lockIndex = -1; 
-                        scv->counter = 1;
-                        scv->useCounter = 0;
-
-                        SCVs->push_back(scv); 
-
-                        reply << SCVs->size() -1;
-
-                    }
-                    else {
-                        reply << index; 
-                    }
-                    sendMessage(outPktHdr, outMailHdr, reply);
-                    CVLock->Release(); 
-                    break;
-                }
-
-                case RPC_DestroyCV: {
-                    CVLock->Acquire();
-                    ss >> cvID; 
-                    cout<<"RPC Destroy CV : " << cvID << endl; 
-
-                    if(cvID < 0 || cvID >= SCVs->size()){
-                        reply << -1;
+                        //not found, send to other servers!
+                        stringstream req;
+                        req << 1 << requestNum << inPktHdr->from << RPC_CreateCV << name;
+                        requestTable.insert (std::pair<int,int>(requestNum, 0));
+                        serverToServer(req);
+                        cout << "CREATECV not found in this server: " << netname << " sending to other servers " << endl;
+                        req.clear();
                     } else{
-                        if(SCVs->at(cvID) == NULL){
-                            reply << -1;
-                        } else{
-                            reply << cvID;
-                            SCVs->at(cvID)->counter--;
-                            if(SCVs->at(cvID)->useCounter == 0){
-                                ServerCV* scv = SCVs->at(cvID);
-                                SCVs->at(cvID) = NULL;
-                                delete scv; 
-                            }
-
-                        }
+                        reply << index;
+                        sendMessage(outPktHdr, outMailHdr, reply);
+                        cout << "CREATECV found in this server: " << netname << " replying to client " << endl;
+                        reply.clear();
                     }
-                    sendMessage(outPktHdr, outMailHdr, reply);
                     CVLock->Release();
                     break;
                 }
 
+                case RPC_DestroyCV: {
+                    CVLock->Acquire();                    
+                    requestNum++;
+                    ss >> cvID; 
+                    cout<<"RPC Destroy CV : " << cvID << endl; 
+
+                    int index = -1;
+                    for(unsigned int i = 0; i<SCVs->size(); i++){
+                        if(SCVs->at(i) != NULL){
+                            if(SCVs->at(i)->name == name){
+                                index = i;
+                                break;
+                            }
+                        }
+                    }
+
+                    if(index == -1){
+                        stringstream req;
+                        req << 1 << requestNum << inPktHdr->from << RPC_DestroyCV << lockID;
+                        requestTable.insert (std::pair<int,int>(requestNum, 0));
+                        serverToServer(req);
+                        cout << "DESTROYCV not found in this server: " << netname << " sending to other servers " << endl;
+                        req.clear();
+                    } 
+                    else {
+                        reply << cvID;
+                        SCVs->at(index)->counter--;
+                        if(SCVs->at(index)->useCounter == 0){
+                            ServerCV* scv = SCVs->at(index);
+                            SCVs->at(index) = NULL;
+                            delete scv; 
+                        }
+                        sendMessage(outPktHdr, outMailHdr, reply);
+                        reply.clear();
+                    }
+                    lockLock->Release(); 
+                    break;
+                }
+
+                /*not implemented yet */
                 case RPC_Wait: {
                     CVLock->Acquire();
                     ss >> lockID >> cvID; 
@@ -783,6 +1167,7 @@ void Server(){
                         CVLock->Release();
                         break;       
                 }
+                /* ----------------- */
 
                 case RPC_CreateMV: {
                     MVLock->Acquire(); 
