@@ -8,11 +8,12 @@ void startAppClerk() {
   SetMV(numActiveAppClerks, 0, GetMV(numActiveAppClerks, 0)+1);
   Release(DataLock);
 
+  me = GetMV(appClerks, id);
+
   while(true) {
     if(GetMV(numCustomers, 0) == 0) break;
     Acquire(AppClerkLineLock);
-
-    me = GetMV(appClerks, id);
+    Write("loop", 4, ConsoleOutput);
     if (GetMV(me, BribeLineCount) != 0) {
       Signal(AppClerkLineLock, GetMV(me, BribeLineCV));
       /* wait so that CurrentCust can be set by Customer */
@@ -41,7 +42,6 @@ void startAppClerk() {
       Printf("ApplicationClerk %d is coming off break\n",
         sizeof("ApplicationClerk %d is coming off break\n"),
         id);
-      Signal(GetMV(me, Lock), GetMV(me, CV));
       SetMV(me, State, AVAIL);
 
       Release(GetMV(me, Lock));
@@ -49,6 +49,7 @@ void startAppClerk() {
     }
     Acquire(GetMV(me, Lock));
     Release(AppClerkLineLock);
+        Write("loop2", 5, ConsoleOutput);
 
     Wait(GetMV(me, Lock), GetMV(me, CV));
     Printf("ApplicationClerk %d has received SSN %d from Customer %d\n",
@@ -69,6 +70,7 @@ void startAppClerk() {
 
     SetMV(me, CurrentCust, NULL);
     Release(GetMV(me, Lock));
+    break;
   }
   Exit(0);
 }

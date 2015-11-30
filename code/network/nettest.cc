@@ -73,7 +73,7 @@ void sendMessage(PacketHeader* outPktHdr, MailHeader* outMailHdr, stringstream& 
     outMailHdr->length = msgLen;
     char *message = new char[msgLen];
     std::strcpy(message, msg.str().c_str());
-
+    cout << "message " << message << endl;
     if(!postOffice->Send(*outPktHdr, *outMailHdr, message)){
         printf("Error in server, cannot send message \n");
     }
@@ -306,7 +306,7 @@ void Server(){
             case RPC_Wait: {
                 CVLock->Acquire();
                 ss >> lockID >> cvID; 
-                cout<<"RPC Wait : " << cvID << endl; 
+                cout<<"RPC Wait : cv " << cvID << " lock " << lockID << endl; 
                 bool pass = true;
 
                 if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
@@ -315,7 +315,7 @@ void Server(){
                 else{
                     if(SLocks->at(lockID)==NULL || SCVs->at(cvID)==NULL){
                         reply<<-1;
-                    } else if (SLocks->at(lockID)->owner != outPktHdr->to || (SCVs->at(cvID)->lockIndex != lockID && SCVs->at(cvID)->lockIndex != -1)){
+                    } else if ((SCVs->at(cvID)->lockIndex != lockID && SCVs->at(cvID)->lockIndex != -1)){
                         reply << -1;
                     }else {
                         SCVs->at(cvID)->useCounter++;
@@ -326,11 +326,10 @@ void Server(){
                         SCVs->at(cvID)->packetWaiting->push(outPktHdr);
                         SCVs->at(cvID)->mailWaiting->push(outMailHdr);
 
-
                         PacketHeader* waitOutPkt = SLocks->at(lockID)->packetWaiting->front();
                         MailHeader* waitOutMail = SLocks->at(lockID)->mailWaiting->front();
 
-                        if(!(waitOutPkt == NULL)){
+                        if(!SLocks->at(lockID)->packetWaiting->empty()){
                             SLocks->at(lockID)->packetWaiting->pop();
                             SLocks->at(lockID)->mailWaiting->pop();
                             SLocks->at(lockID)->owner = waitOutPkt->to;
@@ -351,7 +350,7 @@ void Server(){
         case RPC_Signal: {
                 CVLock->Acquire();
                 ss>> lockID >> cvID;
-                cout<<"RPC Signal: " << cvID << endl; 
+                cout<<"RPC Signal: " << lockID << " " << cvID << endl; 
 
                 if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
                     reply << -1;
@@ -359,11 +358,13 @@ void Server(){
                 else{
                     if(SLocks->at(lockID)==NULL||SCVs->at(cvID)== NULL){
                         reply << -1;
-                    } else if(SLocks->at(lockID)->owner != outPktHdr->to || SCVs->at(cvID)->lockIndex != lockID){
+                    } else if(SCVs->at(cvID)->lockIndex != lockID){
+                        cout << SCVs->at(cvID)->lockIndex << "!=" << lockID << endl;
                         reply << -1;
                     } else{
 
                         if(SCVs->at(cvID)->packetWaiting->empty()){
+                            cout << "No waiting threads" << endl;
                             reply<<-1;
                         } else{
                         reply<<-2;
@@ -398,7 +399,7 @@ void Server(){
                 else{
                     if(SLocks->at(lockID)==NULL||SCVs->at(cvID)== NULL){
                         reply << -1;
-                    } else if(SLocks->at(lockID)->owner != outPktHdr->to || SCVs->at(cvID)->lockIndex != lockID){
+                    } else if(SCVs->at(cvID)->lockIndex != lockID){
                         reply << -1;
                     } else{
                         if(SCVs->at(cvID)->packetWaiting->empty()){
@@ -488,11 +489,15 @@ void Server(){
                 reply << -1;
             } else {
                 if(SMVs->at(mvID)==NULL){
+                    cout << "mvID is NULL" << endl;
                     reply << -1;
                 } else if(mvIndex >= SMVs->at(mvID)->len){
+                    cout << "err: " << mvIndex << " >= " << SMVs->at(mvID)->len << endl;
                     reply << -1;
                 } else{
+                    cout << "returning " <<  SMVs->at(mvID)->values[mvIndex] << endl;
                     reply << SMVs->at(mvID)->values[mvIndex];
+                    cout << "reply " << reply.str() << endl;
                 }
             }
             sendMessage(outPktHdr, outMailHdr, reply);

@@ -394,6 +394,7 @@ std::string SyscallReceiveMsg() {
   std::stringstream ss;
   ss << res;
   delete[] res;
+  cout << "receive " << ss.str() << endl;
   return ss.str();
 }
 #endif
@@ -635,7 +636,7 @@ int Signal_Syscall(int lockIndex, int CVIndex) {
   int cv = -1; // -1 is error
   ss >> cv;
   if (cv == -1) {
-    printf("Error in signalling cv\n");
+    printf("Error in signalling cv %d with lock %d\n", CVIndex, lockIndex);
   }
   return cv;
 
@@ -1077,6 +1078,7 @@ int GetMV_Syscall(int mv, int index) {
   ss << RPC_GetMV << " " << mv << " " << index;
   SyscallSendMsg(ss.str());
 
+  cout << "called getMV " << mv << " " << index << " ";
   std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);

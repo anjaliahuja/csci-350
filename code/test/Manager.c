@@ -2,17 +2,12 @@
 #include "Setup.h"
 
 void managerWakeup(int clerk, char* clerkType) {
-  int lock, cv;
-  lock = GetMV(clerk, Lock);
-  cv = GetMV(clerk, CV);
-
-  Acquire(lock);
-  Signal(lock, cv);
+  Acquire(GetMV(clerk, Lock));
+  Signal(GetMV(clerk, Lock), GetMV(clerk, CV));
   Write("Manager has woken up ", sizeof("Manager has woken up "), ConsoleOutput);
   Write(clerkType, 16, ConsoleOutput);
   Printf(" %d\n", sizeof(" %d\n"), clerk);
-  Wait(lock, cv);
-  Release(lock);
+  Release(GetMV(clerk, Lock));
 }
 
 void startManager() {
@@ -45,6 +40,7 @@ void startManager() {
 
           if (lineSizeJ > 0 && state == ONBREAK) {
             managerWakeup(currClerkJ, "ApplicationClerk");
+            Exit(0);
           }
         }
       }
