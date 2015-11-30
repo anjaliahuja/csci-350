@@ -424,7 +424,7 @@ void Server(){
                                 string name = "";
                                 ss>>name;
                                 ss>>mvSize;
-                                int index = (netname*100)+(SMVs->size()-1);
+                                int index = (netname*100)+(SMVs->size());
                                 ServerMV *mv = new ServerMV;
                                 mv->name = name;
                                 mv->values = new int[mvSize];
@@ -576,7 +576,6 @@ void Server(){
                         for(int i = 0; i< SLocks->size();i++){
                             if(SLocks->at(i)->name.compare(name) == 0){
                                 index = i;
-                                //SLocks->at(i)->counter++;
                                 break;
                             }
                         }
@@ -623,7 +622,6 @@ void Server(){
                         for(int i = 0; i< SLocks->size();i++){
                             if(SLocks->at(i)->index == lockID){
                                 index = i;
-                                SLocks->at(i)->counter++;
                                 break;
                             }
                         }
@@ -678,7 +676,6 @@ void Server(){
                         for(int i = 0; i< SLocks->size();i++){
                             if(SLocks->at(i)->index == lockID){
                                 index = i;
-                                SLocks->at(i)->counter++;
                                 break;
                             }
                         }
@@ -738,7 +735,6 @@ void Server(){
                         for(int i = 0; i< SLocks->size();i++){
                             if(SLocks->at(i)->index == lockID){
                                 index = i;
-                                SLocks->at(i)->counter++;
                                 break;
                             }
                         }
@@ -1225,7 +1221,6 @@ void Server(){
                     for(int i = 0; i<SLocks->size();i++){
                         if(SLocks->at(i)->index == lockID){
                             index = i;
-                            SLocks->at(i)->counter++;
                             break;
                         }
                     }
@@ -1272,7 +1267,6 @@ void Server(){
                     for(int i = 0; i<SLocks->size();i++){
                         if(SLocks->at(i)->index == lockID){
                             index = i;
-                            SLocks->at(i)->counter++;
                             break;
                         }
                     }
@@ -1320,6 +1314,7 @@ void Server(){
                     for(unsigned int i = 0; i<SCVs->size(); i++){
                         if(SCVs->at(i) != NULL){
                             if(SCVs->at(i)->name == name){
+                                SCVs->at(i)->counter++;
                                 index = i;
                                 break;
                             }
