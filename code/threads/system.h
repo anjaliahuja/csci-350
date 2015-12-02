@@ -135,6 +135,56 @@ extern PostOffice* postOffice;
 #define RPC_SetMV 		 12
 #define RPC_DestroyMV	 13
 
+
+#define RPC_Server_CreateLock   111
+#define RPC_Server_DestroyLock  112
+#define RPC_Server_Acquire      113
+#define RPC_Server_Release      114
+#define RPC_Server_CreateCV     115
+#define RPC_Server_DestroyCV    116
+#define RPC_Server_Wait1        117
+#define RPC_Server_Wait2        118
+#define RPC_Server_Wait3        119
+#define RPC_Server_Signal1      120
+#define RPC_Server_Signal2      121
+#define RPC_Server_Signal3      122
+
+
+#define RPC_Server_Broadcast1    123
+#define RPC_Server_Broadcast2    124
+#define RPC_Server_Broadcast3    125
+#define RPC_Server_CreateMV	 	126
+#define RPC_Server_GetMV  	     127
+#define RPC_Server_SetMV 		 128
+#define RPC_Server_DestroyMV	 129
+
+
+
+#define RPC_ServerReply_CreateLock   211
+#define RPC_ServerReply_DestroyLock  212
+#define RPC_ServerReply_Acquire      213
+#define RPC_ServerReply_Release      214
+#define RPC_ServerReply_CreateCV     215
+#define RPC_ServerReply_DestroyCV    216
+#define RPC_ServerReply_Wait1        217
+#define RPC_ServerReply_Wait2        218
+#define RPC_ServerReply_Wait3        219
+#define RPC_ServerReply_Signal1      220
+#define RPC_ServerReply_Signal2      221
+#define RPC_ServerReply_Signal3      222
+
+
+#define RPC_ServerReply_Broadcast1    223
+#define RPC_ServerReply_Broadcast2    224
+#define RPC_ServerReply_Broadcast3    225
+#define RPC_ServerReply_CreateMV	 	226
+#define RPC_ServerReply_GetMV  	     227
+#define RPC_ServerReply_SetMV 		 228
+#define RPC_ServerReply_DestroyMV	 229
+
+
+
+
 #endif
 
 #endif // SYSTEM_H
