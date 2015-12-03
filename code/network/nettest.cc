@@ -96,52 +96,6 @@ struct ServerRequest{
 
 };
 
-void CreateServerRequest(vector<ServerRequest*>* serverRequests, string name, int reqType, int machineID, int mailbox, int arg1, int arg2, int arg3){
-    ServerRequest *sr = new ServerRequest; 
-    serverRequests->push_back(sr);
-
-    sr->requestID = serverRequests->size();
-    sr->machineID = machineID;
-    sr->mailbox = mailbox;
-    sr->reqType = reqType;
-    sr->arg1 = arg1;
-    sr->arg2 = arg2;
-    sr->arg3 = arg3;
-
-    sr->noCount = 0;
-    sr->yes = false;
-    sr->name = name; 
-    sr->lockCount = 0;
-    sr->cvCount = 0;
-    sr->lockFound = false;
-    sr->cvFound  = false;
-
-    PacketHeader* outPktHdr = new PacketHeader();
-    PacketHeader* inPktHdr = new PacketHeader();
-    MailHeader* outMailHdr = new MailHeader();
-    MailHeader* inMailHdr = new MailHeader(); 
-
-    for (int i = 0; i < 5; ++i) // 5 being num max servers 
-    {
-        if (i != netname)
-        {
-            outPktHdr->to = i;
-            outMailHdr->to = i;
-            outMailHdr->from = netname; 
-            outMailHdr->length = request.str().size() + 1;
-            if(reqType == RPC_Server_CreateCV || reqType == RPC_Server_CreateLock || reqType == RPC_Server_CreateMV){
-                ss<< sr->reqType << " " << sr->requestID << " "<<sr->machineID << " " << sr->mailbox << " " << sr->name; 
-            } else if (reqType == RPC_Server_Acquire || reqType == RPC_Server_Release || reqType == RPC_Server_DestroyLock || reqType == RPC_Server_DestroyCV || reqType == RPC_Server_DestroyMV){
-                ss<< sr->reqType << " " << sr->requestID << " "<<sr->machineID << " " << sr->mailbox << " " << sr->arg1; 
-            } else if(reqType == RPC_GetMV || reqType == RPC_Server_Wait1 || reqType == RPC_Server_Wait2 || reqType == RPC_Server_Wait3 || reqType == RPC_Server_Signal1 || reqType == RPC_Server_Signal2 || reqType == RPC_Server_Signal3 || reqType == RPC_Server_Broadcast1 || reqType == RPC_Server_Broadcast2 || reqType == RPC_Server_Broadcast3){
-                ss<< sr->reqType << " " << sr->requestID << " "<<sr->machineID << " " << sr->mailbox << " " << sr->arg1 << " " <<ss->arg2; 
-            } else {
-                ss<< sr->reqType << " " << sr->requestID << " "<<sr->machineID << " " << sr->mailbox << " " << sr->arg1 << " " <<ss->arg2 << " " << ss->arg3; 
-            }
-            sendMessage(outPktHdr, outMailHdr, ss);
-        }
-    }
-}
 void sendMessage(PacketHeader* outPktHdr, MailHeader* outMailHdr, stringstream& msg){
     //outPktHdr is machineID, outMailHdr is mailbox num
     int msgLen = msg.str().length() +1;
@@ -153,46 +107,6 @@ void sendMessage(PacketHeader* outPktHdr, MailHeader* outMailHdr, stringstream& 
         printf("Error in server, cannot send message \n");
     }
     msg.clear();
-}
-
-bool validChecks(vector<ServerRequest*>* serverRequests, vector<ServerLock*>* SLocks, vector<ServerCV*>* SCVs, int lockID, int cvID, int machineID, int mailbox, int reqType) {
-    bool ifValid = true;
-
-    if(lockID / 100 != netname || cvID / 100 != netname ){
-        ifValid = false;
-        if(lockID / 100 != netname && cvID / 100 !=netname){ // if you don't own lock or CV
-            CreateServerRequest(serverRequests, "", reqType + 2, machineID, mailbox, cvID, lockID, 0);
-        } else if (lockID / 100 != netname){
-            //lock doesnt exist, cv does so make sure cv info is valid 
-            int cv = cvID % 100; 
-
-            if(cv < 0 || cv >= SCvs->size()){
-                sendReplyToClient(machineID, mailbox, -1);
-            }else if(SCVs->at(cv) == NULL){
-                sendReplyToClient(machineID, mailbox, -1);
-            }else if(reqType == RPC_Server_Singal1 && SCVs->at(cv)->lockIndex != lockID ) ||  reqType == RPC_Server_Wait1 && SCVs->at(cv)->lockIndex != lockID && SCVs->at(cv)->lockIndex != -1){
-                sendReplyToClient(machineID, mailbox, -1);
-            }else{
-                CreateServerRequest(serverRequests, "", reqType+1, machineID, mailbox, cvID, lockID, 0);
-            }
-        } else if (cvID / 100 != netname){
-            //CV doesnt exist, lock does
-            int lock = lockID % 100; 
-            if(lock < 0 || lock >= SLocks->size()){
-                sendReplyToClient(machineID, mailbox, -1);
-            }else if (SLocks->at(lock)==NULL){
-                sendReplyToClient(machineID, mailbox, -1);
-            } else if(SLocks->at(lock)->owner != machineID){
-                sendReplyToClient(machineID, mailbox, -1);
-            } else {
-                CreateServerRequest(serverRequests, "", reqType, machineID, mailbox, cvID, lockID, 0);
-            }
-        }
-
-
-        }
-    }
-    return ifValid;
 }
 
 void sendReplyToServer(PacketHeader* outPktHdr, MailHeader* outMailHdr, int requestType, int requestID, int machineID, int mailbox, int reply){
@@ -214,6 +128,96 @@ void sendReplyToClient(int machineID, int mailbox, int reply){
     sendMessage(outPktHdr, outMailHdr, reply);
 
 }
+
+void CreateServerRequest(vector<ServerRequest*>* serverRequests, string name, int reqType, int machineID, int mailbox, int arg1, int arg2, int arg3){
+    ServerRequest *sr = new ServerRequest; 
+    serverRequests->push_back(sr);
+
+    sr->requestID = serverRequests->size();
+    sr->machineID = machineID;
+    sr->mailbox = mailbox;
+    sr->reqType = reqType;
+    sr->arg1 = arg1;
+    sr->arg2 = arg2;
+    sr->arg3 = arg3;
+
+    sr->noCount = 0;
+    sr->yes = false;
+    sr->name = name; 
+    sr->lockCount = 0;
+    sr->cvCount = 0;
+    sr->lockFound = false;
+    sr->cvFound  = false;
+
+   
+
+    for (int i = 0; i < 5; ++i) // 5 being num max servers 
+    {
+        if (i != netname)
+        {
+            PacketHeader* outPktHdr = new PacketHeader();
+            MailHeader* outMailHdr = new MailHeader();
+            outPktHdr->to = i;
+            outMailHdr->to = 0;
+            outMailHdr->from = netname; 
+
+            std::stringstream ss;
+
+            if(reqType == RPC_Server_CreateCV || reqType == RPC_Server_CreateLock || reqType == RPC_Server_CreateMV){
+                ss << sr->reqType << " " << sr->requestID << " "<<sr->machineID << " " << sr->mailbox << " " << sr->name; 
+            } else if (reqType == RPC_Server_Acquire || reqType == RPC_Server_Release || reqType == RPC_Server_DestroyLock || reqType == RPC_Server_DestroyCV || reqType == RPC_Server_DestroyMV){
+                ss << sr->reqType << " " << sr->requestID << " "<<sr->machineID << " " << sr->mailbox << " " << sr->arg1; 
+            } else if(reqType == RPC_GetMV || reqType == RPC_Server_Wait1 || reqType == RPC_Server_Wait2 || reqType == RPC_Server_Wait3 || reqType == RPC_Server_Signal1 || reqType == RPC_Server_Signal2 || reqType == RPC_Server_Signal3 || reqType == RPC_Server_Broadcast1 || reqType == RPC_Server_Broadcast2 || reqType == RPC_Server_Broadcast3){
+                ss << sr->reqType << " " << sr->requestID << " "<<sr->machineID << " " << sr->mailbox << " " << sr->arg1 << " " <<ss->arg2; 
+            } else {
+                ss << sr->reqType << " " << sr->requestID << " "<<sr->machineID << " " << sr->mailbox << " " << sr->arg1 << " " <<ss->arg2 << " " << ss->arg3; 
+            }
+            sendMessage(outPktHdr, outMailHdr, ss);
+        }
+    }
+}
+
+
+bool validChecks(vector<ServerRequest*>* serverRequests, vector<ServerLock*>* SLocks, vector<ServerCV*>* SCVs, int lockID, int cvID, int machineID, int mailbox, int reqType) {
+    bool ifValid = true;
+
+    if(lockID / 100 != netname || cvID / 100 != netname ){
+        ifValid = false;
+        if(lockID / 100 != netname && cvID / 100 !=netname){ // if you don't own lock or CV
+            CreateServerRequest(serverRequests, "", reqType + 2, machineID, mailbox, cvID, lockID, 0);
+        } else if (lockID / 100 != netname){
+            //lock doesnt exist, cv does so make sure cv info is valid 
+            int cv = cvID % 100; 
+
+            if(cv < 0 || cv >= SCVs->size()){
+                sendReplyToClient(machineID, mailbox, -1);
+            }else if(SCVs->at(cv) == NULL){
+                sendReplyToClient(machineID, mailbox, -1);
+            }else if((reqType == RPC_Server_Signal1 && SCVs->at(cv)->lockIndex != lockID ) ||  (reqType == RPC_Server_Wait1 && SCVs->at(cv)->lockIndex != lockID && SCVs->at(cv)->lockIndex != -1)){
+                sendReplyToClient(machineID, mailbox, -1);
+            }else{
+                CreateServerRequest(serverRequests, "", reqType+1, machineID, mailbox, cvID, lockID, 0);
+            }
+        } else if (cvID / 100 != netname){
+            //CV doesnt exist, lock does
+            int lock = lockID % 100; 
+            if(lock < 0 || lock >= SLocks->size()){
+                sendReplyToClient(machineID, mailbox, -1);
+            }else if (SLocks->at(lock)==NULL){
+                sendReplyToClient(machineID, mailbox, -1);
+            } else if(SLocks->at(lock)->owner != machineID){
+                sendReplyToClient(machineID, mailbox, -1);
+            } else {
+                CreateServerRequest(serverRequests, "", reqType, machineID, mailbox, cvID, lockID, 0);
+            }
+        }
+
+
+        }
+    
+    return ifValid;
+}
+
 void serverToServer(stringstream& request) {
     PacketHeader* outPktHdr = new PacketHeader();
     PacketHeader* inPktHdr = new PacketHeader();
@@ -674,7 +678,7 @@ void Server(){
     }
     
 
-    else if (type / 100 == 1){ // dealing with server request 
+    } else if (type / 100 == 1){ // dealing with server request 
         ss >> requestID;
         ss >> machineID;
         ss >> mailbox;
@@ -1937,6 +1941,8 @@ void Server(){
         break;
         }
     }
+    }
+
 }
          
 
