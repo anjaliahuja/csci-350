@@ -65,6 +65,7 @@ extern void Problem2(void), TestSuite(void);
 #endif
 #ifdef NETWORK
 extern void Server(void);
+extern void Server2(void);
 #endif
 
 //----------------------------------------------------------------------
