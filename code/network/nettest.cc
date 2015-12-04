@@ -365,6 +365,7 @@ void Server(){
                         cout << "Couldn't find lock to ACQUIRE" << endl;
                         CreateServerRequest(serverRequests, "", RPC_Server_Acquire, inPktHdr->from, inMailHdr->from, lockID, 0, 0);
                     } else{
+                        lockID = lockID%100;
                         if(SLocks -> at(lockID) == NULL){
                             reply << -1;
                         } else if(SLocks->at(lockID)->owner == outPktHdr->to && SLocks->at(lockID)->state == Busy){
@@ -376,6 +377,7 @@ void Server(){
                             SLocks->at(lockID)->mailWaiting->push(outMailHdr);
                         } else{
                             SLocks->at(lockID)->owner = outPktHdr->to;
+                            cout<<"Owner of lock after acquiring is: " << SLocks->at(lockID)->owner << endl;
                             SLocks->at(lockID)->state = Busy;
                             reply << -2; 
                         }
@@ -396,7 +398,7 @@ void Server(){
                         else{
                         if(SLocks->at(lockID)== NULL){
                             reply << -1;
-                        } else if(SLocks->at(lockID)->state == Available){
+                        } else if(SLocks->at(lockID)->state == Available || SLocks->at(lockID)->owner != outPktHdr->to){
 
                             reply << -1;
                         } else{
@@ -763,22 +765,28 @@ void Server(){
                     ss >> lockID;
 
                     if(lockID / 100 != netname){
+                        cout<<"Acquire case 1 " << endl;
                         sendReplyToServer(outPktHdr, outMailHdr, RPC_ServerReply_Acquire, requestID, machineID, mailbox, 0);
                     } else{
+                        cout<<"Acquire case 2 " << endl;
                         sendReplyToServer(outPktHdr, outMailHdr, RPC_ServerReply_DestroyCV, requestID, machineID, mailbox, 1);
 
                         lockID = lockID % 100;
 
                         if(lockID < 0 || lockID >= SLocks->size()){
                             sendReplyToClient(machineID, mailbox, -1);
+                            cout<<"Acquire case 3 " << endl;
                         }
                         else {
                         if(SLocks -> at(lockID) == NULL){
                             sendReplyToClient(machineID, mailbox, -1);
+                            cout<<"Acquire case 4 " << endl;
                         } else if(SLocks->at(lockID)->owner == machineID && SLocks->at(lockID)->state == Busy){
                             sendReplyToClient(machineID, mailbox, -1);
+                            cout<<"Acquire case 5 " << endl;
                         } else if(SLocks->at(lockID)->state == Busy){
-
+                            cout<<"Lock is busy, adding to wait queue"<<endl;
+                            cout<<"Lock owner is: " << SLocks->at(lockID)->owner << endl;
                             PacketHeader *tempOutPkt = new PacketHeader();
                             MailHeader *tempOutMail = new MailHeader();
 
@@ -793,6 +801,7 @@ void Server(){
                         } else{
                             SLocks->at(lockID)->owner = machineID;
                             cout<<"Acquire changed lock ownership"<<endl;
+                            cout<<"Lock owner is: " << SLocks->at(lockID)->owner << endl;
                             SLocks->at(lockID)->state = Busy;
                             sendReplyToClient(machineID, mailbox, -2);
                         }
@@ -818,6 +827,7 @@ void Server(){
                                 if(SLocks->at(lockID)->packetWaiting->empty() && SLocks->at(lockID)->mailWaiting->empty()){ 
 
                                     SLocks->at(lockID)->state = Available; 
+
                                     SLocks->at(lockID)->owner = -1;
                                 } else{
                                     PacketHeader* tempOutPkt = SLocks->at(lockID)->packetWaiting->front();
@@ -1117,6 +1127,7 @@ void Server(){
                     int lockNum = lockID;
                     int cvNum = cvID;
                     
+                    
                     if(lockID / 100 != netname){
                         cout << "case-1" << endl;
                         foundLock = false;
@@ -1134,7 +1145,7 @@ void Server(){
                                 cout << "case-3" << endl;
                                 sendReplyToClient(machineID, mailbox, -1);
                                 invalidLock = true;
-                            } else if (SLocks->at(lockID)->owner != netname){
+                            } else if (SLocks->at(lockID)->owner != machineID){
                                 cout << "case-4, owner: " << SLocks->at(lockID)->owner << endl;
                                 sendReplyToClient(machineID, mailbox, -1);
                                 invalidLock = true;
@@ -1587,6 +1598,7 @@ void Server(){
 
                 case RPC_ServerReply_Acquire: {
                     cout<<"RPC server reply acquire"<<endl;
+
                     if(!yes){
                         if(response == 0){
                             curReq->noCount++;
@@ -1605,6 +1617,7 @@ void Server(){
                             cout<<"other server acquired lock"<<endl;
                         }
                     }
+                    cout<<"This server thinks it has the lock " << endl;
                     break;
                 }
 

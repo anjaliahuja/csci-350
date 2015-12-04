@@ -34,6 +34,7 @@
 using namespace std;
 
 int TLB_INDEX = 0;
+int serverNum = 0;
 
 int copyin(unsigned int vaddr, int len, char *buf) {
     // Copy len bytes from the current thread's virtual address vaddr.
@@ -372,7 +373,14 @@ void SyscallSendMsg(std::string request) {
   MailHeader outMailHeader;
   char *req = new char[request.length()];
   std::strcpy(req, request.c_str());
-  int serverId = rand()%NUM_SERVERS;
+  //int serverId = rand()%NUM_SERVERS;
+  int serverId = serverNum;
+  serverNum++;
+  if (serverNum == NUM_SERVERS)
+  {
+    serverNum = 0;
+  }
+
   outPacketHeader.to = serverId;
   outMailHeader.to = serverId;
   outMailHeader.from = netname; 
