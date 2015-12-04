@@ -785,14 +785,20 @@ void Server(){
                 case RPC_Server_Acquire: {
                     ss >> lockID;
 
-                     if(lockID / 100 != netname){
+                    if(lockID / 100 != netname){
                         sendReplyToServer(outPktHdr, outMailHdr, RPC_ServerReply_Acquire, requestID, machineID, mailbox, 0);
                     } else{
                         sendReplyToServer(outPktHdr, outMailHdr, RPC_ServerReply_DestroyCV, requestID, machineID, mailbox, 1);
 
-                          if(SLocks -> at(lockID) == NULL){
+                        lockID = lockID % 100;
+
+                        if(lockID < 0 || lockID >= SLocks->size()){
                             sendReplyToClient(machineID, mailbox, -1);
-                        } else if(SLocks->at(lockID)->owner == outPktHdr->to && SLocks->at(lockID)->state == Busy){
+                        }
+                        else {
+                        if(SLocks -> at(lockID) == NULL){
+                            sendReplyToClient(machineID, mailbox, -1);
+                        } else if(SLocks->at(lockID)->owner == machineID && SLocks->at(lockID)->state == Busy){
                             sendReplyToClient(machineID, mailbox, -1);
                         } else if(SLocks->at(lockID)->state == Busy){
 
@@ -808,12 +814,13 @@ void Server(){
                             int sizeofPacket = SLocks->at(lockID)->packetWaiting->size();
                             SLocks->at(lockID)->mailWaiting->push(tempOutMail);
                         } else{
-                            SLocks->at(lockID)->owner = outPktHdr->to;
+                            SLocks->at(lockID)->owner = machineID;
+                            cout<<"Acquire changed lock ownership"<<endl;
                             SLocks->at(lockID)->state = Busy;
                             sendReplyToClient(machineID, mailbox, -2);
                         }
                     }
-                   
+                   }
                     break;
                 }
                 case RPC_Server_Release: {

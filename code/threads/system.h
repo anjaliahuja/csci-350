@@ -44,7 +44,7 @@ extern BitMap* bitMap;
 #define NumLocks 10000
 #define NumCVs 10000
 #define NumProcesses 20
-#define NUM_SERVERS 2
+#define NUM_SERVERS 4
 
 extern Table* lockTable;
 extern Lock* lockTableLock;
