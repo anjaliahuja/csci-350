@@ -175,16 +175,16 @@ extern PostOffice* postOffice;
 #define RPC_ServerReply_Signal1      222
 #define RPC_ServerReply_Signal2      223
 #define RPC_ServerReply_Signal3      224
-#define RPC_ServerReply_Signal4
+#define RPC_ServerReply_Signal4		225
 
 
-#define RPC_ServerReply_Broadcast1    225
-#define RPC_ServerReply_Broadcast2    226
-#define RPC_ServerReply_Broadcast3    227
-#define RPC_ServerReply_CreateMV	 	228
-#define RPC_ServerReply_GetMV  	     229
-#define RPC_ServerReply_SetMV 		 230
-#define RPC_ServerReply_DestroyMV	 231
+#define RPC_ServerReply_Broadcast1    226
+#define RPC_ServerReply_Broadcast2    227
+#define RPC_ServerReply_Broadcast3    228
+#define RPC_ServerReply_CreateMV	 	229
+#define RPC_ServerReply_GetMV  	     230
+#define RPC_ServerReply_SetMV 		 231
+#define RPC_ServerReply_DestroyMV	 232
 
 
 
