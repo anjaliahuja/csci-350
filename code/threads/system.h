@@ -44,6 +44,7 @@ extern BitMap* bitMap;
 #define NumLocks 10000
 #define NumCVs 10000
 #define NumProcesses 20
+#define NUM_SERVERS 2
 
 extern Table* lockTable;
 extern Lock* lockTableLock;
@@ -169,18 +170,21 @@ extern PostOffice* postOffice;
 #define RPC_ServerReply_Wait1        217
 #define RPC_ServerReply_Wait2        218
 #define RPC_ServerReply_Wait3        219
-#define RPC_ServerReply_Signal1      220
-#define RPC_ServerReply_Signal2      221
-#define RPC_ServerReply_Signal3      222
+#define RPC_ServerReply_Wait4 		220
+#define RPC_ServerReply_Wait5		221
+#define RPC_ServerReply_Signal1      222
+#define RPC_ServerReply_Signal2      223
+#define RPC_ServerReply_Signal3      224
+#define RPC_ServerReply_Signal4
 
 
-#define RPC_ServerReply_Broadcast1    223
-#define RPC_ServerReply_Broadcast2    224
-#define RPC_ServerReply_Broadcast3    225
-#define RPC_ServerReply_CreateMV	 	226
-#define RPC_ServerReply_GetMV  	     227
-#define RPC_ServerReply_SetMV 		 228
-#define RPC_ServerReply_DestroyMV	 229
+#define RPC_ServerReply_Broadcast1    225
+#define RPC_ServerReply_Broadcast2    226
+#define RPC_ServerReply_Broadcast3    227
+#define RPC_ServerReply_CreateMV	 	228
+#define RPC_ServerReply_GetMV  	     229
+#define RPC_ServerReply_SetMV 		 230
+#define RPC_ServerReply_DestroyMV	 231
 
 
 
