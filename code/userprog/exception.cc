@@ -373,13 +373,7 @@ void SyscallSendMsg(std::string request) {
   MailHeader outMailHeader;
   char *req = new char[request.length()];
   std::strcpy(req, request.c_str());
-  //int serverId = rand()%NUM_SERVERS;
-  int serverId = serverNum;
-  serverNum++;
-  if (serverNum == NUM_SERVERS)
-  {
-    serverNum = 0;
-  }
+  int serverId = rand()%NUM_SERVERS;
 
   outPacketHeader.to = serverId;
   outMailHeader.to = serverId;
