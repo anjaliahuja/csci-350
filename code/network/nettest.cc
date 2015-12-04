@@ -111,7 +111,7 @@ void sendMessage(PacketHeader* outPktHdr, MailHeader* outMailHdr, stringstream& 
 
 void sendReplyToServer(PacketHeader* outPktHdr, MailHeader* outMailHdr, int requestType, int requestID, int machineID, int mailbox, int reply){
     stringstream msg; 
-    msg << requestType << " " << requestID << " " << " " << machineID << " " << mailbox << " " << reply;
+    msg << requestType << " " << requestID << " " << machineID << " " << mailbox << " " << reply;
     sendMessage(outPktHdr, outMailHdr, msg);
 }
 
@@ -133,7 +133,7 @@ void CreateServerRequest(vector<ServerRequest*>* serverRequests, string name, in
     ServerRequest *sr = new ServerRequest; 
     serverRequests->push_back(sr);
 
-    sr->requestID = serverRequests->size();
+    sr->requestID = serverRequests->size()-1;
     sr->machineID = machineID;
     sr->mailbox = mailbox;
     sr->reqType = reqType;
@@ -151,14 +151,15 @@ void CreateServerRequest(vector<ServerRequest*>* serverRequests, string name, in
 
    
 
-    for (int i = 0; i < 5; ++i) // 5 being num max servers 
+    for (int i = 0; i < NUM_SERVERS; ++i) // 5 being num max servers 
     {
         if (i != netname)
         {
+            cout << "Creating server request, sending to: " << i << endl;
             PacketHeader* outPktHdr = new PacketHeader();
             MailHeader* outMailHdr = new MailHeader();
             outPktHdr->to = i;
-            outMailHdr->to = 0;
+            outMailHdr->to = i;
             outMailHdr->from = netname; 
 
             std::stringstream ss;
@@ -180,13 +181,15 @@ void CreateServerRequest(vector<ServerRequest*>* serverRequests, string name, in
 
 bool validChecks(vector<ServerRequest*>* serverRequests, vector<ServerLock*>* SLocks, vector<ServerCV*>* SCVs, int lockID, int cvID, int machineID, int mailbox, int reqType) {
     bool ifValid = true;
-
+    cout<<"in valid checks"<<endl;
     if(lockID / 100 != netname || cvID / 100 != netname ){
         ifValid = false;
         if(lockID / 100 != netname && cvID / 100 !=netname){ // if you don't own lock or CV
+            cout<<"dont own lock or CV"<<endl;
             CreateServerRequest(serverRequests, "", reqType + 2, machineID, mailbox, cvID, lockID, 0);
         } else if (lockID / 100 != netname){
             //lock doesnt exist, cv does so make sure cv info is valid 
+            cout<<"Lock not on server, cv is"<<endl;
             int cv = cvID % 100; 
 
             if(cv < 0 || cv >= SCVs->size()){
@@ -199,6 +202,7 @@ bool validChecks(vector<ServerRequest*>* serverRequests, vector<ServerLock*>* SL
                 CreateServerRequest(serverRequests, "", reqType+1, machineID, mailbox, cvID, lockID, 0);
             }
         } else if (cvID / 100 != netname){
+            cout<<"cv not on server, lock is"<<endl;
             //CV doesnt exist, lock does
             int lock = lockID % 100; 
             if(lock < 0 || lock >= SLocks->size()){
@@ -214,6 +218,7 @@ bool validChecks(vector<ServerRequest*>* serverRequests, vector<ServerLock*>* SL
 
 
         }
+
     
     return ifValid;
 }
@@ -284,21 +289,29 @@ void Server(){
         stringstream reply;
 
         if (RPCType/100 == 0) { //server vs. client 
+
+            outPktHdr->to = inPktHdr->from;
+            outMailHdr->to = inMailHdr->from;
+            outMailHdr->from = netname;
+
             switch(RPCType){
                 case RPC_CreateLock: {
                     string name = "";
                     ss >> name;
+                    cout << "CREATELOCK w/ name " << name << endl;
                     int existingLock = -1;
 
                     for(int i = 0; i<SLocks->size(); i++){
+                        cout << "comparing-" << SLocks->at(i)->name << "- to -" << name << endl;
                         if(SLocks->at(i)->name == name){
                             existingLock = i;
                             break;
                         }
                     }
                     if(existingLock == -1){
-                        CreateServerRequest(serverRequests, "", RPC_Server_CreateLock, inPktHdr->from, inMailHdr->from, 0, 0, 0);
+                        CreateServerRequest(serverRequests, name, RPC_Server_CreateLock, inPktHdr->from, inMailHdr->from, 0, 0, 0);
                     } else {
+                        cout<<"found lock!! " << existingLock<<endl;
                         reply << existingLock + uniqueID; 
                         sendMessage(outPktHdr, outMailHdr, reply);
                     }
@@ -332,16 +345,19 @@ void Server(){
 
                     for(int i =0; i< SCVs->size(); i++){
                         if(SCVs->at(i)->name == name){
+                            cout<<"CV FOUND "<<endl;
                             existingCV = i;
                             break;
                         }
                     }
 
-                    if(existingCV = -1){
+                    if(existingCV == -1){
+                        cout<<"CV Not found" <<endl;
                         CreateServerRequest(serverRequests, name, RPC_Server_CreateCV, inPktHdr->from, inMailHdr->from, 0, 0, 0);
                     }
                     else{
                         reply << existingCV + uniqueID; 
+                        cout<<"SENDING BACK INDEX: "<<reply<<endl;
                         sendMessage(outPktHdr, outMailHdr, reply);
                     }
                     break;
@@ -371,6 +387,7 @@ void Server(){
                     bool pass = true;
 
                     if(lockID / 100 != netname){
+                        cout << "Couldn't find lock to ACQUIRE" << endl;
                         CreateServerRequest(serverRequests, "", RPC_Server_Acquire, inPktHdr->from, inMailHdr->from, lockID, 0, 0);
                     } else{
                         if(SLocks -> at(lockID) == NULL){
@@ -485,6 +502,8 @@ void Server(){
                 }
                 case RPC_Signal: {
                     ss >> lockID >> cvID; 
+                    cout<<"LockID: "<<lockID<<endl;
+                    cout<<"cvID: "<<cvID<<endl;
                     int lockNum = lockID;
                     bool ifValid = validChecks(serverRequests, SLocks, SCVs, lockID, cvID, inPktHdr->from, inMailHdr->from, RPC_Server_Signal1);
                     if (ifValid){
@@ -493,38 +512,41 @@ void Server(){
                         cvID = cvID%100;
                          
                         if(lockID < 0 || lockID >= SLocks->size() || cvID < 0 || cvID >= SCVs->size()){
+                            cout<<"Case 1 error"<<endl;
                             reply << -1;
                         }
-                    } 
-                    else{
-                        if(SLocks->at(lockID)==NULL||SCVs->at(cvID)== NULL){
-                            reply << -1;
-                        } else if(SLocks->at(lockID)->owner != outPktHdr->to || SCVs->at(cvID)->lockIndex != lockNum){
-                            reply << -1;
-                        } else{
-
-                            if(SCVs->at(cvID)->packetWaiting->empty()){
-                                reply<<-1;
+                     
+                        else{
+                            if(SLocks->at(lockID)==NULL||SCVs->at(cvID)== NULL){
+                                reply << -1;
+                            } else if(SLocks->at(lockID)->owner != outPktHdr->to || SCVs->at(cvID)->lockIndex != lockNum){
+                                reply << -1;
                             } else{
-                            reply<<-2;
-                            SCVs->at(cvID)->useCounter--;
-                            PacketHeader* tempOutPkt = SCVs->at(cvID)->packetWaiting->front();
-                            SLocks->at(lockID)->packetWaiting->push(tempOutPkt);
-                            SCVs->at(cvID)->packetWaiting->pop();
-                            MailHeader* tempOutMail = SCVs->at(cvID)->mailWaiting->front();
-                            SLocks->at(lockID)->mailWaiting->push(tempOutMail);
-                            SCVs->at(cvID)->mailWaiting->pop();
-                            sendMessage(tempOutPkt, tempOutMail, reply);
 
-                            if(SCVs->at(cvID)->packetWaiting->empty()){
-                                SCVs->at(cvID)->lockIndex
-                                 = -1; 
-                            }
+                                if(SCVs->at(cvID)->packetWaiting->empty()){
+                                    reply<<-1;
+                                } else{
+                                    reply<<-2;
+                                    SCVs->at(cvID)->useCounter--;
+                                    PacketHeader* tempOutPkt = SCVs->at(cvID)->packetWaiting->front();
+                                    SLocks->at(lockID)->packetWaiting->push(tempOutPkt);
+                                    SCVs->at(cvID)->packetWaiting->pop();
+                                    MailHeader* tempOutMail = SCVs->at(cvID)->mailWaiting->front();
+                                    SLocks->at(lockID)->mailWaiting->push(tempOutMail);
+                                    SCVs->at(cvID)->mailWaiting->pop();
+                                    sendMessage(tempOutPkt, tempOutMail, reply);
+
+                                    if(SCVs->at(cvID)->packetWaiting->empty()){
+                                        SCVs->at(cvID)->lockIndex
+                                         = -1; 
+                                    }
+                                }
                             }
                         }
                     }
                     sendMessage(outPktHdr, outMailHdr, reply);
-                    break;       
+                    break;  
+
                 }
                 case RPC_Broadcast: {
                     ss>>lockID >> cvID;
@@ -669,6 +691,11 @@ void Server(){
             ss >> requestID;
             ss >> machineID;
             ss >> mailbox;
+
+            outPktHdr->to = inPktHdr->from;
+            outMailHdr->to = inMailHdr->from;
+            outMailHdr->from = netname;
+
 
             switch(RPCType){
                 case RPC_Server_CreateLock: {
@@ -870,6 +897,7 @@ void Server(){
                     }
                 }
                 case RPC_Server_Signal2: {
+                    cout<<"Signal 2: cv on server but lock on different server"<<endl;
                     //case where cv is on server but lock is on a different server 
                     //Replies:
                     //-1: error in lock
@@ -902,6 +930,7 @@ void Server(){
                 }
                 case RPC_Server_Signal3: {
                     //CV AND LOCK are on different servers 
+
 
                     cout<<"Server wait 3, no lock or CV on current server " << endl;
                     ss>>lockID>>cvID;
@@ -1291,6 +1320,9 @@ void Server(){
             ss>>mailbox;
             ss>>response;
 
+            cout<<"Request ID: "<<requestID<<endl;
+            cout<<"MachineID: "<<machineID<<endl;
+            cout<<"resonse: "<<response<<endl;
             ServerRequest* curReq;
             bool yes;
 
@@ -1306,6 +1338,7 @@ void Server(){
                             if(curReq->noCount == NUM_SERVERS-1){
                                 cout<<"Creating a new lock "<<endl;
                                  ServerLock *lock = new ServerLock;
+                                    cout << "REQUEST NAME: " << curReq->name;
                                     lock->name = curReq->name;
                                     lock->packetWaiting = new queue<PacketHeader *>();
                                     lock->mailWaiting = new queue<MailHeader *>(); 
