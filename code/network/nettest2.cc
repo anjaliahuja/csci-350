@@ -223,7 +223,7 @@ bool validChecks(vector<ServerRequest*>* serverRequests, vector<ServerLock*>* SL
     return ifValid;
 }
 
-void Server(){
+void Server2(){
     cout << "server " << netname << " has started" << endl;
     vector<ServerLock*>* SLocks = new vector<ServerLock*>;
     vector<ServerCV*>* SCVs = new vector<ServerCV*>;
