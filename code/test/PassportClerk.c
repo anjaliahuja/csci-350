@@ -9,11 +9,11 @@ void startPassportClerk() {
   Release(DataLock);
 
 
+
+    me = GetMV(passportClerks, id);
   while(true) {
     if(GetMV(numCustomers, 0) == 0) break;
     Acquire(PassportClerkLineLock);
-
-    me = GetMV(passportClerks, id);
 
     if (GetMV(me, BribeLineCount) != 0) {
       Signal(PassportClerkLineLock, GetMV(me, BribeLineCV));
@@ -36,7 +36,6 @@ void startPassportClerk() {
       Printf("Passport clerk %d is going on break\n", sizeof("Passport clerk %d is going on break\n"), id);
       Wait(GetMV(me, Lock), GetMV(me, CV));
       Printf("Passport clerk %d is coming off break\n", sizeof("Passport clerk %d is coming off break\n"), id);
-      Signal(GetMV(me, Lock), GetMV(me, CV));
       SetMV(me, State, AVAIL);
 
       Release(GetMV(me, Lock));
@@ -85,5 +84,6 @@ void startPassportClerk() {
 
 int main(){
   setup();
+  initPassportClerks();
   startPassportClerk();
 }

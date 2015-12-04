@@ -394,7 +394,6 @@ std::string SyscallReceiveMsg() {
   std::stringstream ss;
   ss << res;
   delete[] res;
-  cout << "receive " << ss.str() << endl;
   return ss.str();
 }
 #endif
@@ -1078,7 +1077,6 @@ int GetMV_Syscall(int mv, int index) {
   ss << RPC_GetMV << " " << mv << " " << index;
   SyscallSendMsg(ss.str());
 
-  cout << "called getMV " << mv << " " << index << " ";
   std::string res = SyscallReceiveMsg();
   ss.str(std::string());
   ss.str(res);

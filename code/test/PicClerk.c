@@ -7,12 +7,12 @@ void startPicClerk() {
   id = GetMV(numActivePicClerks, 0);
   SetMV(numActivePicClerks, 0, GetMV(numActivePicClerks, 0)+1);
   Release(DataLock);
+  me = GetMV(picClerks, id);
 
   while(true) {
     if(GetMV(numCustomers, 0) == 0) break;
     Acquire(PicClerkLineLock);
 
-    me = GetMV(picClerks, id);
     if (GetMV(me, BribeLineCount) != 0) {
       Signal(PicClerkLineLock, GetMV(me, BribeLineCV));
       /* wait so that CurrentCust can be set by Customer */
@@ -36,7 +36,6 @@ void startPicClerk() {
       Printf("PictureClerk %d is going on break\n", sizeof("PictureClerk %d is going on break"), id);
       Wait(GetMV(me, Lock), GetMV(me, CV));
       Printf("PictureClerk %d coming off break\n", sizeof("PictureClerk %d is coming off break\n"), id);
-      Signal(GetMV(me, Lock), GetMV(me, CV));
       SetMV(me, State, AVAIL);
 
       Release(GetMV(me, Lock));
@@ -86,5 +85,6 @@ void startPicClerk() {
 
 int main() {
   setup();
+  initPicClerks();
   startPicClerk();
 }

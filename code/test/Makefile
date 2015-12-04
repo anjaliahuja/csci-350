@@ -31,7 +31,7 @@ CPP = $(GCCDIR)cpp
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR)
 
-all: halt matmult sort Manager AppClerk PicClerk PassportClerk Cashier Customer
+all: halt matmult sort Manager AppClerk AppClerks PicClerk PassportClerk Cashier Customer Customers
 
 start.o: start.s ../userprog/syscall.h
 	$(CPP) $(CPPFLAGS) start.s > strt.s
@@ -68,6 +68,12 @@ AppClerk: AppClerk.o start.o
 	$(LD) $(LDFLAGS) start.o AppClerk.o -o AppClerk.coff
 	../bin/coff2noff AppClerk.coff AppClerk
 
+AppClerks.o: AppClerks.c
+	$(CC) $(CFLAGS) -c AppClerks.c
+AppClerks: AppClerks.o start.o
+	$(LD) $(LDFLAGS) start.o AppClerks.o -o AppClerks.coff
+	../bin/coff2noff AppClerks.coff AppClerks
+
 PicClerk.o: PicClerk.c
 	$(CC) $(CFLAGS) -c PicClerk.c
 PicClerk: PicClerk.o start.o
@@ -92,5 +98,11 @@ Customer: Customer.o start.o
 	$(LD) $(LDFLAGS) start.o Customer.o -o Customer.coff
 	../bin/coff2noff Customer.coff Customer
 
+Customers.o: Customers.c
+	$(CC) $(CFLAGS) -c Customers.c
+Customers: Customers.o start.o
+	$(LD) $(LDFLAGS) start.o Customers.o -o Customers.coff
+	../bin/coff2noff Customers.coff Customers
+
 clean:
-	rm -f *.o *.coff halt matmult sort Manager AppClerk PicClerk PassportClerk Cashier Customer
+	rm -f *.o *.coff halt matmult sort Manager AppClerk AppClerks PicClerk PassportClerk Cashier Customer Customers

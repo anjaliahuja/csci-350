@@ -394,20 +394,20 @@ void startCustomer(){
   task = Rand(1, 0);
   if (task == 0){
     my_line = findLine('a', id);
-    /*getAppFiled(my_line, id);
+    getAppFiled(my_line, id);
     my_line = findLine('p', id);
-    getPicTaken(my_line, id);*/
+    getPicTaken(my_line, id);
   } else if (task == 1) {
-    /*my_line = findLine('p', id);
+    my_line = findLine('p', id);
     getPicTaken(my_line, id);
     my_line = findLine('a', id);
-    getAppFiled(my_line, id);*/
+    getAppFiled(my_line, id);
   }
-/*
+
   my_line = findLine('s', id);
   getPassport(my_line, id);
   my_line = findLine('c', id);
-  payCashier(my_line, id);*/
+  payCashier(my_line, id);
 
   Printf("Customer %d is leaving the Passport Office\n", 
     sizeof("Customer %d is leaving the Passport Office\n"), 

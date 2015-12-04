@@ -7,12 +7,12 @@ void startCashier() {
   id = GetMV(numActiveCashiers, 0);
   SetMV(numActiveCashiers, 0, GetMV(numActiveCashiers, 0)+1);
   Release(DataLock);
+    me = GetMV(cashiers, id);
 
   while(true) {
     if(GetMV(numCustomers, 0) == 0) break;
     Acquire(CashierLineLock);
     
-    me = GetMV(cashiers, id);
     if (GetMV(me, BribeLineCount) != 0) {
       Signal(CashierLineLock, GetMV(me, BribeLineCV));
       /* wait so that CurrentCust can be set by Customer */
@@ -89,7 +89,6 @@ void startCashier() {
         (id*1000+GetMV(me, CurrentCust)));
       Write(" has been given their completed passport \n", sizeof(" has been given their completed passport \n"), ConsoleOutput);
 
-      Signal(GetMV(me, Lock), GetMV(me, CV));
     }
 
     Wait(GetMV(me, Lock), GetMV(me, CV));
@@ -102,5 +101,6 @@ void startCashier() {
 
 void main() {
   setup();
+  initCashiers();
   startCashier();
 }

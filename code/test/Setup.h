@@ -5,11 +5,11 @@ enum bool {false, true};
 
 #define NULL -10
 
-#define NUM_CUSTOMERS 2
+#define NUM_CUSTOMERS 1
 #define NUM_APPCLERKS 1
-#define NUM_PICCLERKS 0
-#define NUM_PASSPORTCLERKS 0
-#define NUM_CASHIERS 0
+#define NUM_PICCLERKS 1
+#define NUM_PASSPORTCLERKS 1
+#define NUM_CASHIERS 1
 
 /* Customer MV Indicies */
 #define SSN 0
@@ -101,6 +101,7 @@ void initCustomers(){
 
   for(i = 0; i < NUM_CUSTOMERS; i++){
     tempCust = CreateMV(numString("Customer", sizeof("Customer"), i), sizeof("Customer")+4, 3);
+    /*Printf("HELLO %d\n", 10, customers);*/
     SetMV(customers, i, tempCust);
     SetMV(tempCust, SSN, i); 
     money = Rand(4, 0)*500+100;

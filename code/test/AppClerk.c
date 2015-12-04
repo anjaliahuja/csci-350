@@ -13,7 +13,6 @@ void startAppClerk() {
   while(true) {
     if(GetMV(numCustomers, 0) == 0) break;
     Acquire(AppClerkLineLock);
-    Write("loop", 4, ConsoleOutput);
     if (GetMV(me, BribeLineCount) != 0) {
       Signal(AppClerkLineLock, GetMV(me, BribeLineCV));
       /* wait so that CurrentCust can be set by Customer */
@@ -26,6 +25,7 @@ void startAppClerk() {
     } else if (GetMV(me, LineCount) != 0) {
       Signal(AppClerkLineLock, GetMV(me, LineCV));
       /* wait so that CurrentCust can be set by Customer */
+      Write("wait\n", 10, ConsoleOutput);
       Wait(AppClerkLineLock, GetMV(me, LineCV));
       SetMV(me, State, BUSY);
       Printf("ApplicationClerk %d has signalled a Customer to come to their counter\n",
@@ -49,7 +49,6 @@ void startAppClerk() {
     }
     Acquire(GetMV(me, Lock));
     Release(AppClerkLineLock);
-        Write("loop2", 5, ConsoleOutput);
 
     Wait(GetMV(me, Lock), GetMV(me, CV));
     Printf("ApplicationClerk %d has received SSN %d from Customer %d\n",

@@ -6,7 +6,7 @@ void managerWakeup(int clerk, char* clerkType) {
   Signal(GetMV(clerk, Lock), GetMV(clerk, CV));
   Write("Manager has woken up ", sizeof("Manager has woken up "), ConsoleOutput);
   Write(clerkType, 16, ConsoleOutput);
-  Printf(" %d\n", sizeof(" %d\n"), clerk);
+  Printf(" %d\n", sizeof(" %d\n"), GetMV(clerk, ID));
   Release(GetMV(clerk, Lock));
 }
 
@@ -40,7 +40,6 @@ void startManager() {
 
           if (lineSizeJ > 0 && state == ONBREAK) {
             managerWakeup(currClerkJ, "ApplicationClerk");
-            Exit(0);
           }
         }
       }
@@ -63,7 +62,7 @@ void startManager() {
 
       if (i == NUM_PICCLERKS-1) {
         for(j = 0; j < NUM_PICCLERKS; j++) {
-          currClerkJ = GetMV(appClerks, j);
+          currClerkJ = GetMV(picClerks, j);
           state = GetMV(currClerkJ, State);
           lineSizeJ = GetMV(currClerkJ, LineCount);
           if (lineSizeJ > 0 && state == ONBREAK) {
